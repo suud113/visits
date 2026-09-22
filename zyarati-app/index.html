@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B6E5E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="زياراتي">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>زياراتي</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#EEF2F0; --surface:#FFFFFF; --ink:#15201C; --muted:#5B6964; --line:#D5DDD9;
+  --accent:#0B6E5E; --accent-ink:#FFFFFF; --accent-soft:#DCEEE9;
+  --warn:#9A5B00; --warn-bg:#FFF2D6; --warn-line:#EBC67A;
+  --info:#2B5DA8; --info-bg:#E4ECFA;
+  --done:#3F8F4E; --done-bg:#E3F2E5;
+  --shadow:0 1px 2px rgba(16,32,28,.06),0 4px 14px rgba(16,32,28,.05);
+  --sans:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+  --mono:ui-monospace,"Roboto Mono","SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0E1412; --surface:#17201D; --ink:#E4ECE8; --muted:#94A39D; --line:#2A3632;
+    --accent:#38B39C; --accent-ink:#06120F; --accent-soft:#16332D;
+    --warn:#F2BE5C; --warn-bg:#2E2412; --warn-line:#5E4718;
+    --info:#8DB2F0; --info-bg:#172338;
+    --done:#7FCB8C; --done-bg:#15291A;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:620px;margin:0 auto;padding-inline:16px;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+header{display:flex;align-items:flex-start;gap:10px}
+header .t{flex:1}
+h1{font-size:22px;margin:0;font-weight:700}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.summary{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:13px;color:var(--muted)}
+.stat b{color:var(--ink);font-size:16px;margin-inline-end:6px}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--done);transition:width .25s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 14px var(--sans);padding:9px 14px;text-decoration:none;cursor:pointer;min-height:42px}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.big{width:100%;font-size:16px;min-height:50px}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:13px}
+.routes{display:flex;flex-direction:column;gap:8px}
+.alerts{background:var(--surface);border:1px solid var(--warn-line);border-radius:14px;padding:12px 14px}
+.alerts h2{font-size:15px;margin:0 0 8px;color:var(--warn)}
+.alerts ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.alerts li{font-size:14px;display:flex;gap:8px;align-items:baseline}
+.alerts li::before{content:"";flex:none;width:7px;height:7px;border-radius:2px;background:var(--warn);transform:translateY(-2px)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.bar label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
+.bar .grp{display:flex;gap:6px;flex-wrap:wrap}
+#list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px}
+.card.done{background:var(--done-bg);border-color:transparent;box-shadow:none}
+.card.done .body{display:none}
+.hide-done .card.done{display:none}
+.head{display:flex;align-items:center;gap:10px}
+.seq{flex:none;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font:600 14px var(--mono)}
+.card.done .seq{background:var(--done)}
+.sid{font:600 21px var(--mono)}
+.head .sp{flex:1}
+.toggle{border-radius:99px}
+.card.done .toggle{background:var(--done);border-color:var(--done);color:var(--surface)}
+.body{display:flex;flex-direction:column;gap:10px}
+.task{background:var(--accent-soft);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:14px;font-weight:600}
+.task span{color:var(--accent);font-weight:700;margin-inline-end:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;font-weight:500;border-radius:6px;padding:3px 8px;background:var(--info-bg);color:var(--info)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.coords{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.coords .num{color:var(--ink);font-size:14px}
+.nocoord{background:var(--warn-bg);border:1px dashed var(--warn-line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.nocoord strong{color:var(--warn);font-size:15px}
+.nocoord dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px}
+.nocoord dt{color:var(--muted)}
+.nocoord dd{margin:0}
+.addr{font-size:13px;color:var(--muted)}
+.phones{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.ph:last-child{border-bottom:0}
+.ph .num{font-size:16px;user-select:all}
+.ph .cnt{font-size:12px;color:var(--muted)}
+.ph .tag{font-size:11.5px;color:var(--info);background:var(--info-bg);border-radius:5px;padding:1px 6px}
+.ph.main .num{font-weight:700}
+.ph .acts{display:flex;gap:6px;margin-inline-start:auto}
+.btn.call{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.wa{color:var(--accent)}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 16px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty p{margin:0;color:var(--muted)}
+.foot{font-size:12.5px;color:var(--muted);text-align:center}
+.toast{position:fixed;inset-inline:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:auto;width:max-content;max-width:90%;background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:99px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div class="t">
+      <h1>زياراتي</h1>
+      <p class="sub" id="sub">—</p>
+    </div>
+    <button class="btn sm" id="importBtn" type="button">استيراد ملف</button>
+    <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
+  </header>
+  <div id="main"></div>
+  <p class="foot">الإحداثيات: الأكثر تكراراً، وعند التعادل الأقدم · التلفونات من الأكثر تكراراً</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const STORE = "visits.data.v1", DONE = "visits.done.v1", HIDE = "visits.hide.v1";
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const get = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } };
+const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+
+let data = get(STORE, null);
+let done = get(DONE, {});
+
+function dist(a, b){
+  const R = 6371000, t = Math.PI/180;
+  const dLat = (b.lat-a.lat)*t, dLng = (b.lng-a.lng)*t;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+const hasC = s => s.lat != null && s.lng != null;
+const navUrl = s => `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving`;
+const intl = p => "962" + p.replace(/^0/, "");
+
+// ---------- load data from link (#d=...) ----------
+async function fromHash(){
+  const m = location.hash.match(/^#d=([A-Za-z0-9_-]+)/);
+  if (!m) return false;
+  try {
+    const b64 = m[1].replace(/-/g,"+").replace(/_/g,"/");
+    const bin = Uint8Array.from(atob(b64 + "===".slice((b64.length+3)%4)), c => c.charCodeAt(0));
+    const txt = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+    setData(JSON.parse(txt));
+    toast("تم تحميل زيارات " + (data.date || "اليوم"));
+  } catch(e) { toast("الرابط ناقص أو تالف — اطلب رابط جديد"); }
+  history.replaceState(null, "", location.pathname);
+  return true;
+}
+function setData(d){
+  if (!d || !Array.isArray(d.stops)) throw new Error("bad");
+  const key = d.date + "|" + d.stops.map(s=>s.id).join(",");
+  if (!data || (data.date + "|" + data.stops.map(s=>s.id).join(",")) !== key) { done = {}; put(DONE, done); }
+  data = d; put(STORE, d);
+}
+
+// ---------- ordering from current location ----------
+function orderFrom(start){
+  const withC = data.stops.filter(hasC), noC = data.stops.filter(s => !hasC(s));
+  const out = []; let cur = start; const left = withC.slice();
+  while (left.length){
+    let bi = 0, bd = Infinity;
+    left.forEach((s,i) => { const d = dist(cur, s); if (d < bd) { bd = d; bi = i; } });
+    cur = left.splice(bi,1)[0]; out.push(cur);
+  }
+  // put stops without coordinates right after a stop sharing a phone, else at the end
+  noC.forEach(s => {
+    const ph = new Set(s.phones.map(p=>p[0]));
+    let at = -1; out.forEach((o,i) => { if (o.phones.some(p=>ph.has(p[0]))) at = i; });
+    if (at >= 0) out.splice(at+1, 0, s); else out.push(s);
+  });
+  data.stops = out; put(STORE, data); render();
+}
+function sortByLocation(){
+  if (!navigator.geolocation) return toast("الموقع غير متاح على هذا الجهاز");
+  toast("جاري تحديد موقعك…");
+  navigator.geolocation.getCurrentPosition(
+    p => { orderFrom({lat:p.coords.latitude, lng:p.coords.longitude}); toast("رتبت المسار من موقعك"); },
+    () => toast("ما قدرت أحدد موقعك — فعّل الـ GPS"),
+    {enableHighAccuracy:true, timeout:15000}
+  );
+}
+
+// ---------- alerts computed from the data ----------
+function alerts(){
+  const S = data.stops, out = [], seen = new Set();
+  const c = S.filter(hasC);
+  for (let i=0;i<c.length;i++) for (let j=i+1;j<c.length;j++){
+    const d = dist(c[i], c[j]);
+    if (d <= 30) out.push(`نفس النقطة: <span class="num">${c[i].id}</span> + <span class="num">${c[j].id}</span> (~${Math.max(10,Math.round(d/10)*10)}م)`);
+  }
+  const phones = {};
+  S.forEach(s => s.phones.forEach(([p]) => (phones[p] ||= new Set()).add(s.id)));
+  Object.entries(phones).forEach(([p, ids]) => { if (ids.size > 1) out.push(`الرقم <span class="num">${p}</span> لـ ${ids.size} مشتركين: ${[...ids].map(x=>`<span class="num">${x}</span>`).join(" + ")} ← مكالمة وحدة`); });
+  const hods = {};
+  S.forEach(s => { if (s.land && s.land.hod) (hods[s.land.hod] ||= []).push(s); });
+  Object.entries(hods).forEach(([h, arr]) => { if (arr.length > 1) out.push(`حوض ${esc(h)}: ` + arr.map(s=>`قطعة ${esc(s.land.qeta)} (<span class="num">${s.id}</span>)`).join(" · ")); });
+  S.forEach(s => (s.warn||[]).forEach(w => out.push(`<span class="num">${s.id}</span>: ${esc(w)}`)));
+  return out;
+}
+function sharedMap(){
+  const m = {};
+  data.stops.forEach(s => s.phones.forEach(([p]) => (m[p] ||= new Set()).add(s.id)));
+  return m;
+}
+function routeLinks(){
+  const pts = [];
+  data.stops.filter(hasC).filter(s => !done[s.id]).forEach(s => { if (!pts.some(p => dist(p,s) < 25)) pts.push(s); });
+  const links = [];
+  for (let i=0; i<pts.length; i+=10){
+    const chunk = pts.slice(i, i+10), dest = chunk[chunk.length-1];
+    const wp = chunk.slice(0,-1).map(p=>`${p.lat},${p.lng}`).join("|");
+    links.push({from:i+1, to:i+chunk.length, url:`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}${wp?`&waypoints=${encodeURIComponent(wp)}`:""}&travelmode=driving`});
+  }
+  return links;
+}
+
+// ---------- render ----------
+function render(){
+  const main = $("#main");
+  if (!data){
+    $("#sub").textContent = "ما في زيارات محمّلة";
+    main.innerHTML = `<div class="empty"><p>افتح رابط زيارات اليوم، أو استورد ملف اليوم.</p>
+      <button class="btn primary" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف اليوم</button></div>`;
+    return;
+  }
+  const S = data.stops, n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s)).length;
+  $("#sub").textContent = (data.date ? data.date + " · " : "") + (data.area || "");
+  const al = alerts(), routes = routeLinks(), sh = sharedMap();
+  let prev = null;
+  const cards = S.map((s,i) => {
+    const chips = [];
+    const same = S.filter(o => o !== s && hasC(o) && hasC(s) && dist(o,s) <= 30).map(o=>o.id);
+    if (same.length) chips.push(`<span class="chip">نفس الموقع مع <span class="num">${same.join("، ")}</span></span>`);
+    (s.warn||[]).forEach(w => chips.push(`<span class="chip warn">${esc(w)}</span>`));
+    (s.notes||[]).forEach(w => chips.push(`<span class="chip">${esc(w)}</span>`));
+    let loc;
+    if (hasC(s)){
+      const d = prev ? Math.round(dist(prev,s)/10)*10 : null; prev = s;
+      loc = `<div class="coords"><span class="num">${(+s.lat).toFixed(4)}, ${(+s.lng).toFixed(4)}</span>
+        <button class="btn sm" data-copy="${s.lat},${s.lng}" type="button">نسخ</button>
+        <span>${d!=null ? `~${d}م من الموقع السابق` : "أول موقع"}</span></div>
+        <a class="btn primary big" href="${navUrl(s)}" target="_blank" rel="noopener">اذهب ← خرائط جوجل</a>`;
+    } else {
+      loc = `<div class="nocoord"><strong>${s.land ? "ما في احداثيات لكن في بيانات للاراضي" : "ما في احداثيات"}</strong>
+        ${s.land || s.addr ? `<dl>${s.land?`<dt>الحوض</dt><dd>${esc(s.land.hod)}</dd><dt>القطعة</dt><dd>${esc(s.land.qeta)}</dd>`:""}${s.addr?`<dt>العنوان</dt><dd>${esc(s.addr)}</dd>`:""}</dl>` : ""}</div>`;
+    }
+    const extra = hasC(s) && (s.land || s.addr) ? `<div class="addr">${s.land?`حوض ${esc(s.land.hod)} – قطعة ${esc(s.land.qeta)}`:""}${s.land&&s.addr?" · ":""}${esc(s.addr||"")}</div>` : "";
+    const phones = s.phones.map(([p,c,tag],j) => {
+      const others = [...sh[p]].filter(x=>x!==s.id);
+      return `<div class="ph${j===0?" main":""}">
+        <span class="num">${esc(p)}</span>${c?`<span class="cnt">×${c}</span>`:""}
+        ${tag?`<span class="tag">${esc(tag)}</span>`:""}${others.length?`<span class="tag">مشترك مع ${others.join("، ")}</span>`:""}
+        <span class="acts">
+          <a class="btn sm call" href="tel:${esc(p)}">اتصال</a>
+          <a class="btn sm wa" href="https://wa.me/${intl(p)}" target="_blank" rel="noopener">واتساب</a>
+          <button class="btn sm" data-copy="${esc(p)}" type="button">نسخ</button>
+        </span></div>`;
+    }).join("") || `<div class="ph"><span class="cnt">ما في أرقام</span></div>`;
+    return `<article class="card${done[s.id]?" done":""}">
+      <div class="head"><span class="seq">${i+1}</span><span class="sid num">${esc(s.id)}</span>
+        <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
+        <span class="sp"></span>
+        <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button></div>
+      <div class="body">
+        ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
+        ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
+        ${loc}${extra}
+        <div class="phones">${phones}</div>
+      </div></article>`;
+  }).join("");
+
+  main.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="summary">
+        <span class="stat"><b class="num">${S.length}</b>موقع</span>
+        <span class="stat"><b class="num">${n}</b>تم</span>
+        ${noC?`<span class="stat"><b class="num">${noC}</b>بدون إحداثيات</span>`:""}
+      </div>
+      <div class="progress"><i style="width:${S.length?n/S.length*100:0}%"></i></div>
+      <div class="routes">${routes.map((r,k)=>`<a class="btn primary big" href="${r.url}" target="_blank" rel="noopener">${routes.length>1?`المسار (${r.from}–${r.to}) على الخريطة`:"افتح المسار كامل على الخريطة"}</a>`).join("")}</div>
+      ${al.length?`<section class="alerts"><h2>تنبيهات</h2><ul>${al.map(a=>`<li><span>${a}</span></li>`).join("")}</ul></section>`:""}
+      <div class="bar">
+        <label for="hideDone"><input type="checkbox" id="hideDone" ${get(HIDE,false)?"checked":""}> إخفاء المنجز</label>
+        <span class="grp"><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
+        <button class="btn sm" id="resetBtn" type="button">تصفير</button></span>
+      </div>
+      <div id="list">${cards}</div>
+    </div>`;
+  $("#app").classList.toggle("hide-done", get(HIDE,false));
+  $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
+  $("#locBtn").onclick = sortByLocation;
+  $("#resetBtn").onclick = () => { done = {}; put(DONE, done); render(); toast("تم التصفير"); };
+}
+
+let tt;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
+
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-copy]");
+  if (c){
+    const v = c.dataset.copy;
+    const fb = () => { const el = c.closest(".ph, .coords, .head")?.querySelector(".num"); if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("حدّد النص وانسخه"); };
+    try { navigator.clipboard.writeText(v).then(()=>toast("تم النسخ: " + v), fb); } catch(err){ fb(); }
+    return;
+  }
+  const d = e.target.closest("[data-done]");
+  if (d){ const id = d.dataset.done; done[id] = !done[id]; put(DONE, done); render(); }
+});
+$("#importBtn").onclick = () => $("#fileIn").click();
+$("#fileIn").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { setData(JSON.parse(await f.text())); render(); toast("تم استيراد " + data.stops.length + " موقع"); }
+  catch(err){ toast("الملف مش صحيح — تأكد إنه ملف الزيارات"); }
+  e.target.value = "";
+};
+window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
+
+(async () => { await fromHash(); render(); })();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
