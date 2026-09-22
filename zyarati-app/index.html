@@ -35,6 +35,7 @@
   }
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:620px;margin:0 auto;padding-inline:16px;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
@@ -103,6 +104,31 @@ h1{font-size:22px;margin:0;font-weight:700}
 .foot{font-size:12.5px;color:var(--muted);text-align:center}
 .toast{position:fixed;inset-inline:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:auto;width:max-content;max-width:90%;background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:99px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+.tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:12px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:600 14px var(--sans);padding:9px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.res{font-size:13px;color:var(--done);font-weight:600}
+.sheet-bg{position:fixed;inset:0;background:rgba(10,20,16,.45);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:620px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
+.sheet h3{margin:0;font-size:17px}
+.lbl{font-size:13px;color:var(--muted);font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 14px var(--sans);border-radius:10px;padding:8px 12px;cursor:pointer;text-align:start}
+.opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tpls{display:flex;flex-direction:column;gap:6px}
+.tpls .opt{width:100%;font-size:13.5px}
+textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:10px;padding:10px;font:15px var(--sans);background:var(--bg);color:var(--ink);resize:vertical}
+.row{display:flex;gap:8px}
+.row .btn{flex:1}
+.btn.danger{color:#B3261E}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.doc.logged{opacity:.55;box-shadow:none}
+.doc .full{font:700 22px var(--mono);letter-spacing:.03em}
+.doc .line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.doc .work{background:var(--accent-soft);border-radius:8px;padding:6px 10px;font-weight:700}
+.doc .note{flex:1;min-width:200px;font-size:14px;background:var(--bg);border-radius:8px;padding:8px 10px}
+.doc .meta{font-size:12px;color:var(--muted)}
+.dhead{font-size:13px;color:var(--muted);font-weight:700;margin-top:4px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -116,20 +142,37 @@ h1{font-size:22px;margin:0;font-weight:700}
     <button class="btn sm" id="importBtn" type="button">استيراد ملف</button>
     <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
   </header>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabV" aria-selected="true">الزيارات</button>
+    <button type="button" role="tab" id="tabD" aria-selected="false">التوثيق</button>
+  </div>
   <div id="main"></div>
   <p class="foot">الإحداثيات: الأكثر تكراراً، وعند التعادل الأقدم · التلفونات من الأكثر تكراراً</p>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div class="sheet-bg" id="sheetBg" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
 <script>
-const STORE = "visits.data.v1", DONE = "visits.done.v1", HIDE = "visits.hide.v1";
+const STORE = "visits.data.v1", RES = "visits.results.v1", HIDE = "visits.hide.v1", SHOWLOG = "visits.showlogged.v1";
+const WORKS = ["معالجة اتصال","تركيب مودم","جلب قراءة","توزيع فواتير"];
+const NOTES = ["تم برمجة العداد مرتبط بالزمن ومعالجة الاتصال","تم برمجة العداد مرتبط بالزمن ويوجد ضعف شبكة","تم برمجة العداد مرتبط بالزمن , تم اجراء اللازم ولم يتصل","تم برمجة العداد مرتبط بالزمن و وجد العداد متصل","وجد العداد مبدل ومتصل , تم برمجة العداد مرتبط بالزمن عن بعد","وجد العداد مبدل ومتصل , تم برمجة العداد مرتبط بالزمن"];
 const $ = s => document.querySelector(s);
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const get = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } };
 const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
 
 let data = get(STORE, null);
-let done = get(DONE, {});
+let results = get(RES, {});
+let done = {}, view = "v";
+const rkey = id => data.date + "|" + id;
+function syncDone(){ done = {}; if (data) data.stops.forEach(s => { if (results[rkey(s.id)]) done[s.id] = true; }); }
+const fullNum = (town, id) => String(town || "1").replace(/\D/g,"").padStart(3,"0") + String(id).replace(/\D/g,"").padStart(7,"0");
+function guessWork(task){ task = task || "";
+  if (/اتصال|برمجة/.test(task)) return WORKS[0];
+  if (/مودم/.test(task)) return WORKS[1];
+  if (/قراء/.test(task)) return WORKS[2];
+  if (/فاتور|فواتير/.test(task)) return WORKS[3];
+  return ""; }
 
 function dist(a, b){
   const R = 6371000, t = Math.PI/180;
@@ -158,7 +201,6 @@ async function fromHash(){
 function setData(d){
   if (!d || !Array.isArray(d.stops)) throw new Error("bad");
   const key = d.date + "|" + d.stops.map(s=>s.id).join(",");
-  if (!data || (data.date + "|" + data.stops.map(s=>s.id).join(",")) !== key) { done = {}; put(DONE, done); }
   data = d; put(STORE, d);
 }
 
@@ -225,6 +267,11 @@ function routeLinks(){
 
 // ---------- render ----------
 function render(){
+  $("#tabV").setAttribute("aria-selected", view==="v"); $("#tabD").setAttribute("aria-selected", view==="d");
+  const pending = Object.values(results).filter(r=>!r.logged).length;
+  $("#tabD").textContent = "التوثيق" + (pending ? ` (${pending})` : "");
+  if (view === "d") return renderDocs();
+  syncDone();
   const main = $("#main");
   if (!data){
     $("#sub").textContent = "ما في زيارات محمّلة";
@@ -270,6 +317,7 @@ function render(){
         <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
         <span class="sp"></span>
         <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button></div>
+      ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}</div>`:""}
       <div class="body">
         ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
         ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
@@ -298,8 +346,73 @@ function render(){
   $("#app").classList.toggle("hide-done", get(HIDE,false));
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
   $("#locBtn").onclick = sortByLocation;
-  $("#resetBtn").onclick = () => { done = {}; put(DONE, done); render(); toast("تم التصفير"); };
+  $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged) delete results[rkey(s.id)]; }); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
 }
+
+// ---------- result sheet ----------
+function openSheet(id){
+  const s = data.stops.find(x => x.id === id); if (!s) return;
+  const old = results[rkey(id)];
+  let work = old ? old.work : guessWork(s.task);
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>نتيجة الزيارة · <span class="num">${esc(id)}</span></h3>
+    ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
+    <div class="lbl">نوع العمل</div>
+    <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
+    <div class="lbl">الملاحظة: اختر جاهزة أو اكتب</div>
+    <div class="tpls">${NOTES.map((n,i)=>`<button type="button" class="opt" data-n="${i}">${esc(n)}</button>`).join("")}</div>
+    <textarea id="noteIn" placeholder="الإجراء الفعلي اللي تم عند المشترك">${esc(old ? old.note : "")}</textarea>
+    <div class="row"><button type="button" class="btn primary" id="saveRes">حفظ وتم</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
+    ${old?`<button type="button" class="btn danger" id="undoRes">${old.logged?"حذف النتيجة (موثّقة)":"إلغاء تم"}</button>`:""}`;
+  $("#sheetBg").hidden = false;
+  sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
+  sh.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { $("#noteIn").value = NOTES[+b.dataset.n]; });
+  $("#closeSh").onclick = closeSheet;
+  $("#saveRes").onclick = () => {
+    const note = $("#noteIn").value.trim();
+    if (!work) return toast("اختار نوع العمل");
+    if (!note) return toast("اكتب الملاحظة أو اختار وحدة جاهزة");
+    results[rkey(id)] = {date:data.date, id, town:s.town || data.town || "1", work, note, at:new Date().toISOString(), logged: old ? old.logged : false};
+    put(RES, results); closeSheet(); render(); toast("انحفظت نتيجة " + id);
+  };
+  if (old) $("#undoRes").onclick = () => { delete results[rkey(id)]; put(RES, results); closeSheet(); render(); toast("انلغت"); };
+}
+function closeSheet(){ $("#sheetBg").hidden = true; }
+$("#sheetBg").addEventListener("click", e => { if (e.target.id === "sheetBg") closeSheet(); });
+
+// ---------- documentation view ----------
+function renderDocs(){
+  const main = $("#main"), showLogged = get(SHOWLOG, false);
+  let all = Object.entries(results).map(([k,r]) => ({k, ...r}));
+  const pend = all.filter(r => !r.logged).length, logged = all.length - pend;
+  if (!showLogged) all = all.filter(r => !r.logged);
+  all.sort((a,b) => (a.logged - b.logged) || String(a.at).localeCompare(String(b.at)));
+  $("#sub").textContent = pend ? `${pend} زيارة بدها توثيق` : "كل الزيارات موثّقة";
+  let lastDate = "";
+  const items = all.map(r => {
+    const h = r.date !== lastDate ? `<div class="dhead">${esc(r.date)}</div>` : ""; lastDate = r.date;
+    const fn = fullNum(r.town, r.id);
+    return h + `<div class="doc${r.logged?" logged":""}">
+      <div class="line"><span class="full num">${fn}</span><span class="sp" style="flex:1"></span>
+        <button class="btn sm primary" data-copy="${fn}" type="button">نسخ الرقم</button></div>
+      <div class="line"><span class="lbl">نوع العمل:</span><span class="work">${esc(r.work)}</span></div>
+      <div class="line"><span class="note">${esc(r.note)}</span>
+        <button class="btn sm" data-copy="${esc(r.note)}" type="button">نسخ الملاحظة</button></div>
+      <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span><span style="flex:1"></span>
+        <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتها ✓"}</button></div>
+    </div>`;
+  }).join("");
+  main.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
+    <p class="sub" style="margin:0">لكل زيارة: انسخ الرقم ← الصق ← استعلام ← اختار نوع العمل ← انسخ الملاحظة ← الصق ← حفظ ← «وثّقتها»</p>
+    ${logged?`<div class="bar"><label for="showLog"><input type="checkbox" id="showLog" ${showLogged?"checked":""}> عرض الموثّقة (${logged})</label>
+      ${logged?`<button class="btn sm" id="clearLog" type="button">مسح الموثّقة</button>`:""}</div>`:""}
+    ${items || `<div class="empty"><p>ما في زيارات بدها توثيق. لما تضغط «تم» على أي زيارة وتحفظ نتيجتها، بتظهر هون.</p></div>`}
+  </div>`;
+  const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
+  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged) delete results[k]; }); put(RES, results); render(); toast("انمسحت الموثّقة"); };
+}
+$("#tabV").onclick = () => { view = "v"; render(); scrollTo(0,0); };
+$("#tabD").onclick = () => { view = "d"; render(); scrollTo(0,0); };
 
 let tt;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
@@ -308,12 +421,14 @@ document.addEventListener("click", e => {
   const c = e.target.closest("[data-copy]");
   if (c){
     const v = c.dataset.copy;
-    const fb = () => { const el = c.closest(".ph, .coords, .head")?.querySelector(".num"); if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("حدّد النص وانسخه"); };
+    const fb = () => { const el = c.closest(".ph, .coords, .head, .line")?.querySelector(".num, .note"); if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("حدّد النص وانسخه"); };
     try { navigator.clipboard.writeText(v).then(()=>toast("تم النسخ: " + v), fb); } catch(err){ fb(); }
     return;
   }
   const d = e.target.closest("[data-done]");
-  if (d){ const id = d.dataset.done; done[id] = !done[id]; put(DONE, done); render(); }
+  if (d){ openSheet(d.dataset.done); return; }
+  const cp = e.target.closest("[data-logged]");
+  if (cp){ const r = results[cp.dataset.logged]; if (r){ r.logged = !r.logged; put(RES, results); render(); toast(r.logged ? "تم التوثيق ✓" : "رجعت لغير موثّقة"); } }
 });
 $("#importBtn").onclick = () => $("#fileIn").click();
 $("#fileIn").onchange = async e => {
