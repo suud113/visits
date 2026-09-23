@@ -169,11 +169,12 @@ textarea{width:100%;min-height:70px;box-sizing:border-box;border:1px solid var(-
     <input type="file" id="galIn" accept="image/*" multiple hidden>
   </header>
   <div class="tabs" role="tablist">
-    <button type="button" role="tab" id="tabV" aria-selected="true">الزيارات</button>
+    <button type="button" role="tab" id="tabV" aria-selected="true">خط السير</button>
+    <button type="button" role="tab" id="tabM" aria-selected="false">الزيارات المُدخلة</button>
     <button type="button" role="tab" id="tabD" aria-selected="false">التوثيق</button>
   </div>
   <div id="main"></div>
-  <p class="foot">الإحداثيات: الأكثر تكراراً، وعند التعادل الأقدم · التلفونات من الأكثر تكراراً</p>
+  <p class="foot">الإحداثيات: القيمة الأكثر تكراراً، وعند التساوي الأقدم · أرقام الهواتف مرتبة من الأكثر تكراراً</p>
 </div>
 <div class="toast" id="toast" role="status"></div>
 <div class="viewer" id="viewer" hidden><img id="viewerImg" alt="صورة الزيارة"></div>
@@ -257,7 +258,7 @@ function queueDelete(r){
 }
 let syncing = false, syncAgain = false;
 async function syncAll(manual){
-  if (!cfgReady()){ if (manual) { toast("اضبط الإعدادات أول ⚙️"); openSettings(); } return; }
+  if (!cfgReady()){ if (manual) { toast("يرجى ضبط الإعدادات أولاً ⚙️"); openSettings(); } return; }
   if ((!manual && !cfg.auto) || (!navigator.onLine && !manual)) return;
   if (syncing){ syncAgain = true; return; }
   syncing = true; let ok = 0, fail = 0;
@@ -272,15 +273,15 @@ async function syncAll(manual){
         const cur = results[k];
         if (cur && (cur.v || 0) === v){ cur.sent = true; cur.tech = body.tech; cur.sentPhotos = body.photos.map(x => x.k); }
         ok++;
-      } catch(e){ fail++; if (manual && fail === 1) toast("ما انبعت: " + e.message); }
+      } catch(e){ fail++; if (manual && fail === 1) toast("تعذّر الإرسال: " + e.message); }
     }
   } finally { syncing = false; }
   put(RES, results);
   if (syncAgain){ syncAgain = false; setTimeout(() => syncAll(manual), 50); }
   if (ok || fail) render();
-  if (fail) toast(`ما انبعت ${fail} — رح أعيد المحاولة لما يرجع النت`);
-  else if (ok) toast(`☁️ انبعت ${ok} للمدير`);
-  else if (manual) toast("كل الزيارات عند المدير ✓");
+  if (fail) toast(`تعذّر إرسال ${fail} — ستُعاد المحاولة عند عودة الاتصال`);
+  else if (ok) toast(`☁️ أُرسلت ${ok} إلى رئيس القسم`);
+  else if (manual) toast("جميع الزيارات أُرسلت إلى رئيس القسم ✓");
 }
 window.addEventListener("online", () => syncAll());
 
@@ -289,17 +290,17 @@ let deferredInstall = null;
 const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); wireInstall(); });
-window.addEventListener("appinstalled", () => { deferredInstall = null; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); toast("انثبّت التطبيق ✅"); });
+window.addEventListener("appinstalled", () => { deferredInstall = null; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); toast("تم تثبيت التطبيق ✅"); });
 function installBlock(){
-  if (isStandalone()) return `<div class="checks">✅ التطبيق مثبّت على شاشتك</div>`;
+  if (isStandalone()) return `<div class="checks">✅ التطبيق مثبّت على الشاشة الرئيسية</div>`;
   if (deferredInstall) return `<button type="button" class="btn big" id="instBtn">📲 تثبيت التطبيق على الشاشة</button>`;
-  if (isIOS) return `<div class="checks">على الآيفون: خليك على <b>Safari</b> وافتح الروابط منه مباشرة، وما في داعي تثبّته.</div>`;
+  if (isIOS) return `<div class="checks">على الآيفون: استخدم متصفح <b>Safari</b> وافتح الروابط منه مباشرة، ولا حاجة إلى تثبيته.</div>`;
   return `<div class="checks">من قائمة المتصفح <b>⋮</b> ← <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b></div>`;
 }
 function wireInstall(){ const b = $("#instBtn"); if (b) b.onclick = async () => { deferredInstall.prompt(); await deferredInstall.userChoice.catch(()=>{}); deferredInstall = null; const x = $("#instBox"); if (x) x.innerHTML = installBlock(); }; }
 async function shareOrCopy(text, label){
   if (navigator.share){ try { await navigator.share({text}); return; } catch(e){ if (e && e.name === "AbortError") return; } }
-  try { await navigator.clipboard.writeText(text); toast(label + " — انسخ، الصقه بالواتساب"); }
+  try { await navigator.clipboard.writeText(text); toast(label + " — الصقه في واتساب"); }
   catch(e){ prompt("انسخ الرابط", text); }
 }
 const teamFrom = s => String(s || "").split(/\n|،|,/).map(x => x.trim()).filter(Boolean).filter((x,i,a) => a.indexOf(x) === i);
@@ -308,11 +309,11 @@ const teamFrom = s => String(s || "").split(/\n|،|,/).map(x => x.trim()).filter
 function openWelcome(){
   const sh = $("#sheet"), team = cfg.team || [];
   let picked = team.includes(cfg.name) ? cfg.name : "";
-  sh.innerHTML = `<h3>أهلاً فيك بـ«زياراتي» 👋</h3>
-    <p class="hint">خطوتين وبتكون جاهز.</p>
-    <div class="lbl">1. اختار اسمك</div>
+  sh.innerHTML = `<h3>مرحباً بك في «زياراتي» 👋</h3>
+    <p class="hint">خطوتان فقط وتكون جاهزاً.</p>
+    <div class="lbl">1. اختر اسمك</div>
     ${team.length ? `<div class="opts" id="wTeam">${team.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n===picked}">${esc(n)}</button>`).join("")}</div>
-      <p class="hint">اسمك مش بالقائمة؟ اكتبه:</p>` : ""}
+      <p class="hint">اسمك غير موجود في القائمة؟ اكتبه:</p>` : ""}
     <input class="inp" id="wName" value="${picked ? "" : esc(cfg.name)}" placeholder="اسمك الكامل">
     <div class="lbl">2. ثبّت التطبيق</div>
     <div id="instBox">${installBlock()}</div>
@@ -322,12 +323,12 @@ function openWelcome(){
   $("#wName").oninput = () => { picked = ""; sh.querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", "false")); };
   $("#wDone").onclick = async () => {
     const name = $("#wName").value.trim() || picked;
-    if (!name) return toast("اختار اسمك أو اكتبه");
+    if (!name) return toast("اختر اسمك أو اكتبه");
     cfg.name = name; put(CFG, cfg);
     let ok = false;
     try { const r = await fetch(cfg.url, {method:"POST", body: JSON.stringify({token:cfg.token, ping:true})}); ok = (await r.json()).ok; } catch(e){}
     closeSheet(); render();
-    toast(ok ? `أهلاً ${name} ✅ لما يوصلك رابط زيارات اليوم افتحه` : `انحفظ اسمك ✅ بس الربط ما اشتغل — تأكد من النت`);
+    toast(ok ? `مرحباً ${name} ✅ يمكنك الآن توثيق زياراتك` : `تم حفظ اسمك ✅ لكن تعذّر الاتصال — تحقّق من الإنترنت`);
   };
 }
 
@@ -337,14 +338,14 @@ function openSettings(){
   sh.innerHTML = `<h3>الإعدادات</h3>
     <label class="lbl" for="cfgName">اسم الفني</label>
     <input class="inp" id="cfgName" value="${esc(cfg.name)}" placeholder="مثلاً: سعود">
-    <label class="lbl" for="cfgAuto" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="cfgAuto" ${cfg.auto?"checked":""}> إرسال تلقائي بعد «حفظ وتم»</label>
+    <label class="lbl" for="cfgAuto" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="cfgAuto" ${cfg.auto?"checked":""}> إرسال تلقائي إلى رئيس القسم بعد الحفظ</label>
     <div id="instBox">${isStandalone() ? "" : installBlock()}</div>
 
     <div class="lbl" style="margin-top:6px">👥 الفريق</div>
-    <label class="hint" for="cfgTeam">أسماء الزملاء، كل اسم بسطر. بتطلعلهم قائمة يختاروا منها، عشان ما تتكرر الأسماء بالشيت.</label>
+    <label class="hint" for="cfgTeam">أسماء الزملاء، اسم في كل سطر. تظهر لهم قائمة يختارون منها، حتى لا تتكرر الأسماء بصيغ مختلفة في الجدول.</label>
     <textarea id="cfgTeam" placeholder="سعود التحتموني&#10;قصي صوالحة">${esc((cfg.team || []).join("\n"))}</textarea>
     <button type="button" class="btn primary" id="cfgShare">📤 رابط انضمام للزملاء</button>
-    <p class="hint">الزميل بيفتح الرابط، بيختار اسمه، وخلص. رابط الانضمام فيه الرمز السري، فابعته لزملاء القسم بس.</p>
+    <p class="hint">يفتح الزميل الرابط ويختار اسمه فقط. يتضمن رابط الانضمام الرمز السري، لذا أرسله لزملاء القسم فقط.</p>
 
     <details style="display:flex;flex-direction:column;gap:8px">
       <summary class="lbl" style="cursor:pointer">⚙️ إعدادات الربط (متقدم)</summary>
@@ -364,25 +365,25 @@ function openSettings(){
   $("#closeSh").onclick = closeSheet;
   $("#cfgSave").onclick = () => {
     const n = read();
-    if (n.url && !/^https:\/\/script\.google\.com\/.+\/exec/.test(n.url)) return toast("الرابط لازم يبلش بـ script.google.com وينتهي بـ exec");
-    cfg = n; put(CFG, cfg); closeSheet(); render(); toast("انحفظت الإعدادات"); syncAll();
+    if (n.url && !/^https:\/\/script\.google\.com\/.+\/exec/.test(n.url)) return toast("يجب أن يبدأ الرابط بـ script.google.com وينتهي بـ exec");
+    cfg = n; put(CFG, cfg); closeSheet(); render(); toast("تم حفظ الإعدادات"); syncAll();
   };
   $("#cfgTest").onclick = async () => {
-    const n = read(); if (!n.url || !n.token) return toast("عبّي الرابط والرمز أول");
+    const n = read(); if (!n.url || !n.token) return toast("أدخل الرابط والرمز أولاً");
     toast("جاري الاختبار…");
     try { const res = await fetch(n.url, {method:"POST", body: JSON.stringify({token:n.token, ping:true})}); const j = await res.json();
-      toast(j.ok ? "الربط شغال ✅" : "❌ " + (j.error || "فشل")); }
-    catch(e){ toast("❌ ما وصلت للسكربت — تأكد من الرابط والنت"); }
+      toast(j.ok ? "الربط يعمل ✅" : "❌ " + (j.error || "فشل")); }
+    catch(e){ toast("❌ تعذّر الوصول إلى السكربت — تحقّق من الرابط والإنترنت"); }
   };
   $("#cfgShare").onclick = () => {
-    const n = read(); if (!n.url || !n.token) return toast("اضبط إعدادات الربط أول");
+    const n = read(); if (!n.url || !n.token) return toast("اضبط إعدادات الربط أولاً");
     cfg = n; put(CFG, cfg);
     const link = location.origin + location.pathname + "#cfg=" + b64url(JSON.stringify({url:n.url, token:n.token, team:n.team}));
-    shareOrCopy("انضم لتطبيق «زياراتي» 👇\nافتح الرابط واختار اسمك:\n" + link, "انسخ رابط الانضمام");
+    shareOrCopy("انضم إلى تطبيق «زياراتي» 👇\nافتح الرابط واختر اسمك:\n" + link, "تم نسخ رابط الانضمام");
   };
   $("#cfgPasteBtn").onclick = async () => {
     const v = $("#cfgPaste").value.trim(), i = v.indexOf("#");
-    if (i < 0) return toast("الصق الرابط كامل");
+    if (i < 0) return toast("الصق الرابط كاملاً");
     closeSheet(); if (await fromHash(v.slice(i))) render();
   };
 }
@@ -428,7 +429,7 @@ async function fromHash(h){
     try { const c = JSON.parse(unb64url(cm[1]));
       if (c.url) cfg.url = c.url; if (c.token) cfg.token = c.token; if (Array.isArray(c.team) && c.team.length) cfg.team = c.team;
       put(CFG, cfg); setTimeout(openWelcome, 300); }
-    catch(e){ toast("رابط الانضمام ناقص أو تالف"); }
+    catch(e){ toast("رابط الانضمام غير مكتمل أو تالف"); }
     if (own) history.replaceState(null, "", location.pathname);
     return true;
   }
@@ -440,7 +441,7 @@ async function fromHash(h){
     const txt = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
     setData(JSON.parse(txt));
     toast("تم تحميل زيارات " + (data.date || "اليوم"));
-  } catch(e) { toast("الرابط ناقص أو تالف — اطلب رابط جديد"); }
+  } catch(e) { toast("الرابط غير مكتمل أو تالف — اطلب رابطاً جديداً"); }
   if (own) history.replaceState(null, "", location.pathname);
   return true;
 }
@@ -475,8 +476,8 @@ function sortByLocation(){
   if (!navigator.geolocation) return toast("الموقع غير متاح على هذا الجهاز");
   toast("جاري تحديد موقعك…");
   navigator.geolocation.getCurrentPosition(
-    p => { orderFrom({lat:p.coords.latitude, lng:p.coords.longitude}); toast("رتبت المسار من موقعك"); },
-    () => toast("ما قدرت أحدد موقعك — فعّل الـ GPS"),
+    p => { orderFrom({lat:p.coords.latitude, lng:p.coords.longitude}); toast("تم ترتيب المسار انطلاقاً من موقعك"); },
+    () => toast("تعذّر تحديد موقعك — فعّل خدمة الموقع (GPS)"),
     {enableHighAccuracy:true, timeout:15000}
   );
 }
@@ -491,7 +492,7 @@ function alerts(){
   }
   const phones = {};
   S.forEach(s => s.phones.forEach(([p]) => (phones[p] ||= new Set()).add(s.id)));
-  Object.entries(phones).forEach(([p, ids]) => { if (ids.size > 1) out.push(`الرقم <span class="num">${p}</span> لـ ${ids.size} مشتركين: ${[...ids].map(x=>`<span class="num">${x}</span>`).join(" + ")} ← مكالمة وحدة`); });
+  Object.entries(phones).forEach(([p, ids]) => { if (ids.size > 1) out.push(`الرقم <span class="num">${p}</span> لـ ${ids.size} مشتركين: ${[...ids].map(x=>`<span class="num">${x}</span>`).join(" + ")} ← مكالمة واحدة`); });
   const hods = {};
   S.forEach(s => { if (s.land && s.land.hod) (hods[s.land.hod] ||= []).push(s); });
   Object.entries(hods).forEach(([h, arr]) => { if (arr.length > 1) out.push(`حوض ${esc(h)}: ` + arr.map(s=>`قطعة ${esc(s.land.qeta)} (<span class="num">${s.id}</span>)`).join(" · ")); });
@@ -517,25 +518,31 @@ function routeLinks(){
 
 // ---------- render ----------
 function render(){
-  $("#tabV").setAttribute("aria-selected", view==="v"); $("#tabD").setAttribute("aria-selected", view==="d");
+  const planned = data ? data.stops.filter(s => !s.manual) : [], manualN = data ? data.stops.filter(s => s.manual).length : 0;
+  $("#tabV").hidden = !planned.length;
+  if (view === "v" && !planned.length) view = "m";
+  $("#tabV").setAttribute("aria-selected", view==="v"); $("#tabM").setAttribute("aria-selected", view==="m"); $("#tabD").setAttribute("aria-selected", view==="d");
+  $("#tabM").textContent = "الزيارات المُدخلة" + (manualN ? ` (${manualN})` : "");
+  if (view !== "v") $("#app").classList.remove("hide-done");
+  if (view === "m") return renderManual();
   const pending = Object.values(results).filter(r=>!r.logged).length;
   $("#tabD").textContent = "التوثيق" + (pending ? ` (${pending})` : "");
   if (view === "d") return renderDocs();
   syncDone();
   const main = $("#main");
   if (!data){
-    $("#sub").textContent = "ما في زيارات محمّلة";
+    $("#sub").textContent = "لا توجد زيارات محمّلة";
     main.innerHTML = `<div class="empty">
-      ${cfg.name ? `<p style="color:var(--ink);font-weight:700">أهلاً ${esc(cfg.name)} 👋</p>` : ""}
-      <p>لسا ما في زيارات اليوم. بعد ما تخلص أي زيارة، اضغط <b>➕ توثيق زيارة</b> وسجّل شو عملت.</p>
+      ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)} 👋</p>` : ""}
+      <p>لا توجد زيارات اليوم. بعد إنجاز أي زيارة، اضغط <b>➕ توثيق زيارة</b> وسجّل ما تم.</p>
       <button class="btn primary big" type="button" id="addBtn0">➕ توثيق زيارة</button>
-      ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختار اسمك</button>` : ""}
+      ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختر اسمك</button>` : ""}
       <button class="btn" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف</button></div>`;
     const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
     $("#addBtn0").onclick = () => openSheet(null, true);
     return;
   }
-  const S = data.stops, n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s) && !s.manual).length;
+  const S = data.stops.filter(s => !s.manual), n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s)).length;
   $("#sub").textContent = [data.date, data.area].filter(Boolean).join(" · ");
   const al = alerts(), routes = routeLinks(), sh = sharedMap();
   let prev = null;
@@ -553,7 +560,7 @@ function render(){
         <span>${d!=null ? `~${d}م من الموقع السابق` : "أول موقع"}</span></div>
         <a class="btn primary big" href="${navUrl(s)}" target="_blank" rel="noopener">اذهب ← خرائط جوجل</a>`;
     } else {
-      loc = `<div class="nocoord"><strong>${s.land ? "ما في احداثيات لكن في بيانات للاراضي" : "ما في احداثيات"}</strong>
+      loc = `<div class="nocoord"><strong>${s.land ? "لا توجد إحداثيات، لكن توجد بيانات للأراضي" : "لا توجد إحداثيات"}</strong>
         ${s.land || s.addr ? `<dl>${s.land?`<dt>الحوض</dt><dd>${esc(s.land.hod)}</dd><dt>القطعة</dt><dd>${esc(s.land.qeta)}</dd>`:""}${s.addr?`<dt>العنوان</dt><dd>${esc(s.addr)}</dd>`:""}</dl>` : ""}</div>`;
     }
     const extra = hasC(s) && (s.land || s.addr) ? `<div class="addr">${s.land?`حوض ${esc(s.land.hod)} – قطعة ${esc(s.land.qeta)}`:""}${s.land&&s.addr?" · ":""}${esc(s.addr||"")}</div>` : "";
@@ -567,7 +574,7 @@ function render(){
           <a class="btn sm wa" href="https://wa.me/${intl(p)}" target="_blank" rel="noopener">واتساب</a>
           <button class="btn sm" data-copy="${esc(p)}" type="button">نسخ</button>
         </span></div>`;
-    }).join("") || `<div class="ph"><span class="cnt">ما في أرقام تلفون</span></div>`;
+    }).join("") || `<div class="ph"><span class="cnt">لا توجد أرقام هواتف</span></div>`;
     return `<article class="card${done[s.id]?" done":""}">
       <div class="head"><span class="seq">${i+1}</span><span class="sid num">${esc(s.id)}</span>
         <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
@@ -593,11 +600,11 @@ function render(){
         ${noC?`<span class="stat"><b class="num">${noC}</b>بدون إحداثيات</span>`:""}
       </div>
       <div class="progress"><i style="width:${S.length?n/S.length*100:0}%"></i></div>
-      <div class="routes">${routes.map((r,k)=>`<a class="btn primary big" href="${r.url}" target="_blank" rel="noopener">${routes.length>1?`المسار (${r.from}–${r.to}) على الخريطة`:"افتح المسار كامل على الخريطة"}</a>`).join("")}</div>
+      <div class="routes">${routes.map((r,k)=>`<a class="btn primary big" href="${r.url}" target="_blank" rel="noopener">${routes.length>1?`المسار (${r.from}–${r.to}) على الخريطة`:"افتح المسار كاملاً على الخريطة"}</a>`).join("")}</div>
       ${al.length?`<section class="alerts"><h2>تنبيهات</h2><ul>${al.map(a=>`<li><span>${a}</span></li>`).join("")}</ul></section>`:""}
       <div class="bar">
-        <label for="hideDone"><input type="checkbox" id="hideDone" ${get(HIDE,false)?"checked":""}> إخفاء المنجز</label>
-        <span class="grp"><button class="btn sm primary" id="addBtn" type="button">➕ زيارة</button><button class="btn sm" id="exportBtn" type="button">⬇️ Excel</button><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
+        <label for="hideDone"><input type="checkbox" id="hideDone" ${get(HIDE,false)?"checked":""}> إخفاء المُنجَز</label>
+        <span class="grp"><button class="btn sm" id="exportBtn" type="button">⬇️ Excel</button><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
         <button class="btn sm" id="resetBtn" type="button">تصفير</button></span>
       </div>
       <div id="list">${cards}</div>
@@ -605,8 +612,7 @@ function render(){
   $("#app").classList.toggle("hide-done", get(HIDE,false));
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
   $("#locBtn").onclick = sortByLocation;
-  $("#addBtn").onclick = () => openSheet(null, true);
-  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteVisit(b.dataset.del), "متأكد؟"));
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteVisit(b.dataset.del), "هل أنت متأكد؟"));
   fillThumbs(main).then(() => main.querySelectorAll(".card img[data-pk]").forEach(im => im.onclick = () => viewPhoto(im.src)));
   $("#exportBtn").onclick = exportExcel;
   $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
@@ -625,9 +631,9 @@ function openSheet(id, isNew){
   const drawChecks = () => {
     $("#chkBox").innerHTML = `
       <span class="q">هل ختم المودم موجود؟</span>${yn("modemSeal")}
-      <span class="q sub2">هل وجد سليم؟</span>${yn("modemOk", chk.modemSeal!=="yes")}
+      <span class="q sub2">هل وُجد سليماً؟</span>${yn("modemOk", chk.modemSeal!=="yes")}
       <span class="q">هل ختم الكونيكشن موجود؟</span>${yn("connSeal")}
-      <span class="q sub2">هل وجد سليم؟</span>${yn("connOk", chk.connSeal!=="yes")}
+      <span class="q sub2">هل وُجد سليماً؟</span>${yn("connOk", chk.connSeal!=="yes")}
       <span class="q">هل يوجد ضعف شبكة؟</span>${yn("weak")}`;
     $("#chkBox").querySelectorAll("[data-f]").forEach(b => b.onclick = () => {
       const f = b.dataset.f; chk[f] = chk[f] === b.dataset.v ? "" : b.dataset.v;
@@ -640,7 +646,7 @@ function openSheet(id, isNew){
     const all = [...photos.map(k => ({k})), ...added.map((a,i) => ({a, i}))];
     $("#phBox").innerHTML = all.map((x,n) => `<div class="thumb"><img alt="" ${x.k?`data-pk="${x.k}"`:`data-new="${x.i}"`}>
       <button type="button" class="x" ${x.k?`data-rk="${x.k}"`:`data-rn="${x.i}"`} aria-label="حذف الصورة">×</button>${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")
-      || `<span class="sub" style="margin:0">ما في صور</span>`;
+      || `<span class="sub" style="margin:0">لا توجد صور</span>`;
     $("#phBox").querySelectorAll("img[data-new]").forEach(im => im.src = added[+im.dataset.new].url);
     await fillThumbs($("#phBox"));
     $("#phBox").querySelectorAll("img").forEach(im => im.onclick = () => viewPhoto(im.src));
@@ -648,7 +654,7 @@ function openSheet(id, isNew){
     $("#phBox").querySelectorAll("[data-rn]").forEach(b => b.onclick = () => { added.splice(+b.dataset.rn, 1); drawPhotos(); });
   };
   const onFiles = async files => {
-    for (const f of files){ try { const c = await compress(f); added.push({...c, url: URL.createObjectURL(c.blob)}); } catch(e){ toast("ما قدرت أقرأ الصورة"); } }
+    for (const f of files){ try { const c = await compress(f); added.push({...c, url: URL.createObjectURL(c.blob)}); } catch(e){ toast("تعذّرت قراءة الصورة"); } }
     drawPhotos();
   };
   sh.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${isNew ? "➕ توثيق زيارة" : `نتيجة الزيارة · <span class="num">${esc(id)}</span>`}</h3>
@@ -656,7 +662,7 @@ function openSheet(id, isNew){
     ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
     <label class="lbl" for="fullIn">رقم الاشتراك (10 خانات)</label>
     <input class="inp num" id="fullIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="0010132777" value="${isNew ? "" : esc((old && old.full) || stopFull(s))}">
-    <p class="hint">أول 3 خانات رقم البلدة (اربد 001، جرش 004…). تأكد منه قبل الحفظ.</p>
+    <p class="hint">الخانات الثلاث الأولى رقم البلدة (إربد 001، جرش 004…). تحقّق منه قبل الحفظ.</p>
     <div class="lbl">المهمة *</div>
     <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
     <div class="lbl">الفحص</div>
@@ -665,9 +671,9 @@ function openSheet(id, isNew){
     <div class="photos" id="phBox"></div>
     <div class="row"><button type="button" class="btn" id="camBtn">📷 كاميرا</button><button type="button" class="btn" id="galBtn">🖼️ من المعرض</button></div>
     <label class="lbl" for="noteIn">الملاحظة *</label>
-    <textarea id="noteIn" placeholder="اكتب الإجراء الفعلي اللي تم عند المشترك">${esc(old ? old.note : "")}</textarea>
-    <div class="row"><button type="button" class="btn primary" id="saveRes">حفظ وتم</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
-    ${old?`<button type="button" class="btn danger" id="undoRes">${s.manual ? "حذف الزيارة" : old.logged ? "حذف النتيجة (موثّقة)" : "إلغاء تم"}</button>`:""}`;
+    <textarea id="noteIn" placeholder="اكتب الإجراء الفعلي الذي تم لدى المشترك">${esc(old ? old.note : "")}</textarea>
+    <div class="row"><button type="button" class="btn primary" id="saveRes">حفظ</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
+    ${old?`<button type="button" class="btn danger" id="undoRes">${s.manual ? "حذف الزيارة" : old.logged ? "حذف النتيجة (موثّقة)" : "إلغاء الإنجاز"}</button>`:""}`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0;
   drawChecks(); drawPhotos();
   if (isNew) setTimeout(() => $("#fullIn").focus(), 250);
@@ -678,15 +684,15 @@ function openSheet(id, isNew){
   $("#saveRes").onclick = async () => {
     const note = $("#noteIn").value.trim();
     const full = clean10($("#fullIn").value);
-    if (full.length !== 10) return toast("رقم الاشتراك لازم يكون 10 خانات");
+    if (full.length !== 10) return toast("يجب أن يتكون رقم الاشتراك من 10 خانات");
     const newId = String(parseInt(full.slice(3), 10));
-    if (!+newId) return toast("رقم المشترك غلط");
-    if (!s.manual && newId !== String(parseInt(clean10(id), 10))) return toast("آخر 7 خانات لازم تطابق رقم المشترك " + id);
-    if (!work) return toast("اختار المهمة");
+    if (!+newId) return toast("رقم المشترك غير صحيح");
+    if (!s.manual && newId !== String(parseInt(clean10(id), 10))) return toast("يجب أن تطابق الخانات السبع الأخيرة رقم المشترك " + id);
+    if (!work) return toast("اختر المهمة");
     if (!note) return toast("اكتب الملاحظة");
     const sameDay = data && data.date === todayStr();
     if (s.manual && newId !== s.id && data && (isNew ? sameDay : true) && data.stops.some(x => x.id === newId && x !== s))
-      return toast("المشترك " + newId + " موجود بالقائمة — افتحه من بطاقته");
+      return toast("المشترك " + newId + " موجود في القائمة — افتحه من بطاقته");
     if (isNew && !sameDay) data = {date: todayStr(), area:"", town: String(parseInt(full.slice(0,3),10)), stops: []};
     if (!isNew && s.manual && newId !== s.id && old){ queueDelete(old); delete results[key]; }
     if (s.manual) s.id = newId;
@@ -696,15 +702,15 @@ function openSheet(id, isNew){
       for (const k of removed) await IDB.del(k);
       for (const a of added){ const k = key + "|" + Date.now() + Math.random().toString(36).slice(2,6); await IDB.put(k, {blob:a.blob, w:a.w, h:a.h}); photos.push(k); }
       if (added.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
-    } catch(e){ toast("مشكلة بحفظ الصور — جرّب مرة ثانية"); return; }
+    } catch(e){ toast("حدثت مشكلة في حفظ الصور — حاول مرة أخرى"); return; }
     s.full = full; put(STORE, data);
     results[key] = {date:data.date, id:s.id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
       stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || []};
-    put(RES, results); closeSheet(); view = "v"; render(); toast((isNew ? "انضافت الزيارة " : "انحفظت نتيجة ") + s.id); syncAll();
+    put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تمت إضافة الزيارة " : "تم حفظ نتيجة ") + s.id); syncAll();
   };
   if (old){
-    const del = e => confirmTap(e.currentTarget, () => deleteVisit(s.id), "متأكد؟ اضغط مرة ثانية");
+    const del = e => confirmTap(e.currentTarget, () => deleteVisit(s.id), "هل أنت متأكد؟ اضغط مرة أخرى");
     $("#undoRes").onclick = del; $("#delTop").onclick = del;
   }
 }
@@ -713,15 +719,41 @@ async function deleteVisit(id){
   const key = rkey(id), r = results[key];
   if (r){ for (const k of (r.photos||[])) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[key]; put(RES, results); }
   if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
-  closeSheet(); render(); toast(s.manual ? "انحذفت الزيارة " + id : "انلغت نتيجة " + id); syncAll();
+  closeSheet(); render(); toast(s.manual ? "تم حذف الزيارة " + id : "تم إلغاء نتيجة " + id); syncAll();
 }
 function confirmTap(btn, fn, msg){
-  if (!btn.dataset.sure){ btn.dataset.sure = "1"; const t = btn.textContent; btn.textContent = msg || "متأكد؟ اضغط مرة ثانية";
+  if (!btn.dataset.sure){ btn.dataset.sure = "1"; const t = btn.textContent; btn.textContent = msg || "هل أنت متأكد؟ اضغط مرة أخرى";
     setTimeout(() => { if (btn.isConnected){ delete btn.dataset.sure; btn.textContent = t; } }, 4000); return; }
   fn();
 }
 function closeSheet(){ $("#sheetBg").hidden = true; }
 $("#sheetBg").addEventListener("click", e => { if (e.target.id === "sheetBg") closeSheet(); });
+
+// ---------- entered (manual) visits view ----------
+function renderManual(){
+  const main = $("#main"), M = data ? data.stops.filter(s => s.manual) : [];
+  $("#sub").textContent = [data ? data.date : todayStr(), cfg.name].filter(Boolean).join(" · ");
+  const cards = M.map((s, i) => { const r = results[rkey(s.id)] || {};
+    return `<article class="card done">
+      <div class="head"><span class="seq">${i+1}</span><span class="sid num">${esc(s.id)}</span><span class="sp"></span>
+        <button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">🗑️</button>
+        <button class="btn sm" data-done="${esc(s.id)}" type="button">✏️ تعديل</button></div>
+      <div class="res"><span class="num">${esc(stopFull(s))}</span> · ${esc(r.work || "")} · ${esc(r.note || "")}${(r.photos||[]).length ? ` · 📷 ${r.photos.length}` : ""}</div>
+    </article>`; }).join("");
+  main.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
+    <button class="btn primary big" id="addBtnM" type="button">➕ توثيق زيارة جديدة</button>
+    ${M.length ? `<div class="summary"><span class="stat"><b class="num">${M.length}</b>زيارة مُدخلة</span></div><div id="list">${cards}</div>
+      <button class="btn" id="exportBtnM" type="button">⬇️ تصدير زيارات اليوم إلى Excel</button>`
+    : `<div class="empty">
+      ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)} 👋</p>` : ""}
+      <p>لا توجد زيارات مُدخلة اليوم. بعد إنجاز أي زيارة، اضغط <b>«توثيق زيارة جديدة»</b> وسجّل ما تم.</p>
+      ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختر اسمك</button>` : ""}</div>`}
+  </div>`;
+  $("#addBtnM").onclick = () => openSheet(null, true);
+  const ex = $("#exportBtnM"); if (ex) ex.onclick = exportExcel;
+  const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteVisit(b.dataset.del), "هل أنت متأكد؟"));
+}
 
 // ---------- documentation view ----------
 function renderDocs(){
@@ -730,7 +762,7 @@ function renderDocs(){
   const pend = all.filter(r => !r.logged).length, logged = all.length - pend;
   if (!showLogged) all = all.filter(r => !r.logged);
   all.sort((a,b) => (a.logged - b.logged) || String(a.at).localeCompare(String(b.at)));
-  $("#sub").textContent = pend ? `${pend} زيارة بدها توثيق` : "كل الزيارات موثّقة";
+  $("#sub").textContent = pend ? `${pend} زيارة بانتظار التوثيق` : "جميع الزيارات موثّقة";
   let lastDate = "";
   const items = all.map(r => {
     const h = r.date !== lastDate ? `<div class="dhead">${esc(r.date)}</div>` : ""; lastDate = r.date;
@@ -746,28 +778,29 @@ function renderDocs(){
         <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
       ${(r.photos||[]).length?`<div class="photos">${r.photos.map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}</div>`:""}
       <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span>
-        ${cfgReady() ? (r.sent ? `<span class="sync ok">☁️ عند المدير</span>` : `<span class="sync">⏳ لسا ما انبعت</span>`) : ""}<span style="flex:1"></span>
-        <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتها ✓"}</button></div>
+        ${cfgReady() ? (r.sent ? `<span class="sync ok">☁️ وصلت إلى رئيس القسم</span>` : `<span class="sync">⏳ لم تُرسل بعد</span>`) : ""}<span style="flex:1"></span>
+        <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتُها ✓"}</button></div>
     </div>`;
   }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     ${(() => { const un = Object.values(results).filter(r => !r.sent).length;
-      return cfgReady() ? `<button class="btn${un?" primary":""}" id="sendBtn" type="button">☁️ ${un ? `إرسال ${un} للمدير` : "كل الزيارات عند المدير ✓"}</button>`
-        : `<button class="btn" id="sendBtn" type="button">☁️ ربط مع المدير (Google Sheet)</button>`; })()}
+      return cfgReady() ? `<button class="btn${un?" primary":""}" id="sendBtn" type="button">☁️ ${un ? `إرسال ${un} إلى رئيس القسم` : "جميع الزيارات أُرسلت إلى رئيس القسم ✓"}</button>`
+        : `<button class="btn" id="sendBtn" type="button">☁️ الربط مع رئيس القسم (Google Sheet)</button>`; })()}
     ${data?`<button class="btn" id="exportBtn2" type="button">⬇️ تصدير زيارات ${esc(data.date)} إلى Excel</button>`:""}
-    <p class="sub" style="margin:0">لكل زيارة: انسخ الرقم ← الصق ← استعلام ← اختار نوع العمل ← انسخ الملاحظة ← الصق ← حفظ ← «وثّقتها»</p>
+    <p class="sub" style="margin:0">لكل زيارة: انسخ الرقم ← الصقه ← استعلام ← اختر نوع العمل ← انسخ الملاحظة ← الصقها ← حفظ ← «وثّقتُها»</p>
     ${logged?`<div class="bar"><label for="showLog"><input type="checkbox" id="showLog" ${showLogged?"checked":""}> عرض الموثّقة (${logged})</label>
       ${logged?`<button class="btn sm" id="clearLog" type="button">مسح الموثّقة</button>`:""}</div>`:""}
-    ${items || `<div class="empty"><p>ما في زيارات بدها توثيق. لما تضغط «تم» على أي زيارة وتحفظ نتيجتها، بتظهر هون.</p></div>`}
+    ${items || `<div class="empty"><p>لا توجد زيارات بانتظار التوثيق. عند حفظ نتيجة أي زيارة ستظهر هنا.</p></div>`}
   </div>`;
   fillThumbs(main).then(() => main.querySelectorAll(".doc img").forEach(im => im.onclick = () => viewPhoto(im.src)));
   const ex = $("#exportBtn2"); if (ex) ex.onclick = exportExcel;
   main.querySelectorAll("[data-editfull]").forEach(b => b.onclick = () => editFull(b.dataset.editfull));
   const sn = $("#sendBtn"); if (sn) sn.onclick = () => syncAll(true);
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
-  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("انمسحت الموثّقة"); };
+  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
 }
 $("#tabV").onclick = () => { view = "v"; render(); scrollTo(0,0); };
+$("#tabM").onclick = () => { view = "m"; render(); scrollTo(0,0); };
 $("#tabD").onclick = () => { view = "d"; render(); scrollTo(0,0); };
 
 // ---------- Excel export ----------
@@ -776,9 +809,9 @@ function loadExcelJS(){
   return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "exceljs.min.js"; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
 }
 async function exportExcel(){
-  if (!data) return toast("ما في زيارات محمّلة");
+  if (!data) return toast("لا توجد زيارات محمّلة");
   toast("جاري تجهيز ملف Excel…");
-  try { await loadExcelJS(); } catch(e){ return toast("لازم نت أول مرة عشان يتحمّل التصدير"); }
+  try { await loadExcelJS(); } catch(e){ return toast("يلزم الاتصال بالإنترنت في المرة الأولى لتحميل أداة التصدير"); }
   const wb = new ExcelJS.Workbook(); wb.creator = "زياراتي";
   const ws = wb.addWorksheet("الزيارات", {views:[{rightToLeft:true, state:"frozen", ySplit:1}]});
   const cols = [
@@ -829,7 +862,7 @@ async function exportExcel(){
     <button type="button" class="btn" id="closeSh">إغلاق</button>`;
   $("#sheetBg").hidden = false;
   $("#closeSh").onclick = closeSheet;
-  $("#dlX").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast("انحفظ بالتنزيلات"); };
+  $("#dlX").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast("تم الحفظ في التنزيلات"); };
   const shx = $("#shX"); if (shx) shx.onclick = () => navigator.share({files:[file], title:name}).catch(()=>{});
 }
 
@@ -844,11 +877,11 @@ function editFull(k){
   $("#closeSh").onclick = closeSheet;
   $("#efSave").onclick = () => {
     const full = clean10($("#efIn").value);
-    if (full.length !== 10) return toast("رقم الاشتراك لازم يكون 10 خانات");
-    if (String(parseInt(full.slice(3), 10)) !== String(parseInt(r.id, 10))) return toast("آخر 7 خانات لازم تطابق رقم المشترك " + r.id);
+    if (full.length !== 10) return toast("يجب أن يتكون رقم الاشتراك من 10 خانات");
+    if (String(parseInt(full.slice(3), 10)) !== String(parseInt(r.id, 10))) return toast("يجب أن تطابق الخانات السبع الأخيرة رقم المشترك " + r.id);
     r.full = full; r.town = String(parseInt(full.slice(0,3),10)); r.sent = false; r.v = (r.v||0) + 1;
     if (data && data.date === r.date){ const s = data.stops.find(x => x.id === r.id); if (s){ s.full = full; put(STORE, data); } }
-    put(RES, results); closeSheet(); render(); toast("انحفظ الرقم"); syncAll();
+    put(RES, results); closeSheet(); render(); toast("تم حفظ الرقم"); syncAll();
   };
 }
 
@@ -859,26 +892,26 @@ document.addEventListener("click", e => {
   const c = e.target.closest("[data-copy]");
   if (c){
     const v = c.dataset.copy;
-    const fb = () => { const el = c.closest(".ph, .coords, .head, .line")?.querySelector(".num, .note"); if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("حدّد النص وانسخه"); };
+    const fb = () => { const el = c.closest(".ph, .coords, .head, .line")?.querySelector(".num, .note"); if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("حدّد النص وانسخه يدوياً"); };
     try { navigator.clipboard.writeText(v).then(()=>toast("تم النسخ: " + v), fb); } catch(err){ fb(); }
     return;
   }
   const d = e.target.closest("[data-done]");
   if (d){ openSheet(d.dataset.done); return; }
   const cp = e.target.closest("[data-logged]");
-  if (cp){ const r = results[cp.dataset.logged]; if (r){ r.logged = !r.logged; put(RES, results); render(); toast(r.logged ? "تم التوثيق ✓" : "رجعت لغير موثّقة"); } }
+  if (cp){ const r = results[cp.dataset.logged]; if (r){ r.logged = !r.logged; put(RES, results); render(); toast(r.logged ? "تم التوثيق ✓" : "أُعيدت إلى غير موثّقة"); } }
 });
 $("#importBtn").onclick = () => $("#fileIn").click();
 $("#fileIn").onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try { setData(JSON.parse(await f.text())); render(); toast("تم استيراد " + data.stops.length + " موقع"); }
-  catch(err){ toast("الملف مش صحيح — تأكد إنه ملف الزيارات"); }
+  catch(err){ toast("الملف غير صحيح — تأكد أنه ملف الزيارات"); }
   e.target.value = "";
 };
 window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
 
 (async () => { await fromHash(); render(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 10;
+const APP_VERSION = 12;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
