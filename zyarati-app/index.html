@@ -129,6 +129,22 @@ textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:1
 .doc .note{flex:1;min-width:200px;font-size:14px;background:var(--bg);border-radius:8px;padding:8px 10px}
 .doc .meta{font-size:12px;color:var(--muted)}
 .dhead{font-size:13px;color:var(--muted);font-weight:700;margin-top:4px}
+.chk{display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center;background:var(--bg);border-radius:12px;padding:10px 12px}
+.chk .q{font-size:14px;font-weight:600}
+.chk .q.sub2{font-weight:500;color:var(--muted);padding-inline-start:14px}
+.yn{display:flex;gap:6px}
+.yn .opt{min-width:52px;text-align:center;padding:7px 10px;background:var(--surface)}
+.yn .opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.yn .opt[aria-pressed="true"][data-v="no"]{background:#B3261E;border-color:#B3261E;color:#fff}
+.yn .opt:disabled{opacity:.35}
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .x{position:absolute;top:2px;inset-inline-end:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font:700 14px var(--sans);cursor:pointer}
+.thumb .tag0{position:absolute;bottom:0;inset-inline:0;background:rgba(11,110,94,.85);color:#fff;font-size:10.5px;text-align:center;padding:1px 0}
+.checks{font-size:13px;color:var(--ink);background:var(--bg);border-radius:8px;padding:6px 10px}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:20;display:flex;align-items:center;justify-content:center}
+.viewer img{max-width:100%;max-height:100%}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -141,6 +157,8 @@ textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:1
     </div>
     <button class="btn sm" id="importBtn" type="button">استيراد ملف</button>
     <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
+    <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galIn" accept="image/*" multiple hidden>
   </header>
   <div class="tabs" role="tablist">
     <button type="button" role="tab" id="tabV" aria-selected="true">الزيارات</button>
@@ -150,6 +168,7 @@ textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:1
   <p class="foot">الإحداثيات: الأكثر تكراراً، وعند التعادل الأقدم · التلفونات من الأكثر تكراراً</p>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div class="viewer" id="viewer" hidden><img id="viewerImg" alt="صورة الزيارة"></div>
 <div class="sheet-bg" id="sheetBg" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
 <script>
@@ -162,6 +181,40 @@ const get = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON
 const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
 
 let data = get(STORE, null);
+// ---------- photo storage (IndexedDB) ----------
+const IDB = (() => {
+  let dbp;
+  const db = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("visits-photos", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("p");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const run = (mode, fn) => db().then(d => new Promise((res, rej) => {
+    const t = d.transaction("p", mode), req = fn(t.objectStore("p"));
+    t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+  }));
+  return { put: (k, v) => run("readwrite", s => s.put(v, k)), get: k => run("readonly", s => s.get(k)), del: k => run("readwrite", s => s.delete(k)) };
+})();
+async function compress(file, max = 1280, q = 0.72){
+  let bmp; try { bmp = await createImageBitmap(file, {imageOrientation:"from-image"}); } catch(e) { bmp = await createImageBitmap(file); }
+  const sc = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width*sc); c.height = Math.round(bmp.height*sc);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", q));
+  return {blob, w:c.width, h:c.height};
+}
+const urlCache = {};
+async function photoUrl(k){ if (urlCache[k]) return urlCache[k]; const v = await IDB.get(k).catch(()=>null); return v ? (urlCache[k] = URL.createObjectURL(v.blob)) : ""; }
+async function fillThumbs(root){ for (const img of root.querySelectorAll("img[data-pk]")) img.src = await photoUrl(img.dataset.pk); }
+function viewPhoto(src){ $("#viewerImg").src = src; $("#viewer").hidden = false; }
+$("#viewer").onclick = () => { $("#viewer").hidden = true; };
+const YN = {yes:"نعم", no:"لا"};
+function checksText(c){
+  if (!c) return "";
+  const seal = (name, has, ok) => has === "no" ? `${name}: غير موجود` : has === "yes" ? `${name}: موجود${ok==="yes"?" وسليم":ok==="no"?" وغير سليم":""}` : "";
+  return [seal("ختم المودم", c.modemSeal, c.modemOk), seal("ختم الكونيكشن", c.connSeal, c.connOk), c.weak ? `ضعف شبكة: ${YN[c.weak]}` : ""].filter(Boolean).join(" · ");
+}
+
 let results = get(RES, {});
 let done = {}, view = "v";
 const rkey = id => data.date + "|" + id;
@@ -317,7 +370,7 @@ function render(){
         <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
         <span class="sp"></span>
         <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button></div>
-      ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}</div>`:""}
+      ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · 📷 ${results[rkey(s.id)].photos.length}`:""}</div>`:""}
       <div class="body">
         ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
         ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
@@ -338,7 +391,7 @@ function render(){
       ${al.length?`<section class="alerts"><h2>تنبيهات</h2><ul>${al.map(a=>`<li><span>${a}</span></li>`).join("")}</ul></section>`:""}
       <div class="bar">
         <label for="hideDone"><input type="checkbox" id="hideDone" ${get(HIDE,false)?"checked":""}> إخفاء المنجز</label>
-        <span class="grp"><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
+        <span class="grp"><button class="btn sm" id="exportBtn" type="button">⬇️ Excel</button><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
         <button class="btn sm" id="resetBtn" type="button">تصفير</button></span>
       </div>
       <div id="list">${cards}</div>
@@ -346,36 +399,83 @@ function render(){
   $("#app").classList.toggle("hide-done", get(HIDE,false));
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
   $("#locBtn").onclick = sortByLocation;
-  $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged) delete results[rkey(s.id)]; }); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
+  $("#exportBtn").onclick = exportExcel;
+  $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[rkey(s.id)]; } }); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
 }
 
 // ---------- result sheet ----------
 function openSheet(id){
   const s = data.stops.find(x => x.id === id); if (!s) return;
-  const old = results[rkey(id)];
+  const key = rkey(id), old = results[key];
   let work = old ? old.work : guessWork(s.task);
+  const chk = Object.assign({modemSeal:"", modemOk:"", connSeal:"", connOk:"", weak:""}, old && old.checks);
+  let photos = (old && old.photos ? old.photos.slice() : []);   // existing keys
+  const added = [], removed = [];
   const sh = $("#sheet");
+  const yn = (f, dis) => `<span class="yn">${["yes","no"].map(v=>`<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}" ${dis?"disabled":""}>${YN[v]}</button>`).join("")}</span>`;
+  const drawChecks = () => {
+    $("#chkBox").innerHTML = `
+      <span class="q">هل ختم المودم موجود؟</span>${yn("modemSeal")}
+      <span class="q sub2">هل وجد سليم؟</span>${yn("modemOk", chk.modemSeal!=="yes")}
+      <span class="q">هل ختم الكونيكشن موجود؟</span>${yn("connSeal")}
+      <span class="q sub2">هل وجد سليم؟</span>${yn("connOk", chk.connSeal!=="yes")}
+      <span class="q">هل يوجد ضعف شبكة؟</span>${yn("weak")}`;
+    $("#chkBox").querySelectorAll("[data-f]").forEach(b => b.onclick = () => {
+      const f = b.dataset.f; chk[f] = chk[f] === b.dataset.v ? "" : b.dataset.v;
+      if (f === "modemSeal" && chk.modemSeal !== "yes") chk.modemOk = "";
+      if (f === "connSeal" && chk.connSeal !== "yes") chk.connOk = "";
+      drawChecks();
+    });
+  };
+  const drawPhotos = async () => {
+    const all = [...photos.map(k => ({k})), ...added.map((a,i) => ({a, i}))];
+    $("#phBox").innerHTML = all.map((x,n) => `<div class="thumb"><img alt="" ${x.k?`data-pk="${x.k}"`:`data-new="${x.i}"`}>
+      <button type="button" class="x" ${x.k?`data-rk="${x.k}"`:`data-rn="${x.i}"`} aria-label="حذف الصورة">×</button>${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")
+      || `<span class="sub" style="margin:0">ما في صور</span>`;
+    $("#phBox").querySelectorAll("img[data-new]").forEach(im => im.src = added[+im.dataset.new].url);
+    await fillThumbs($("#phBox"));
+    $("#phBox").querySelectorAll("img").forEach(im => im.onclick = () => viewPhoto(im.src));
+    $("#phBox").querySelectorAll("[data-rk]").forEach(b => b.onclick = () => { removed.push(b.dataset.rk); photos = photos.filter(k => k !== b.dataset.rk); drawPhotos(); });
+    $("#phBox").querySelectorAll("[data-rn]").forEach(b => b.onclick = () => { added.splice(+b.dataset.rn, 1); drawPhotos(); });
+  };
+  const onFiles = async files => {
+    for (const f of files){ try { const c = await compress(f); added.push({...c, url: URL.createObjectURL(c.blob)}); } catch(e){ toast("ما قدرت أقرأ الصورة"); } }
+    drawPhotos();
+  };
   sh.innerHTML = `<h3>نتيجة الزيارة · <span class="num">${esc(id)}</span></h3>
     ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
     <div class="lbl">نوع العمل</div>
     <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
+    <div class="lbl">الفحص</div>
+    <div class="chk" id="chkBox"></div>
+    <div class="lbl">الصور (أول صورة = صورة العداد)</div>
+    <div class="photos" id="phBox"></div>
+    <div class="row"><button type="button" class="btn" id="camBtn">📷 كاميرا</button><button type="button" class="btn" id="galBtn">🖼️ من المعرض</button></div>
     <div class="lbl">الملاحظة: اختر جاهزة أو اكتب</div>
     <div class="tpls">${NOTES.map((n,i)=>`<button type="button" class="opt" data-n="${i}">${esc(n)}</button>`).join("")}</div>
     <textarea id="noteIn" placeholder="الإجراء الفعلي اللي تم عند المشترك">${esc(old ? old.note : "")}</textarea>
     <div class="row"><button type="button" class="btn primary" id="saveRes">حفظ وتم</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
     ${old?`<button type="button" class="btn danger" id="undoRes">${old.logged?"حذف النتيجة (موثّقة)":"إلغاء تم"}</button>`:""}`;
-  $("#sheetBg").hidden = false;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0;
+  drawChecks(); drawPhotos();
   sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
   sh.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { $("#noteIn").value = NOTES[+b.dataset.n]; });
+  $("#camBtn").onclick = () => { $("#camIn").value = ""; $("#camIn").onchange = e => onFiles(e.target.files); $("#camIn").click(); };
+  $("#galBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = e => onFiles(e.target.files); $("#galIn").click(); };
   $("#closeSh").onclick = closeSheet;
-  $("#saveRes").onclick = () => {
+  $("#saveRes").onclick = async () => {
     const note = $("#noteIn").value.trim();
     if (!work) return toast("اختار نوع العمل");
     if (!note) return toast("اكتب الملاحظة أو اختار وحدة جاهزة");
-    results[rkey(id)] = {date:data.date, id, town:s.town || data.town || "1", work, note, at:new Date().toISOString(), logged: old ? old.logged : false};
+    try {
+      for (const k of removed) await IDB.del(k);
+      for (const a of added){ const k = key + "|" + Date.now() + Math.random().toString(36).slice(2,6); await IDB.put(k, {blob:a.blob, w:a.w, h:a.h}); photos.push(k); }
+      if (added.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+    } catch(e){ toast("مشكلة بحفظ الصور — جرّب مرة ثانية"); return; }
+    results[key] = {date:data.date, id, town:s.town || data.town || "1", work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false};
     put(RES, results); closeSheet(); render(); toast("انحفظت نتيجة " + id);
   };
-  if (old) $("#undoRes").onclick = () => { delete results[rkey(id)]; put(RES, results); closeSheet(); render(); toast("انلغت"); };
+  if (old) $("#undoRes").onclick = async () => { for (const k of (old.photos||[])) await IDB.del(k).catch(()=>{}); delete results[key]; put(RES, results); closeSheet(); render(); toast("انلغت"); };
 }
 function closeSheet(){ $("#sheetBg").hidden = true; }
 $("#sheetBg").addEventListener("click", e => { if (e.target.id === "sheetBg") closeSheet(); });
@@ -398,21 +498,90 @@ function renderDocs(){
       <div class="line"><span class="lbl">نوع العمل:</span><span class="work">${esc(r.work)}</span></div>
       <div class="line"><span class="note">${esc(r.note)}</span>
         <button class="btn sm" data-copy="${esc(r.note)}" type="button">نسخ الملاحظة</button></div>
+      ${checksText(r.checks)?`<div class="line"><span class="checks" style="flex:1">${esc(checksText(r.checks))}</span>
+        <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
+      ${(r.photos||[]).length?`<div class="photos">${r.photos.map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}</div>`:""}
       <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span><span style="flex:1"></span>
         <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتها ✓"}</button></div>
     </div>`;
   }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
+    ${data?`<button class="btn" id="exportBtn2" type="button">⬇️ تصدير زيارات ${esc(data.date)} إلى Excel</button>`:""}
     <p class="sub" style="margin:0">لكل زيارة: انسخ الرقم ← الصق ← استعلام ← اختار نوع العمل ← انسخ الملاحظة ← الصق ← حفظ ← «وثّقتها»</p>
     ${logged?`<div class="bar"><label for="showLog"><input type="checkbox" id="showLog" ${showLogged?"checked":""}> عرض الموثّقة (${logged})</label>
       ${logged?`<button class="btn sm" id="clearLog" type="button">مسح الموثّقة</button>`:""}</div>`:""}
     ${items || `<div class="empty"><p>ما في زيارات بدها توثيق. لما تضغط «تم» على أي زيارة وتحفظ نتيجتها، بتظهر هون.</p></div>`}
   </div>`;
+  fillThumbs(main).then(() => main.querySelectorAll(".doc img").forEach(im => im.onclick = () => viewPhoto(im.src)));
+  const ex = $("#exportBtn2"); if (ex) ex.onclick = exportExcel;
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
-  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged) delete results[k]; }); put(RES, results); render(); toast("انمسحت الموثّقة"); };
+  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("انمسحت الموثّقة"); };
 }
 $("#tabV").onclick = () => { view = "v"; render(); scrollTo(0,0); };
 $("#tabD").onclick = () => { view = "d"; render(); scrollTo(0,0); };
+
+// ---------- Excel export ----------
+function loadExcelJS(){
+  if (window.ExcelJS) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "exceljs.min.js"; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+}
+async function exportExcel(){
+  if (!data) return toast("ما في زيارات محمّلة");
+  toast("جاري تجهيز ملف Excel…");
+  try { await loadExcelJS(); } catch(e){ return toast("لازم نت أول مرة عشان يتحمّل التصدير"); }
+  const wb = new ExcelJS.Workbook(); wb.creator = "زياراتي";
+  const ws = wb.addWorksheet("الزيارات", {views:[{rightToLeft:true, state:"frozen", ySplit:1}]});
+  const cols = [
+    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["وقت الإنجاز",11],["نوع العمل",14],
+    ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["المهمة",30],["التلفون",14],
+    ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22]
+  ];
+  ws.columns = cols.map(([h,w]) => ({header:h, width:w}));
+  const hr = ws.getRow(1); hr.height = 24;
+  hr.eachCell(c => { c.font = {bold:true, color:{argb:"FFFFFFFF"}}; c.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF0B6E5E"}}; c.alignment = {vertical:"middle", horizontal:"center", wrapText:true}; });
+  const seal = (has, ok) => has === "no" ? "غير موجود" : has === "yes" ? (ok === "yes" ? "موجود وسليم" : ok === "no" ? "موجود وغير سليم" : "موجود") : "";
+  let rowN = 2, doneN = 0;
+  for (const [i, s] of data.stops.entries()){
+    const r = results[rkey(s.id)]; if (r) doneN++;
+    const c = (r && r.checks) || {};
+    const row = ws.getRow(rowN);
+    row.values = [i+1, fullNum(s.town || data.town || "1", s.id), s.id, r ? "تمت" : "لم تتم",
+      r ? new Date(r.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}) : "", r ? r.work : "", r ? r.note : "",
+      seal(c.modemSeal, c.modemOk), seal(c.connSeal, c.connOk), c.weak ? YN[c.weak] : "", s.task || "",
+      (s.phones && s.phones[0] && s.phones[0][0]) || "", hasC(s) ? `${s.lat}, ${s.lng}` : "لا يوجد",
+      hasC(s) ? {text:"فتح", hyperlink:`https://www.google.com/maps?q=${s.lat},${s.lng}`} : "", r ? (r.logged ? "نعم" : "لا") : ""];
+    row.alignment = {vertical:"middle", wrapText:true};
+    row.getCell(4).font = {bold:true, color:{argb: r ? "FF2E7D32" : "FFB3261E"}};
+    if (hasC(s)) row.getCell(14).font = {color:{argb:"FF2B5DA8"}, underline:true};
+    const pks = (r && r.photos || []).slice(0, 3);
+    if (pks.length){
+      row.height = 120;
+      for (const [n, pk] of pks.entries()){
+        const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
+        const buf = await v.blob.arrayBuffer();
+        const id = wb.addImage({buffer:buf, extension:"jpeg"});
+        const sc = Math.min(150 / v.w, 150 / v.h);
+        ws.addImage(id, {tl:{col:15 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
+      }
+    } else row.height = 36;
+    rowN++;
+  }
+  const sum = ws.getRow(rowN + 1);
+  sum.values = ["", `المجموع: ${data.stops.length} زيارة · تمت ${doneN} · لم تتم ${data.stops.length - doneN}`];
+  sum.getCell(2).font = {bold:true};
+  const buf = await wb.xlsx.writeBuffer();
+  const name = `زيارات-${String(data.date).replace(/\//g,"-")}.xlsx`;
+  const file = new File([buf], name, {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>ملف Excel جاهز ✅</h3><p class="sub" style="margin:0">${esc(name)} · ${data.stops.length} زيارة · ${(file.size/1024/1024).toFixed(1)} MB</p>
+    <div class="row"><button type="button" class="btn primary" id="dlX">⬇️ تنزيل</button>
+    ${navigator.canShare && navigator.canShare({files:[file]}) ? `<button type="button" class="btn" id="shX">📤 مشاركة</button>` : ""}</div>
+    <button type="button" class="btn" id="closeSh">إغلاق</button>`;
+  $("#sheetBg").hidden = false;
+  $("#closeSh").onclick = closeSheet;
+  $("#dlX").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast("انحفظ بالتنزيلات"); };
+  const shx = $("#shX"); if (shx) shx.onclick = () => navigator.share({files:[file], title:name}).catch(()=>{});
+}
 
 let tt;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
