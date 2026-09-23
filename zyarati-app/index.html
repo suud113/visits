@@ -117,7 +117,7 @@ h1{font-size:22px;margin:0;font-weight:700}
 .opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .tpls{display:flex;flex-direction:column;gap:6px}
 .tpls .opt{width:100%;font-size:13.5px}
-textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:10px;padding:10px;font:15px var(--sans);background:var(--bg);color:var(--ink);resize:vertical}
+textarea{width:100%;min-height:70px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px;font:15px var(--sans);background:var(--bg);color:var(--ink);resize:vertical}
 .row{display:flex;gap:8px}
 .row .btn{flex:1}
 .btn.danger{color:#B3261E}
@@ -222,7 +222,7 @@ function checksText(c){
 
 // ---------- settings + sync to Google Sheet ----------
 const CFG = "visits.cfg.v1", DELQ = "visits.delq.v1";
-let cfg = Object.assign({name:"", url:"", token:"", auto:true}, get(CFG, {}));
+let cfg = Object.assign({name:"", url:"", token:"", auto:true, team:[]}, get(CFG, {}));
 const cfgReady = () => !!(cfg.url && cfg.token && cfg.name);
 const sealTxt = (has, ok) => has === "no" ? "غير موجود" : has === "yes" ? (ok === "yes" ? "موجود وسليم" : ok === "no" ? "موجود وغير سليم" : "موجود") : "";
 const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
@@ -281,22 +281,82 @@ async function syncAll(manual){
 }
 window.addEventListener("online", () => syncAll());
 
+// ---------- install helpers ----------
+let deferredInstall = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); wireInstall(); });
+window.addEventListener("appinstalled", () => { deferredInstall = null; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); toast("انثبّت التطبيق ✅"); });
+function installBlock(){
+  if (isStandalone()) return `<div class="checks">✅ التطبيق مثبّت على شاشتك</div>`;
+  if (deferredInstall) return `<button type="button" class="btn big" id="instBtn">📲 تثبيت التطبيق على الشاشة</button>`;
+  if (isIOS) return `<div class="checks">على الآيفون: خليك على <b>Safari</b> وافتح الروابط منه مباشرة، وما في داعي تثبّته.</div>`;
+  return `<div class="checks">من قائمة المتصفح <b>⋮</b> ← <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b></div>`;
+}
+function wireInstall(){ const b = $("#instBtn"); if (b) b.onclick = async () => { deferredInstall.prompt(); await deferredInstall.userChoice.catch(()=>{}); deferredInstall = null; const x = $("#instBox"); if (x) x.innerHTML = installBlock(); }; }
+async function shareOrCopy(text, label){
+  if (navigator.share){ try { await navigator.share({text}); return; } catch(e){ if (e && e.name === "AbortError") return; } }
+  try { await navigator.clipboard.writeText(text); toast(label + " — انسخ، الصقه بالواتساب"); }
+  catch(e){ prompt("انسخ الرابط", text); }
+}
+const teamFrom = s => String(s || "").split(/\n|،|,/).map(x => x.trim()).filter(Boolean).filter((x,i,a) => a.indexOf(x) === i);
+
+// ---------- welcome (for colleagues opening a join link) ----------
+function openWelcome(){
+  const sh = $("#sheet"), team = cfg.team || [];
+  let picked = team.includes(cfg.name) ? cfg.name : "";
+  sh.innerHTML = `<h3>أهلاً فيك بـ«زياراتي» 👋</h3>
+    <p class="hint">خطوتين وبتكون جاهز.</p>
+    <div class="lbl">1. اختار اسمك</div>
+    ${team.length ? `<div class="opts" id="wTeam">${team.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n===picked}">${esc(n)}</button>`).join("")}</div>
+      <p class="hint">اسمك مش بالقائمة؟ اكتبه:</p>` : ""}
+    <input class="inp" id="wName" value="${picked ? "" : esc(cfg.name)}" placeholder="اسمك الكامل">
+    <div class="lbl">2. ثبّت التطبيق</div>
+    <div id="instBox">${installBlock()}</div>
+    <button type="button" class="btn primary big" id="wDone">ابدأ</button>`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
+  sh.querySelectorAll("[data-nm]").forEach(b => b.onclick = () => { picked = b.dataset.nm; $("#wName").value = ""; sh.querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+  $("#wName").oninput = () => { picked = ""; sh.querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", "false")); };
+  $("#wDone").onclick = async () => {
+    const name = $("#wName").value.trim() || picked;
+    if (!name) return toast("اختار اسمك أو اكتبه");
+    cfg.name = name; put(CFG, cfg);
+    let ok = false;
+    try { const r = await fetch(cfg.url, {method:"POST", body: JSON.stringify({token:cfg.token, ping:true})}); ok = (await r.json()).ok; } catch(e){}
+    closeSheet(); render();
+    toast(ok ? `أهلاً ${name} ✅ لما يوصلك رابط زيارات اليوم افتحه` : `انحفظ اسمك ✅ بس الربط ما اشتغل — تأكد من النت`);
+  };
+}
+
+// ---------- settings ----------
 function openSettings(){
   const sh = $("#sheet");
   sh.innerHTML = `<h3>الإعدادات</h3>
     <label class="lbl" for="cfgName">اسم الفني</label>
     <input class="inp" id="cfgName" value="${esc(cfg.name)}" placeholder="مثلاً: سعود">
-    <label class="lbl" for="cfgUrl">رابط الربط مع Google Sheet</label>
-    <input class="inp" id="cfgUrl" dir="ltr" value="${esc(cfg.url)}" placeholder="https://script.google.com/macros/s/…/exec">
-    <label class="lbl" for="cfgTok">الرمز السري</label>
-    <input class="inp" id="cfgTok" dir="ltr" value="${esc(cfg.token)}">
     <label class="lbl" for="cfgAuto" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="cfgAuto" ${cfg.auto?"checked":""}> إرسال تلقائي بعد «حفظ وتم»</label>
-    <div class="row"><button type="button" class="btn primary" id="cfgSave">حفظ</button><button type="button" class="btn" id="cfgTest">اختبار الاتصال</button></div>
-    <button type="button" class="btn" id="cfgShare">🔗 رابط إعداد لزميل</button>
-    <p class="hint">رابط الإعداد فيه الرابط والرمز السري، ابعته لزملاء القسم بس.</p>
-    <button type="button" class="btn" id="closeSh">إغلاق</button>`;
-  $("#sheetBg").hidden = false; sh.scrollTop = 0;
-  const read = () => ({name: $("#cfgName").value.trim(), url: $("#cfgUrl").value.trim(), token: $("#cfgTok").value.trim(), auto: $("#cfgAuto").checked});
+    <div id="instBox">${isStandalone() ? "" : installBlock()}</div>
+
+    <div class="lbl" style="margin-top:6px">👥 الفريق</div>
+    <label class="hint" for="cfgTeam">أسماء الزملاء، كل اسم بسطر. بتطلعلهم قائمة يختاروا منها، عشان ما تتكرر الأسماء بالشيت.</label>
+    <textarea id="cfgTeam" placeholder="سعود التحتموني&#10;قصي صوالحة">${esc((cfg.team || []).join("\n"))}</textarea>
+    <button type="button" class="btn primary" id="cfgShare">📤 رابط انضمام للزملاء</button>
+    <p class="hint">الزميل بيفتح الرابط، بيختار اسمه، وخلص. رابط الانضمام فيه الرمز السري، فابعته لزملاء القسم بس.</p>
+
+    <details style="display:flex;flex-direction:column;gap:8px">
+      <summary class="lbl" style="cursor:pointer">⚙️ إعدادات الربط (متقدم)</summary>
+      <label class="lbl" for="cfgUrl">رابط الربط مع Google Sheet</label>
+      <input class="inp" id="cfgUrl" dir="ltr" value="${esc(cfg.url)}" placeholder="https://script.google.com/macros/s/…/exec">
+      <label class="lbl" for="cfgTok">الرمز السري</label>
+      <input class="inp" id="cfgTok" dir="ltr" value="${esc(cfg.token)}">
+      <button type="button" class="btn" id="cfgTest">اختبار الاتصال</button>
+      <label class="lbl" for="cfgPaste">لصق رابط (انضمام أو زيارات)</label>
+      <div class="row"><input class="inp" id="cfgPaste" dir="ltr" placeholder="https://suud113.github.io/…#…"><button type="button" class="btn" id="cfgPasteBtn" style="flex:0 0 auto">فتح</button></div>
+    </details>
+
+    <div class="row"><button type="button" class="btn primary" id="cfgSave">حفظ</button><button type="button" class="btn" id="closeSh">إغلاق</button></div>`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
+  const read = () => ({name: $("#cfgName").value.trim(), url: $("#cfgUrl").value.trim(), token: $("#cfgTok").value.trim(), auto: $("#cfgAuto").checked, team: teamFrom($("#cfgTeam").value)});
   $("#closeSh").onclick = closeSheet;
   $("#cfgSave").onclick = () => {
     const n = read();
@@ -311,9 +371,15 @@ function openSettings(){
     catch(e){ toast("❌ ما وصلت للسكربت — تأكد من الرابط والنت"); }
   };
   $("#cfgShare").onclick = () => {
-    const n = read(); if (!n.url || !n.token) return toast("عبّي الرابط والرمز أول");
-    const link = location.origin + location.pathname + "#cfg=" + b64url(JSON.stringify({url:n.url, token:n.token}));
-    try { navigator.clipboard.writeText(link).then(() => toast("انسخ رابط الإعداد — ابعته للزميل"), () => prompt("انسخ الرابط", link)); } catch(e){ toast(link); }
+    const n = read(); if (!n.url || !n.token) return toast("اضبط إعدادات الربط أول");
+    cfg = n; put(CFG, cfg);
+    const link = location.origin + location.pathname + "#cfg=" + b64url(JSON.stringify({url:n.url, token:n.token, team:n.team}));
+    shareOrCopy("انضم لتطبيق «زياراتي» 👇\nافتح الرابط واختار اسمك:\n" + link, "انسخ رابط الانضمام");
+  };
+  $("#cfgPasteBtn").onclick = async () => {
+    const v = $("#cfgPaste").value.trim(), i = v.indexOf("#");
+    if (i < 0) return toast("الصق الرابط كامل");
+    closeSheet(); if (await fromHash(v.slice(i))) render();
   };
 }
 $("#setBtn").onclick = openSettings;
@@ -341,15 +407,18 @@ const navUrl = s => `https://www.google.com/maps/dir/?api=1&destination=${s.lat}
 const intl = p => "962" + p.replace(/^0/, "");
 
 // ---------- load data from link (#d=...) ----------
-async function fromHash(){
-  const cm = location.hash.match(/^#cfg=([A-Za-z0-9_-]+)/);
+async function fromHash(h){
+  const own = h === undefined; h = own ? location.hash : h;
+  const cm = h.match(/^#cfg=([A-Za-z0-9_-]+)/);
   if (cm){
-    try { const c = JSON.parse(unb64url(cm[1])); cfg = Object.assign(cfg, {url:c.url, token:c.token}); put(CFG, cfg);
-      history.replaceState(null, "", location.pathname); setTimeout(() => { openSettings(); toast("انضبط الربط ✅ اكتب اسمك واضغط حفظ"); }, 300); }
-    catch(e){ toast("رابط الإعداد ناقص أو تالف"); }
+    try { const c = JSON.parse(unb64url(cm[1]));
+      if (c.url) cfg.url = c.url; if (c.token) cfg.token = c.token; if (Array.isArray(c.team) && c.team.length) cfg.team = c.team;
+      put(CFG, cfg); setTimeout(openWelcome, 300); }
+    catch(e){ toast("رابط الانضمام ناقص أو تالف"); }
+    if (own) history.replaceState(null, "", location.pathname);
     return true;
   }
-  const m = location.hash.match(/^#d=([A-Za-z0-9_-]+)/);
+  const m = h.match(/^#d=([A-Za-z0-9_-]+)/);
   if (!m) return false;
   try {
     const b64 = m[1].replace(/-/g,"+").replace(/_/g,"/");
@@ -358,7 +427,7 @@ async function fromHash(){
     setData(JSON.parse(txt));
     toast("تم تحميل زيارات " + (data.date || "اليوم"));
   } catch(e) { toast("الرابط ناقص أو تالف — اطلب رابط جديد"); }
-  history.replaceState(null, "", location.pathname);
+  if (own) history.replaceState(null, "", location.pathname);
   return true;
 }
 function setData(d){
@@ -438,8 +507,12 @@ function render(){
   const main = $("#main");
   if (!data){
     $("#sub").textContent = "ما في زيارات محمّلة";
-    main.innerHTML = `<div class="empty"><p>افتح رابط زيارات اليوم، أو استورد ملف اليوم.</p>
-      <button class="btn primary" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف اليوم</button></div>`;
+    main.innerHTML = `<div class="empty">
+      ${cfg.name ? `<p style="color:var(--ink);font-weight:700">أهلاً ${esc(cfg.name)} 👋</p>` : ""}
+      <p>لسا ما في زيارات. لما يوصلك <b>رابط زيارات اليوم</b> على الواتساب، افتحه وبتظهر هون.</p>
+      ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختار اسمك</button>` : ""}
+      <button class="btn" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف</button></div>`;
+    const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
     return;
   }
   const S = data.stops, n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s)).length;
