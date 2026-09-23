@@ -357,7 +357,8 @@ function openSettings(){
       <div class="row"><input class="inp" id="cfgPaste" dir="ltr" placeholder="https://suud113.github.io/…#…"><button type="button" class="btn" id="cfgPasteBtn" style="flex:0 0 auto">فتح</button></div>
     </details>
 
-    <div class="row"><button type="button" class="btn primary" id="cfgSave">حفظ</button><button type="button" class="btn" id="closeSh">إغلاق</button></div>`;
+    <div class="row"><button type="button" class="btn primary" id="cfgSave">حفظ</button><button type="button" class="btn" id="closeSh">إغلاق</button></div>
+    <p class="hint" style="text-align:center">الإصدار ${APP_VERSION}</p>`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
   const read = () => ({name: $("#cfgName").value.trim(), url: $("#cfgUrl").value.trim(), token: $("#cfgTok").value.trim(), auto: $("#cfgAuto").checked, team: teamFrom($("#cfgTeam").value)});
   $("#closeSh").onclick = closeSheet;
@@ -877,7 +878,12 @@ $("#fileIn").onchange = async e => {
 window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
 
 (async () => { await fromHash(); render(); setTimeout(() => syncAll(), 1500); })();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+const APP_VERSION = 10;
+if ("serviceWorker" in navigator){
+  const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
+  navigator.serviceWorker.register("sw.js", {updateViaCache: "none"}).then(r => r.update()).catch(()=>{});
+}
 </script>
 </body>
 </html>
