@@ -1043,8 +1043,19 @@ $("#fileIn").onchange = async e => {
 };
 window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
 
-(async () => { await fromHash(); render(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 14;
+async function takeShared(){
+  if (!/[?&]share=1/.test(location.search)) return;
+  history.replaceState(null, "", location.pathname + location.hash);
+  try {
+    const c = await caches.open("share-inbox"), r = await c.match("shared"); if (!r) return toast("لم يصل الملف — جرّب المشاركة مرة أخرى");
+    const name = decodeURIComponent(r.headers.get("x-name") || "chat.zip"), f = new File([await r.blob()], name, {type: r.headers.get("content-type") || "application/zip"});
+    await c.delete("shared");
+    if (/\.zip$/i.test(name) || /zip/.test(f.type)) importWhatsApp(f);
+    else toast("الملف المُشارك ليس ملف محادثة — اختر «تصدير الدردشة» مع الوسائط");
+  } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
+}
+(async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
+const APP_VERSION = 15;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
