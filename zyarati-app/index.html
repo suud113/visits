@@ -143,6 +143,23 @@ textarea{width:100%;min-height:70px;box-sizing:border-box;border:1px solid var(-
 .thumb .x{position:absolute;top:2px;inset-inline-end:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font:700 14px var(--sans);cursor:pointer}
 .thumb .tag0{position:absolute;bottom:0;inset-inline:0;background:rgba(11,110,94,.85);color:#fff;font-size:10.5px;text-align:center;padding:1px 0}
 .checks{font-size:13px;color:var(--ink);background:var(--bg);border-radius:8px;padding:6px 10px}
+.townrow{display:flex;gap:8px}
+.townrow .tb{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;font:500 13px var(--sans);text-align:start}
+.townrow .tb b{font:700 16px var(--sans)}
+.townrow .tb.num-b{flex:0 0 34%}
+.townrow .tb.num-b b{font-family:var(--mono);letter-spacing:.04em}
+.townrow .tb.empty b{color:#B3261E}
+.fullprev{font-size:13px;color:var(--muted)}
+.fullprev .num{color:var(--ink);font-weight:700;font-size:15px}
+.picker{position:fixed;inset:0;z-index:15;background:var(--surface);display:flex;flex-direction:column}
+.picker .ph{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.picker .ph h3{flex:1;margin:0;font-size:17px}
+.picker .ps{padding:10px 14px}
+.picker .pl{flex:1;overflow:auto;padding:0 14px calc(14px + env(safe-area-inset-bottom,0px))}
+.picker .pi{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:13px 4px;font:500 16px var(--sans);cursor:pointer;text-align:start}
+.picker .pi .n{margin-inline-start:auto;font:600 15px var(--mono);color:var(--muted)}
+.picker .pi.cur{background:var(--accent-soft)}
+.picker .sec{font-size:12px;color:var(--muted);font-weight:700;padding:10px 4px 4px}
 .viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:20;display:flex;align-items:center;justify-content:center}
 .viewer img{max-width:100%;max-height:100%}
 .inp{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:15px var(--sans);background:var(--bg);color:var(--ink)}
@@ -630,6 +647,54 @@ function render(){
 }
 
 // ---------- result sheet ----------
+const TOWN_LIST = [[1,"اربد"],[2,"الرمثا"],[3,"المفرق"],[4,"جرش"],[5,"الحصن"],[6,"الطره"],[7,"الشجره"],[8,"حواره"],[9,"الصريح"],[10,"عجلون"],[11,"عين جنا"],[12,"ايدون"],[13,"الطيبه"],[14,"النعيمه"],[15,"دير يوسف"],[16,"عبين عبلين"],[17,"حرثا"],[18,"دير ابي سعيد"],[19,"صما"],[20,"المزار"],[21,"كفرنجه"],[22,"سوف"],[23,"صخره"],[24,"عنجره"],[25,"بيت راس"],[26,"كفر يوبا"],[27,"بشرى"],[28,"كفر اسد"],[29,"حكما"],[30,"الخالديه"],[31,"المغير"],[32,"قميم"],[33,"كتم"],[34,"المنشيه"],[35,"كفرالما"],[36,"بليلا"],[37,"حوشا"],[38,"صمد"],[39,"ناطفه"],[40,"حوفا الوسطيه"],[41,"سما الروسان"],[42,"الزعتري"],[43,"ايدون بني حسن"],[44,"زحر"],[45,"الابراهيميه"],[46,"البويضه"],[47,"كفر سوم"],[48,"سموع"],[49,"زمال"],[50,"سوم"],[51,"قم"],[52,"بريقا"],[53,"كفرخل"],[54,"سال"],[55,"دير السعنه"],[56,"سميا"],[57,"الضليل"],[58,"ججين"],[59,"كفرعان"],[60,"م.شهيد عزمي المفتي"],[61,"جحفيه"],[62,"مخيم سوف"],[63,"خرجا"],[64,"مرو"],[65,"كفر جايز"],[66,"علعال"],[67,"عزريت"],[68,"حريما"],[69,"ابواللوقس"],[70,"الخريبه"],[71,"السيله"],[72,"القصفه"],[73,"الخناصري"],[74,"حبراص"],[75,"يبلا"],[76,"تقبل"],[77,"الرفيد"],[78,"مقبله"],[79,"سحم"],[80,"سمر"],[81,"الحمراء"],[82,"مخيم غزه"],[83,"حاتم"],[84,"ابدر"],[85,"المزيريب"],[86,"ام قيس"],[87,"ملكا"],[88,"المنصوره"],[89,"مخربا"],[90,"دير الليات"],[91,"الحداده"],[92,"الاشرفيه"],[93,"عقربا"],[94,"دوقره"],[95,"الزعتره"],[96,"الوصفيه"],[97,"برشتا"],[98,"الخراج"],[99,"ساكب"],[100,"ريمون"],[101,"حبكا"],[102,"روضة بسمه"],[103,"نحله"],[104,"الكته"],[105,"صبحا وصبحيه"],[106,"سبع الصير"],[107,"عمره وعميره"],[108,"ام الجمال"],[109,"حوفا المزار"],[110,"جمحا"],[111,"زقريط الفوقا"],[112,"قفقفا"],[113,"المزه"],[114,"ثغرة الجب"],[115,"منشية الكعيبر"],[116,"الحرش"],[117,"سما السرحان"],[118,"مغير السرحان"],[119,"حور"],[120,"السعيديه"],[121,"الباعج"],[122,"فاع"],[123,"تبنه"],[124,"العاقب"],[125,"جنين الصفا"],[126,"كفرراكب"],[127,"جفين"],[128,"كفرابيل"],[129,"عمراوه"],[130,"الذنيبه"],[131,"زوبيا"],[132,"باعون"],[133,"راسون"],[134,"اوصره"],[135,"عرجان"],[136,"بيت يافا"],[137,"فوعرا"],[138,"كفر رحتا"],[139,"شطنا"],[140,"رحابا"],[141,"جديتا"],[142,"بيت ايدس"],[143,"ام النعام الشرقيه"],[144,"ام النعام الغربيه"],[145,"الدجنيه"],[146,"رحاب المفرق"],[147,"رباع السرحان"],[148,"منصورة المفرق"],[149,"بويضة الحوامده"],[150,"المدور"],[151,"حمامة العموش"],[152,"طيب اسم"],[153,"الغدير الابيض"],[154,"رجم السبع الشمالي"],[155,"سامتا"],[156,"كفرعوان"],[157,"كفركيفيا"],[158,"برما"],[159,"الجزازه"],[160,"المجدل"],[161,"زقريط الخضرا"],[162,"هامتا وعليمون"],[163,"نادره"],[164,"الاشرفيه / المفرق"],[165,"نايفه"],[166,"صالحيه المفرق"],[167,"زملة الامير غازي"],[168,"حميديه وبستان"],[169,"بويضةالعليمات"],[170,"خشاع السليتين"],[171,"منشية القبلان"],[172,"الدفيانه"],[173,"ام القطين"],[174,"عنبه"],[175,"هام"],[176,"النهضه"],[177,"رأس منيف"],[178,"مشرف الباعج"],[179,"ام السرب"],[180,"الزبيديه"],[181,"الكوم الاحمر"],[182,"جابر السرحان"],[183,"صيدور"],[184,"دير ورق"],[185,"البويضه الغربيه"],[186,"المكيفته"],[187,"ام الجدايل"],[188,"حيان الشرقي"],[189,"حيان الغربي"],[190,"الزنيه"],[191,"روضة الامير محمد"],[192,"بلعما"],[193,"ابوالقين"],[194,"الرشايده"],[195,"كوم الرف"],[196,"جبا"],[197,"ام الزيتون"],[198,"الدندنيه"],[199,"ام بطيمه"],[200,"حلاوه"],[201,"خربة الوهادنه"],[202,"الهاشميه"],[203,"الرحمانيه"],[204,"المصطبه"],[205,"جبه"],[206,"تلعة الرز"],[207,"سلحوب"],[208,"مرصع"],[209,"السويلمه"],[210,"الاكيدر"],[211,"مشيرفة جرش"],[212,"اشتفينا"],[213,"راجب"],[214,"الساخنه"],[215,"السفينه"],[216,"بلاص"],[217,"الكفير"],[218,"مندح"],[219,"زبده الوسطيه"],[220,"القاسميه"],[221,"مشيرفة الرمثا"],[222,"منشية القنو"],[223,"عين بني حسن"],[224,"حيان المشرف"],[225,"المزرعه"],[226,"النزهه"],[227,"دبين"],[228,"الدقمسه"],[229,"ابسر ابو علي"],[230,"صنعار"],[231,"محنا"],[232,"الخشيبه"],[233,"المجر"],[234,"قريع"],[235,"حمامة العليمات"],[236,"المناره المفرق"],[237,"عين النبي"],[238,"الخريشيه"],[239,"الغدير الاخضر"],[240,"البستان"],[241,"النبي هود"],[242,"بلدة قاسم"],[243,"روضة الامير علي بن الحسين"],[244,"المنيصه"],[245,"خربة الشواهد"],[246,"الرأس الاخضر"],[247,"الثغره والعصفوره"],[248,"اليرموك"],[249,"الصهاه"],[250,"السعاده"],[251,"دير الصماديه"],[252,"اسعره"],[253,"المرجم"],[254,"بير الداليه"],[255,"الخشيبه الفوقا"],[256,"الرفاعيات"],[257,"دحل"],[258,"المفردات"],[259,"عين جملا"],[260,"الفواره"],[261,"المنيفه"],[262,"الحسينات"],[263,"ام القنطره شرقيه"],[264,"نجده"],[265,"الرقه"],[266,"المعمريه"],[267,"الزعفران"],[268,"الرياشي"],[269,"حويجه"],[270,"الحازيه وعنيبه"],[271,"القدم"],[272,"عين البستان"],[273,"العباره"],[274,"الفيصليه"],[275,"البشريه"],[276,"الحرفوشيه"],[277,"الرايه"],[278,"الطياره"],[279,"روضة الامير حمزه بن الحسين"],[280,"حمراء سحيم"],[281,"المطله"],[282,"الجبيه"],[283,"دير الكهف"],[284,"الحراره"],[285,"حميد و الكرم"],[286,"الجبارات"],[287,"مخيم اربد"],[288,"ام الينابيع"],[289,"زملة الطرقي"],[290,"هويشان"],[291,"رحبة ركاد"],[292,"الخيريه"],[293,"سراس"],[294,"الخارجه"],[295,"الرحمات"],[296,"دير القن"],[297,"مدور القن"],[298,"خشاع القن"],[299,"تل رماح"],[300,"أم حسين"],[301,"المريجيب"],[302,"الفحيليه"],[303,"السبطه"],[304,"أم جوزه"],[305,"عصيم"],[306,"ثغرة زبيد"],[307,"دحوس"],[308,"الفيحاء"],[309,"الحرث والعقده"],[310,"الجنيديه"],[311,"مثناة راجل"],[312,"الجدعاء"],[313,"منصورة القن"],[314,"السليم"],[315,"ارينبه"],[316,"المشرفه"],[317,"خربة البرز"],[318,"الرابية"],[319,"خريسان"],[320,"ام رامح"],[321,"منشية السلطه"],[322,"الهاشميه/المفرق"],[323,"منشية الخليفه"],[324,"روضة بني هاشم"],[325,"عالية الشويعر"],[326,"الهونه"],[327,"منشية/بلدية المعراض"],[328,"وزارة الاشغال / انارة شوارع"],[329,"انارة سلطة وادي الاردن"],[500,"الرمثا/1"],[501,"الرمثا/2"],[502,"الرمثا/3"],[503,"الرمثا/4"],[504,"الرمثا/5"],[505,"الرمثا/6"],[506,"الرمثا/7"],[507,"الرمثا/8"],[508,"الرمثا/9"],[509,"الرمثا/10"],[510,"الرمثا/11"],[511,"الرمثا/12"],[512,"مدينة الحسن الصناعيه"],[513,"مجلس الخدمات المشتركه"],[900,"اتفاقيات تخصيص"]];
+const TOWN_BY = new Map(TOWN_LIST.map(([n, name]) => [n, name]));
+const townName = n => TOWN_BY.get(+n) || "";
+const pad3 = n => String(+n || 0).padStart(3, "0");
+const normAr = t => AR_DIG(t).replace(/[\u064B-\u0652\u0640]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ").trim();
+const TOWN_KEY = TOWN_LIST.map(([n, name]) => [n, name, normAr(name), normAr(name).replace(/ /g, "")]);
+const RECENT_T = "visits.towns.recent";
+const recentTowns = () => { try { return (JSON.parse(localStorage.getItem(RECENT_T)) || []).filter(n => TOWN_BY.has(n)); } catch(e){ return []; } };
+function rememberTown(n){ try { localStorage.setItem(RECENT_T, JSON.stringify([+n, ...recentTowns().filter(x => x !== +n)].slice(0, 6))); } catch(e){} }
+// full-screen town picker: mode "name" (Arabic keyboard) or "num" (number pad)
+function pickTown(mode, cur, onPick){
+  const el = document.createElement("div"); el.className = "picker"; el.setAttribute("role", "dialog");
+  el.innerHTML = `<div class="ph"><h3>${mode === "num" ? "رقم البلدة" : "اسم البلدة"}</h3><button type="button" class="btn sm" data-x>إغلاق</button></div>
+    <div class="ps"><input class="inp ${mode === "num" ? "num" : ""}" ${mode === "num" ? 'inputmode="numeric" dir="ltr"' : ""} placeholder="${mode === "num" ? "اكتب رقم البلدة، مثل 4" : "اكتب جزءاً من اسم البلدة"}" autocomplete="off"></div>
+    <div class="pl"></div>`;
+  document.body.appendChild(el);
+  const inp = el.querySelector("input"), list = el.querySelector(".pl");
+  const row = ([n, name]) => `<button type="button" class="pi${+cur === n ? " cur" : ""}" data-n="${n}"><span>${esc(name)}</span><span class="n">${pad3(n)}</span></button>`;
+  const draw = () => {
+    const q = inp.value.trim();
+    let items, head = "";
+    if (!q){
+      const rec = recentTowns();
+      head = rec.length ? `<div class="sec">المستخدمة مؤخراً</div>${rec.map(n => row([n, townName(n)])).join("")}<div class="sec">كل البلدات</div>` : "";
+      items = TOWN_LIST;
+    } else if (/^\d+$/.test(AR_DIG(q))){
+      const d = String(+AR_DIG(q));
+      items = TOWN_LIST.filter(([n]) => String(n).startsWith(d)).sort((a, b) => (String(a[0]) === d ? -1 : 0) - (String(b[0]) === d ? -1 : 0) || a[0] - b[0]);
+    } else {
+      const k = normAr(q), k2 = k.replace(/ /g, "");
+      items = TOWN_KEY.filter(t => t[2].includes(k) || t[3].includes(k2)).sort((a, b) => (b[2].startsWith(k) - a[2].startsWith(k)) || a[0] - b[0]);
+    }
+    list.innerHTML = head + (items.map(row).join("") || `<div class="sec">لا توجد بلدة بهذا ${mode === "num" ? "الرقم" : "الاسم"}</div>`);
+  };
+  const close = () => el.remove();
+  el.querySelector("[data-x]").onclick = close;
+  list.onclick = e => { const b = e.target.closest("[data-n]"); if (!b) return; rememberTown(+b.dataset.n); onPick(+b.dataset.n); close(); };
+  inp.oninput = draw;
+  inp.onkeydown = e => { if (e.key === "Enter"){ const b = list.querySelector("[data-n]"); if (b) b.click(); } };
+  draw(); setTimeout(() => inp.focus(), 60);
+}
+// two linked buttons (name | number) that set the same town
+function townButtons(box, get, set){
+  const n = get(), nm = townName(n);
+  box.innerHTML = `<button type="button" class="tb${nm ? "" : " empty"}" data-tm="name"><span>اسم البلدة</span><b>${nm ? esc(nm) : "اختر"}</b></button>
+    <button type="button" class="tb num-b${nm ? "" : " empty"}" data-tm="num"><span>رقم البلدة</span><b>${nm ? pad3(n) : "---"}</b></button>`;
+  box.querySelectorAll("[data-tm]").forEach(b => b.onclick = () => pickTown(b.dataset.tm, get(), v => { set(v); townButtons(box, get, set); }));
+}
 function openSheet(id, isNew){
   const s = isNew ? {id:"", manual:true, phones:[]} : (data && data.stops.find(x => x.id === id)); if (!s) return;
   let key = isNew ? "" : rkey(id); const old = isNew ? null : results[key];
@@ -638,6 +703,10 @@ function openSheet(id, isNew){
   let photos = (old && old.photos ? old.photos.slice() : []);   // existing keys
   const added = [], removed = [];
   const sh = $("#sheet");
+  const full0 = isNew ? "" : clean10((old && old.full) || (s.full) || "");
+  let town = full0.length === 10 ? parseInt(full0.slice(0, 3), 10) : (isNew ? (recentTowns()[0] || 0) : 0);
+  if (!TOWN_BY.has(town)) town = 0;
+  const sub0 = isNew ? "" : String(parseInt(clean10(s.id), 10) || "");
   const yn = (f, dis) => `<span class="yn">${["yes","no"].map(v=>`<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}" ${dis?"disabled":""}>${YN[v]}</button>`).join("")}</span>`;
   const drawChecks = () => {
     $("#chkBox").innerHTML = `
@@ -671,9 +740,11 @@ function openSheet(id, isNew){
   sh.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${isNew ? "➕ توثيق زيارة" : `نتيجة الزيارة · <span class="num">${esc(id)}</span>`}</h3>
     ${old ? `<button type="button" class="btn sm danger" id="delTop">🗑️ ${s.manual ? "حذف" : "إلغاء"}</button>` : ""}</div>
     ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
-    <label class="lbl" for="fullIn">رقم الاشتراك (10 خانات)</label>
-    <input class="inp num" id="fullIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="0010132777" value="${isNew ? "" : esc((old && old.full) || stopFull(s))}">
-    <p class="hint">الخانات الثلاث الأولى رقم البلدة (إربد 001، جرش 004…). تحقّق منه قبل الحفظ.</p>
+    <div class="lbl">البلدة *</div>
+    <div class="townrow" id="townBox"></div>
+    <label class="lbl" for="subIn">رقم المشترك *</label>
+    <input class="inp num" id="subIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="132777" value="${esc(sub0)}" ${s.manual ? "" : "readonly"}>
+    <div class="fullprev" id="fullPrev"></div>
     <div class="lbl">المهمة *</div>
     <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
     <div class="lbl">الفحص</div>
@@ -687,17 +758,29 @@ function openSheet(id, isNew){
     ${old?`<button type="button" class="btn danger" id="undoRes">${s.manual ? "حذف الزيارة" : old.logged ? "حذف النتيجة (موثّقة)" : "إلغاء الإنجاز"}</button>`:""}`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0;
   drawChecks(); drawPhotos();
-  if (isNew) setTimeout(() => $("#fullIn").focus(), 250);
+  const subVal = () => String(parseInt(clean10($("#subIn").value), 10) || "");
+  const drawFull = () => { const v = subVal(); $("#fullPrev").innerHTML = town && v ? `رقم الاشتراك (10 خانات): <span class="num">${fullNum(town, v)}</span>` : "رقم الاشتراك يتكوّن تلقائياً من رقم البلدة ورقم المشترك"; };
+  townButtons($("#townBox"), () => town, v => { town = v; drawFull(); });
+  $("#subIn").oninput = () => {
+    const d = clean10($("#subIn").value);
+    if (d.length === 10 && TOWN_BY.has(parseInt(d.slice(0, 3), 10))){   // a full 10-digit number was pasted: split it
+      town = parseInt(d.slice(0, 3), 10); rememberTown(town); $("#subIn").value = String(parseInt(d.slice(3), 10));
+      townButtons($("#townBox"), () => town, v => { town = v; drawFull(); });
+    }
+    drawFull();
+  };
+  drawFull();
+  if (isNew) setTimeout(() => (town ? $("#subIn") : $("#townBox button")).focus(), 250);
   sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
   $("#camBtn").onclick = () => { $("#camIn").value = ""; $("#camIn").onchange = e => onFiles(e.target.files); $("#camIn").click(); };
   $("#galBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = e => onFiles(e.target.files); $("#galIn").click(); };
   $("#closeSh").onclick = closeSheet;
   $("#saveRes").onclick = async () => {
     const note = $("#noteIn").value.trim();
-    const full = clean10($("#fullIn").value);
-    if (full.length !== 10) return toast("يجب أن يتكون رقم الاشتراك من 10 خانات");
-    const newId = String(parseInt(full.slice(3), 10));
-    if (!+newId) return toast("رقم المشترك غير صحيح");
+    if (!town) return toast("اختر البلدة");
+    const newId = subVal();
+    if (!+newId || newId.length > 7) return toast("رقم المشترك غير صحيح");
+    const full = fullNum(town, newId); rememberTown(town);
     if (!s.manual && newId !== String(parseInt(clean10(id), 10))) return toast("يجب أن تطابق الخانات السبع الأخيرة رقم المشترك " + id);
     if (!work) return toast("اختر المهمة");
     if (!note) return toast("اكتب الملاحظة");
@@ -779,7 +862,7 @@ function renderManual(){
       <div class="head">${selHead(s, i)}<span class="sid num">${esc(s.id)}</span><span class="sp"></span>
         ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">🗑️</button>
         <button class="btn sm" data-done="${esc(s.id)}" type="button">✏️ تعديل</button>`}</div>
-      <div class="res"><span class="num">${esc(stopFull(s))}</span> · ${esc(r.work || "")} · ${esc(r.note || "")}${(r.photos||[]).length ? ` · 📷 ${r.photos.length}` : ""}</div>
+      <div class="res"><span class="num">${esc(stopFull(s))}</span>${townName(parseInt(stopFull(s).slice(0, 3), 10)) ? ` · ${esc(townName(parseInt(stopFull(s).slice(0, 3), 10)))}` : ""} · ${esc(r.work || "")} · ${esc(r.note || "")}${(r.photos||[]).length ? ` · 📷 ${r.photos.length}` : ""}</div>
     </article>`; }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
     <button class="btn primary big" id="addBtnM" type="button">➕ توثيق زيارة جديدة</button>
@@ -812,7 +895,7 @@ function renderDocs(){
     const h = r.date !== lastDate ? `<div class="dhead">${esc(r.date)}</div>` : ""; lastDate = r.date;
     const fn = resFull(r);
     return h + `<div class="doc${r.logged?" logged":""}">
-      <div class="line"><span class="full num">${fn}</span><span class="sp" style="flex:1"></span>
+      <div class="line"><span class="full num">${fn}</span>${townName(parseInt(fn.slice(0, 3), 10)) ? `<span class="meta">${esc(townName(parseInt(fn.slice(0, 3), 10)))}</span>` : ""}<span class="sp" style="flex:1"></span>
         <button class="btn sm" data-editfull="${esc(r.k)}" type="button" aria-label="تعديل رقم الاشتراك">✏️</button>
         <button class="btn sm primary" data-copy="${fn}" type="button">نسخ الرقم</button></div>
       <div class="line"><span class="lbl">المهمة:</span><span class="work">${esc(r.work)}</span></div>
@@ -996,18 +1079,21 @@ async function exportExcel(){
 
 function editFull(k){
   const r = results[k]; if (!r) return;
-  const sh = $("#sheet");
+  const sh = $("#sheet"), f0 = clean10(resFull(r));
+  let town = parseInt(f0.slice(0, 3), 10); if (!TOWN_BY.has(town)) town = 0;
   sh.innerHTML = `<h3>رقم الاشتراك · <span class="num">${esc(r.id)}</span></h3>
-    <label class="lbl" for="efIn">رقم الاشتراك (10 خانات)</label>
-    <input class="inp num" id="efIn" inputmode="numeric" maxlength="10" dir="ltr" value="${esc(resFull(r))}">
+    <div class="lbl">البلدة *</div>
+    <div class="townrow" id="townBox"></div>
+    <div class="fullprev" id="fullPrev"></div>
     <div class="row"><button type="button" class="btn primary" id="efSave">حفظ</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>`;
   $("#sheetBg").hidden = false;
+  const drawFull = () => { $("#fullPrev").innerHTML = town ? `رقم الاشتراك (10 خانات): <span class="num">${fullNum(town, r.id)}</span>` : "اختر البلدة"; };
+  townButtons($("#townBox"), () => town, v => { town = v; drawFull(); }); drawFull();
   $("#closeSh").onclick = closeSheet;
   $("#efSave").onclick = () => {
-    const full = clean10($("#efIn").value);
-    if (full.length !== 10) return toast("يجب أن يتكون رقم الاشتراك من 10 خانات");
-    if (String(parseInt(full.slice(3), 10)) !== String(parseInt(r.id, 10))) return toast("يجب أن تطابق الخانات السبع الأخيرة رقم المشترك " + r.id);
-    r.full = full; r.town = String(parseInt(full.slice(0,3),10)); r.sent = false; r.v = (r.v||0) + 1;
+    if (!town) return toast("اختر البلدة");
+    const full = fullNum(town, r.id); rememberTown(town);
+    r.full = full; r.town = String(town); r.sent = false; r.v = (r.v||0) + 1;
     if (data && data.date === r.date){ const s = data.stops.find(x => x.id === r.id); if (s){ s.full = full; put(STORE, data); } }
     put(RES, results); closeSheet(); render(); toast("تم حفظ الرقم"); syncAll();
   };
@@ -1055,7 +1141,7 @@ async function takeShared(){
   } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
 }
 (async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 15;
+const APP_VERSION = 16;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });

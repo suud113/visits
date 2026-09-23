@@ -1,4 +1,4 @@
-const CACHE = "visits-v15";
+const CACHE = "visits-v16";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "exceljs.min.js",
                "wa-import.js", "reader.js", "reader-model.json"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
