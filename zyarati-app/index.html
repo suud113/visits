@@ -571,6 +571,7 @@ function render(){
       <div class="head"><span class="seq">${i+1}</span><span class="sid num">${esc(s.id)}</span>
         <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
         <span class="sp"></span>
+        ${s.manual ? `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">🗑️</button>` : ""}
         <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button></div>
       ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · 📷 ${results[rkey(s.id)].photos.length}`:""}</div>`:""}
       <div class="body">
@@ -604,6 +605,7 @@ function render(){
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
   $("#locBtn").onclick = sortByLocation;
   $("#addBtn").onclick = () => openSheet(null, true);
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteVisit(b.dataset.del), "متأكد؟"));
   fillThumbs(main).then(() => main.querySelectorAll(".card img[data-pk]").forEach(im => im.onclick = () => viewPhoto(im.src)));
   $("#exportBtn").onclick = exportExcel;
   $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
@@ -648,7 +650,8 @@ function openSheet(id, isNew){
     for (const f of files){ try { const c = await compress(f); added.push({...c, url: URL.createObjectURL(c.blob)}); } catch(e){ toast("ما قدرت أقرأ الصورة"); } }
     drawPhotos();
   };
-  sh.innerHTML = `<h3>${isNew ? "➕ توثيق زيارة" : `نتيجة الزيارة · <span class="num">${esc(id)}</span>`}</h3>
+  sh.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${isNew ? "➕ توثيق زيارة" : `نتيجة الزيارة · <span class="num">${esc(id)}</span>`}</h3>
+    ${old ? `<button type="button" class="btn sm danger" id="delTop">🗑️ ${s.manual ? "حذف" : "إلغاء"}</button>` : ""}</div>
     ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
     <label class="lbl" for="fullIn">رقم الاشتراك (10 خانات)</label>
     <input class="inp num" id="fullIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="0010132777" value="${isNew ? "" : esc((old && old.full) || stopFull(s))}">
@@ -699,13 +702,22 @@ function openSheet(id, isNew){
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || []};
     put(RES, results); closeSheet(); view = "v"; render(); toast((isNew ? "انضافت الزيارة " : "انحفظت نتيجة ") + s.id); syncAll();
   };
-  if (old) $("#undoRes").onclick = async e => {
-    const b = e.currentTarget;
-    if (s.manual && !b.dataset.sure){ b.dataset.sure = "1"; b.textContent = "متأكد؟ اضغط مرة ثانية للحذف"; return; }
-    for (const k of (old.photos||[])) await IDB.del(k).catch(()=>{});
-    queueDelete(old); delete results[key]; put(RES, results);
-    if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
-    closeSheet(); render(); toast(s.manual ? "انحذفت الزيارة" : "انلغت"); syncAll(); };
+  if (old){
+    const del = e => confirmTap(e.currentTarget, () => deleteVisit(s.id), "متأكد؟ اضغط مرة ثانية");
+    $("#undoRes").onclick = del; $("#delTop").onclick = del;
+  }
+}
+async function deleteVisit(id){
+  const s = data && data.stops.find(x => x.id === id); if (!s) return;
+  const key = rkey(id), r = results[key];
+  if (r){ for (const k of (r.photos||[])) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[key]; put(RES, results); }
+  if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
+  closeSheet(); render(); toast(s.manual ? "انحذفت الزيارة " + id : "انلغت نتيجة " + id); syncAll();
+}
+function confirmTap(btn, fn, msg){
+  if (!btn.dataset.sure){ btn.dataset.sure = "1"; const t = btn.textContent; btn.textContent = msg || "متأكد؟ اضغط مرة ثانية";
+    setTimeout(() => { if (btn.isConnected){ delete btn.dataset.sure; btn.textContent = t; } }, 4000); return; }
+  fn();
 }
 function closeSheet(){ $("#sheetBg").hidden = true; }
 $("#sheetBg").addEventListener("click", e => { if (e.target.id === "sheetBg") closeSheet(); });
