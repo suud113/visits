@@ -858,6 +858,13 @@ async function deleteVisit(id){
   if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
   closeSheet(); render(); toast(s.manual ? "تم حذف الزيارة " + id : "تم إلغاء نتيجة " + id); syncAll();
 }
+async function deleteResult(k){
+  const r = results[k]; if (!r) return;
+  for (const p of (r.photos||[])) await IDB.del(p).catch(()=>{});
+  queueDelete(r); delete results[k]; put(RES, results);
+  if (data && data.date === r.date){ const s = data.stops.find(x => x.id === r.id); if (s && s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); } }
+  syncDone(); render(); toast("تم حذف الزيارة " + r.id); syncAll();
+}
 function confirmTap(btn, fn, msg){
   if (!btn.dataset.sure){ btn.dataset.sure = "1"; const t = btn.textContent; btn.textContent = msg || "هل أنت متأكد؟ اضغط مرة أخرى";
     setTimeout(() => { if (btn.isConnected){ delete btn.dataset.sure; btn.textContent = t; } }, 4000); return; }
@@ -910,6 +917,7 @@ function renderDocs(){
     return h + `<div class="doc${r.logged?" logged":""}">
       <div class="line"><span class="full num">${fn}</span>${townName(parseInt(fn.slice(0, 3), 10)) ? `<span class="meta">${esc(townName(parseInt(fn.slice(0, 3), 10)))}</span>` : ""}<span class="sp" style="flex:1"></span>
         <button class="btn sm" data-editfull="${esc(r.k)}" type="button" aria-label="تعديل رقم الاشتراك">✏️</button>
+        <button class="btn sm danger" data-delres="${esc(r.k)}" type="button" aria-label="حذف الزيارة">🗑️</button>
         <button class="btn sm primary" data-copy="${fn}" type="button">نسخ الرقم</button></div>
       <div class="line"><span class="lbl">المهمة:</span><span class="work">${esc(r.work)}</span></div>
       <div class="line"><span class="note">${esc(r.note)}</span>
@@ -935,6 +943,7 @@ function renderDocs(){
   fillThumbs(main).then(() => main.querySelectorAll(".doc img").forEach(im => im.onclick = () => viewPhoto(im.src)));
   const ex = $("#exportBtn2"); if (ex) ex.onclick = exportExcel;
   main.querySelectorAll("[data-editfull]").forEach(b => b.onclick = () => editFull(b.dataset.editfull));
+  main.querySelectorAll("[data-delres]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, () => deleteResult(b.dataset.delres), "متأكد؟ اضغط مرة أخرى"));
   const sn = $("#sendBtn"); if (sn) sn.onclick = () => syncAll(true);
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
   const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
@@ -1154,7 +1163,7 @@ async function takeShared(){
   } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
 }
 (async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 17;
+const APP_VERSION = 18;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
