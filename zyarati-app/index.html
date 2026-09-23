@@ -152,6 +152,11 @@ textarea{width:100%;min-height:70px;box-sizing:border-box;border:1px solid var(-
 .fullrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
 .fullrow .num{font-size:15px;font-weight:600}
 .fullrow .tag{font-size:11px;color:var(--warn);background:var(--warn-bg);border-radius:5px;padding:1px 6px}
+.selbox{width:24px;height:24px;flex:none;accent-color:var(--accent);pointer-events:none;margin:4px}
+.selecting .card .body{display:none}
+.card.selected{outline:3px solid var(--accent);outline-offset:-1px}
+.selbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:var(--shadow)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -390,7 +395,7 @@ function openSettings(){
 $("#setBtn").onclick = openSettings;
 
 let results = get(RES, {});
-let done = {}, view = "v";
+let done = {}, view = "v", selMode = false; const sel = new Set();
 const rkey = id => data.date + "|" + id;
 function syncDone(){ done = {}; if (data) data.stops.forEach(s => { if (results[rkey(s.id)]) done[s.id] = true; }); }
 const AR_DIG = s => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
@@ -524,6 +529,7 @@ function render(){
   $("#tabV").setAttribute("aria-selected", view==="v"); $("#tabM").setAttribute("aria-selected", view==="m"); $("#tabD").setAttribute("aria-selected", view==="d");
   $("#tabM").textContent = "الزيارات المُدخلة" + (manualN ? ` (${manualN})` : "");
   if (view !== "v") $("#app").classList.remove("hide-done");
+  $("#app").classList.toggle("selecting", selMode);
   if (view === "m") return renderManual();
   const pending = Object.values(results).filter(r=>!r.logged).length;
   $("#tabD").textContent = "التوثيق" + (pending ? ` (${pending})` : "");
@@ -575,12 +581,12 @@ function render(){
           <button class="btn sm" data-copy="${esc(p)}" type="button">نسخ</button>
         </span></div>`;
     }).join("") || `<div class="ph"><span class="cnt">لا توجد أرقام هواتف</span></div>`;
-    return `<article class="card${done[s.id]?" done":""}">
-      <div class="head"><span class="seq">${i+1}</span><span class="sid num">${esc(s.id)}</span>
+    return `<article class="card${done[s.id]?" done":""}${sel.has(s.id)?" selected":""}" data-card="${esc(s.id)}">
+      <div class="head">${selHead(s, i)}<span class="sid num">${esc(s.id)}</span>
         <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
         <span class="sp"></span>
-        ${s.manual ? `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">🗑️</button>` : ""}
-        <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button></div>
+        ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الموقع">🗑️</button>
+        <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button>`}</div>
       ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · 📷 ${results[rkey(s.id)].photos.length}`:""}</div>`:""}
       <div class="body">
         <div class="fullrow"><span class="lbl">رقم الاشتراك:</span><span class="num">${esc(stopFull(s))}</span>${s.full?"":`<span class="tag">مقترح</span>`}
@@ -605,14 +611,18 @@ function render(){
       <div class="bar">
         <label for="hideDone"><input type="checkbox" id="hideDone" ${get(HIDE,false)?"checked":""}> إخفاء المُنجَز</label>
         <span class="grp"><button class="btn sm" id="exportBtn" type="button">⬇️ Excel</button><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
+        <button class="btn sm" id="selBtn" type="button">☑️ تحديد</button>
         <button class="btn sm" id="resetBtn" type="button">تصفير</button></span>
       </div>
+      ${selBar(get(HIDE,false) ? S.filter(s => !done[s.id]) : S)}
       <div id="list">${cards}</div>
     </div>`;
   $("#app").classList.toggle("hide-done", get(HIDE,false));
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
   $("#locBtn").onclick = sortByLocation;
-  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteVisit(b.dataset.del), "هل أنت متأكد؟"));
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
+  $("#selBtn").onclick = () => { selMode = !selMode; sel.clear(); render(); };
+  wireSel(get(HIDE,false) ? S.filter(s => !done[s.id]) : S);
   fillThumbs(main).then(() => main.querySelectorAll(".card img[data-pk]").forEach(im => im.onclick = () => viewPhoto(im.src)));
   $("#exportBtn").onclick = exportExcel;
   $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
@@ -714,6 +724,36 @@ function openSheet(id, isNew){
     $("#undoRes").onclick = del; $("#delTop").onclick = del;
   }
 }
+async function deleteMany(ids){
+  if (!data || !ids.length) return;
+  for (const id of ids){
+    const r = results[rkey(id)];
+    if (r){ for (const k of (r.photos||[])) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[rkey(id)]; }
+  }
+  const set = new Set(ids);
+  data.stops = data.stops.filter(x => !set.has(x.id));
+  put(STORE, data); put(RES, results);
+  sel.clear(); selMode = false; closeSheet(); render();
+  toast(ids.length === 1 ? "تم حذف " + ids[0] : `تم حذف المحدد (${ids.length})`); syncAll();
+}
+function selBar(list){
+  if (!selMode) return "";
+  const all = list.length && list.every(s => sel.has(s.id));
+  return `<div class="selbar">
+    <button type="button" class="btn sm" id="selAll">${all ? "إلغاء تحديد الكل" : "تحديد الكل"}</button>
+    <button type="button" class="btn sm danger" id="selDel" ${sel.size ? "" : "disabled"}>🗑️ حذف المحدد (${sel.size})</button>
+    <span style="flex:1"></span>
+    <button type="button" class="btn sm" id="selExit">إنهاء التحديد</button></div>`;
+}
+function wireSel(list){
+  const a = $("#selAll"); if (!a) return;
+  a.onclick = () => { const all = list.every(s => sel.has(s.id)); if (all) sel.clear(); else list.forEach(s => sel.add(s.id)); render(); };
+  $("#selDel").onclick = e => confirmTap(e.currentTarget, () => deleteMany([...sel]), `تأكيد حذف ${sel.size}؟ اضغط مرة أخرى`);
+  $("#selExit").onclick = () => { selMode = false; sel.clear(); render(); };
+}
+const selHead = (s, i) => selMode
+  ? `<input type="checkbox" class="selbox" ${sel.has(s.id) ? "checked" : ""} aria-label="تحديد ${esc(s.id)}" tabindex="-1">`
+  : `<span class="seq">${i+1}</span>`;
 async function deleteVisit(id){
   const s = data && data.stops.find(x => x.id === id); if (!s) return;
   const key = rkey(id), r = results[key];
@@ -734,15 +774,16 @@ function renderManual(){
   const main = $("#main"), M = data ? data.stops.filter(s => s.manual) : [];
   $("#sub").textContent = [data ? data.date : todayStr(), cfg.name].filter(Boolean).join(" · ");
   const cards = M.map((s, i) => { const r = results[rkey(s.id)] || {};
-    return `<article class="card done">
-      <div class="head"><span class="seq">${i+1}</span><span class="sid num">${esc(s.id)}</span><span class="sp"></span>
-        <button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">🗑️</button>
-        <button class="btn sm" data-done="${esc(s.id)}" type="button">✏️ تعديل</button></div>
+    return `<article class="card done${sel.has(s.id)?" selected":""}" data-card="${esc(s.id)}">
+      <div class="head">${selHead(s, i)}<span class="sid num">${esc(s.id)}</span><span class="sp"></span>
+        ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">🗑️</button>
+        <button class="btn sm" data-done="${esc(s.id)}" type="button">✏️ تعديل</button>`}</div>
       <div class="res"><span class="num">${esc(stopFull(s))}</span> · ${esc(r.work || "")} · ${esc(r.note || "")}${(r.photos||[]).length ? ` · 📷 ${r.photos.length}` : ""}</div>
     </article>`; }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
     <button class="btn primary big" id="addBtnM" type="button">➕ توثيق زيارة جديدة</button>
-    ${M.length ? `<div class="summary"><span class="stat"><b class="num">${M.length}</b>زيارة مُدخلة</span></div><div id="list">${cards}</div>
+    ${M.length ? `<div class="bar"><div class="summary"><span class="stat"><b class="num">${M.length}</b>زيارة مُدخلة</span></div>
+      <button class="btn sm" id="selBtnM" type="button">☑️ تحديد</button></div>${selBar(M)}<div id="list">${cards}</div>
       <button class="btn" id="exportBtnM" type="button">⬇️ تصدير زيارات اليوم إلى Excel</button>`
     : `<div class="empty">
       ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)} 👋</p>` : ""}
@@ -752,7 +793,9 @@ function renderManual(){
   $("#addBtnM").onclick = () => openSheet(null, true);
   const ex = $("#exportBtnM"); if (ex) ex.onclick = exportExcel;
   const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
-  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteVisit(b.dataset.del), "هل أنت متأكد؟"));
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
+  const sb = $("#selBtnM"); if (sb) sb.onclick = () => { selMode = !selMode; sel.clear(); render(); };
+  wireSel(M);
 }
 
 // ---------- documentation view ----------
@@ -799,9 +842,9 @@ function renderDocs(){
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
   const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
 }
-$("#tabV").onclick = () => { view = "v"; render(); scrollTo(0,0); };
-$("#tabM").onclick = () => { view = "m"; render(); scrollTo(0,0); };
-$("#tabD").onclick = () => { view = "d"; render(); scrollTo(0,0); };
+$("#tabV").onclick = () => { view = "v"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
+$("#tabM").onclick = () => { view = "m"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
+$("#tabD").onclick = () => { view = "d"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
 
 // ---------- Excel export ----------
 function loadExcelJS(){
@@ -889,6 +932,10 @@ let tt;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
 
 document.addEventListener("click", e => {
+  if (selMode){
+    const card = e.target.closest("[data-card]");
+    if (card && !e.target.closest("button, a")){ const id = card.dataset.card; sel.has(id) ? sel.delete(id) : sel.add(id); render(); return; }
+  }
   const c = e.target.closest("[data-copy]");
   if (c){
     const v = c.dataset.copy;
@@ -911,7 +958,7 @@ $("#fileIn").onchange = async e => {
 window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
 
 (async () => { await fromHash(); render(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 12;
+const APP_VERSION = 13;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
