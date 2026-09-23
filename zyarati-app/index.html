@@ -168,8 +168,8 @@ textarea{width:100%;min-height:70px;box-sizing:border-box;border:1px solid var(-
       <p class="sub" id="sub">—</p>
     </div>
     <button class="btn sm" id="setBtn" type="button" aria-label="الإعدادات">⚙️</button>
-    <button class="btn sm" id="importBtn" type="button">استيراد ملف</button>
-    <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
+    <button class="btn sm" id="importBtn" type="button">📥 استيراد</button>
+    <input type="file" id="fileIn" accept=".zip,application/zip,application/x-zip-compressed,.json,application/json" hidden>
     <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
     <input type="file" id="galIn" accept="image/*" multiple hidden>
   </header>
@@ -594,6 +594,7 @@ function render(){
         ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
 
         ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
+        ${(s.refs||[]).length?`<div class="lbl">${s.auto ? "قُرئت آلياً — الصور الأصلية للمراجعة:" : "الصور الأصلية:"}</div><div class="photos">${s.refs.map(k=>`<div class="thumb"><img alt="صورة أصلية" data-pk="${esc(k)}"></div>`).join("")}</div>`:""}
         ${s.manual ? "" : `${loc}${extra}<div class="phones">${phones}</div>`}
       </div></article>`;
   }).join("");
@@ -846,6 +847,90 @@ $("#tabV").onclick = () => { view = "v"; selMode = false; sel.clear(); render();
 $("#tabM").onclick = () => { view = "m"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
 $("#tabD").onclick = () => { view = "d"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
 
+// ---------- WhatsApp chat import + on-device reading ----------
+function loadScript(src){ return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+let readerReady = null;
+function loadReader(){
+  return readerReady || (readerReady = (async () => {
+    await loadScript("wa-import.js"); await loadScript("reader.js");
+    const m = await (await fetch("reader-model.json")).json(); VisitReader.setNet(m);
+  })().catch(e => { readerReady = null; throw e; }));
+}
+const TOWNS = {"اربد":"1","إربد":"1","جرش":"4"};
+function nearestOrder(stops){
+  const withC = stops.filter(hasC), noC = stops.filter(s => !hasC(s));
+  if (!withC.length) return stops;
+  let cur = withC.reduce((a, b) => (b.lat > a.lat ? b : a)); const out = [cur]; const left = withC.filter(s => s !== cur);
+  while (left.length){ let bi = 0, bd = Infinity; left.forEach((s, i) => { const d = dist(cur, s); if (d < bd){ bd = d; bi = i; } }); cur = left.splice(bi, 1)[0]; out.push(cur); }
+  noC.forEach(s => { const ph = new Set(s.phones.map(p => p[0])); let at = -1; out.forEach((o, i) => { if (o.phones.some(p => ph.has(p[0]))) at = i; }); if (at >= 0) out.splice(at + 1, 0, s); else out.push(s); });
+  return out;
+}
+async function importWhatsApp(file){
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>📥 استيراد محادثة واتساب</h3><p class="hint" id="impMsg">جاري فتح الملف…</p>`;
+  $("#sheetBg").hidden = false;
+  let files, msgs, day;
+  try {
+    await loadReader();
+    files = await WAImport.readZip(await file.arrayBuffer());
+    const txt = Object.keys(files).find(n => /\.txt$/i.test(n));
+    if (!txt) throw new Error("لم يُعثر على نص المحادثة داخل الملف");
+    msgs = WAImport.parseChat(new TextDecoder("utf-8").decode(await files[txt].get()));
+    day = WAImport.buildDay(msgs);
+  } catch(e){ $("#impMsg").textContent = "تعذّر فتح الملف: " + (e.message || e); sh.insertAdjacentHTML("beforeend", `<button type="button" class="btn" id="closeSh">إغلاق</button>`); $("#closeSh").onclick = closeSheet; return; }
+  const dates = day.dates.length ? day.dates : [day.date];
+  const run = async () => {
+    $("#impGo").disabled = true; $("#impProg").hidden = false;
+    const total = day.subs.reduce((a, s) => a + s.images.length, 0); let doneN = 0;
+    if (data && data.stops) for (const s of data.stops) for (const k of (s.refs || [])) await IDB.del(k).catch(()=>{});
+    const stops = [];
+    for (const sub of day.subs){
+      const reads = [], refs = [];
+      for (const name of sub.images){
+        $("#impMsg").textContent = `جاري قراءة صور المشترك ${sub.id} (${doneN + 1} من ${total})…`;
+        await new Promise(r => setTimeout(r, 0));
+        const f = files[name];
+        if (f){
+          try {
+            const blob = new Blob([await f.get()], {type: "image/jpeg"});
+            const {g, W, H} = await VisitReader.grayFromBlob(blob);
+            reads.push(VisitReader.readGray(g, W, H));
+            const c = await compress(blob, 1600, 0.8);
+            const k = "ref|" + day.date + "|" + sub.id + "|" + refs.length; await IDB.put(k, {blob: c.blob, w: c.w, h: c.h}); refs.push(k);
+          } catch(e){ console.warn(e); }
+        }
+        doneN++; $("#impProg i").style.width = (doneN / total * 100) + "%";
+      }
+      const r = VisitReader.combine(reads);
+      const phones = r.phones.map(o => o.alt.length ? [o.p, o.n, "تحقق من الصورة: قد يكون " + o.alt[0]] : [o.p, o.n]);
+      sub.extraPhones.forEach(p => { if (!phones.some(x => x[0] === p)) phones.push([p, 1, "من الطلب"]); });
+      const warn = [];
+      if (r.lat === null || r.lng === null) warn.push("لم تُقرأ الإحداثيات آلياً — راجع الصور الأصلية");
+      if (!phones.length) warn.push("لم تُقرأ أرقام الهواتف آلياً — راجع الصور الأصلية");
+      stops.push({id: sub.id, lat: r.lat, lng: r.lng, phones, task: sub.task, refs, warn, auto: true});
+    }
+    setData({date: day.date, area: "", town: "1", stops: nearestOrder(stops), auto: true});
+    closeSheet(); view = "v"; render(); scrollTo(0, 0);
+    const bad = stops.filter(s => s.warn.length).length;
+    toast(`تمت قراءة ${stops.length} مشتركاً` + (bad ? ` — ${bad} بحاجة إلى مراجعة` : ""));
+  };
+  const draw = () => {
+    const n = day.subs.length, imgs = day.subs.reduce((a, s) => a + s.images.length, 0);
+    sh.innerHTML = `<h3>📥 استيراد محادثة واتساب</h3>
+      <label class="lbl" for="impDate">التاريخ</label>
+      <select class="inp" id="impDate">${dates.slice().reverse().map(d => `<option ${d === day.date ? "selected" : ""}>${esc(d)}</option>`).join("")}</select>
+      <div class="checks">${n ? `وُجد <b>${n}</b> مشتركاً و<b>${imgs}</b> صورة من «${esc(day.clerk || "")}».` : "لا توجد أرقام اشتراكات مع صور في هذا التاريخ."}</div>
+      <p class="hint">تُقرأ الإحداثيات وأرقام الهواتف من الصور على هاتفك مباشرة، دون إنترنت ودون إرسال أي بيانات. القراءة الآلية قد تخطئ، لذا تُحفظ الصور الأصلية مع كل موقع للمراجعة.</p>
+      <div class="progress" id="impProg" hidden><i style="width:0%"></i></div>
+      <p class="hint" id="impMsg"></p>
+      <div class="row"><button type="button" class="btn primary" id="impGo" ${n ? "" : "disabled"}>قراءة الصور وبناء خط السير</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>`;
+    $("#closeSh").onclick = closeSheet;
+    $("#impDate").onchange = e => { day = WAImport.buildDay(msgs, e.target.value); draw(); };
+    $("#impGo").onclick = run;
+  };
+  draw();
+}
+
 // ---------- Excel export ----------
 function loadExcelJS(){
   if (window.ExcelJS) return Promise.resolve();
@@ -951,14 +1036,15 @@ document.addEventListener("click", e => {
 $("#importBtn").onclick = () => $("#fileIn").click();
 $("#fileIn").onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
-  try { setData(JSON.parse(await f.text())); render(); toast("تم استيراد " + data.stops.length + " موقع"); }
-  catch(err){ toast("الملف غير صحيح — تأكد أنه ملف الزيارات"); }
   e.target.value = "";
+  if (/\.zip$/i.test(f.name) || /zip/.test(f.type)) return importWhatsApp(f);
+  try { setData(JSON.parse(await f.text())); render(); toast("تم استيراد " + data.stops.length + " موقع"); }
+  catch(err){ toast("الملف غير صحيح — اختر ملف محادثة واتساب (zip) أو ملف الزيارات"); }
 };
 window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
 
 (async () => { await fromHash(); render(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 13;
+const APP_VERSION = 14;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
