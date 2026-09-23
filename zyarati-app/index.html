@@ -526,15 +526,15 @@ function render(){
     $("#sub").textContent = "ما في زيارات محمّلة";
     main.innerHTML = `<div class="empty">
       ${cfg.name ? `<p style="color:var(--ink);font-weight:700">أهلاً ${esc(cfg.name)} 👋</p>` : ""}
-      <p>لسا ما في زيارات. ضيف زيارتك بإيدك، أو افتح <b>رابط زيارات اليوم</b> إذا وصلك.</p>
-      <button class="btn primary big" type="button" id="addBtn0">➕ زيارة جديدة</button>
+      <p>لسا ما في زيارات اليوم. بعد ما تخلص أي زيارة، اضغط <b>➕ توثيق زيارة</b> وسجّل شو عملت.</p>
+      <button class="btn primary big" type="button" id="addBtn0">➕ توثيق زيارة</button>
       ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختار اسمك</button>` : ""}
       <button class="btn" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف</button></div>`;
     const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
-    $("#addBtn0").onclick = () => openStopForm();
+    $("#addBtn0").onclick = () => openSheet(null, true);
     return;
   }
-  const S = data.stops, n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s)).length;
+  const S = data.stops, n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s) && !s.manual).length;
   $("#sub").textContent = [data.date, data.area].filter(Boolean).join(" · ");
   const al = alerts(), routes = routeLinks(), sh = sharedMap();
   let prev = null;
@@ -575,12 +575,11 @@ function render(){
       ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · 📷 ${results[rkey(s.id)].photos.length}`:""}</div>`:""}
       <div class="body">
         <div class="fullrow"><span class="lbl">رقم الاشتراك:</span><span class="num">${esc(stopFull(s))}</span>${s.full?"":`<span class="tag">مقترح</span>`}
-          <span style="flex:1"></span>${s.manual?`<button class="btn sm" data-editstop="${esc(s.id)}" type="button">✏️ تعديل</button>`:""}</div>
-        ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
-        ${(s.refs||[]).length?`<div class="photos">${s.refs.map(k=>`<div class="thumb"><img alt="صورة مرجع" data-pk="${esc(k)}"></div>`).join("")}</div>`:""}
+          <span style="flex:1"></span></div>
+        ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
+
         ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
-        ${loc}${extra}
-        <div class="phones">${phones}</div>
+        ${s.manual ? "" : `${loc}${extra}<div class="phones">${phones}</div>`}
       </div></article>`;
   }).join("");
 
@@ -604,17 +603,16 @@ function render(){
   $("#app").classList.toggle("hide-done", get(HIDE,false));
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
   $("#locBtn").onclick = sortByLocation;
-  $("#addBtn").onclick = () => openStopForm();
-  main.querySelectorAll("[data-editstop]").forEach(b => b.onclick = () => openStopForm(b.dataset.editstop));
+  $("#addBtn").onclick = () => openSheet(null, true);
   fillThumbs(main).then(() => main.querySelectorAll(".card img[data-pk]").forEach(im => im.onclick = () => viewPhoto(im.src)));
   $("#exportBtn").onclick = exportExcel;
   $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
 }
 
 // ---------- result sheet ----------
-function openSheet(id){
-  const s = data.stops.find(x => x.id === id); if (!s) return;
-  const key = rkey(id), old = results[key];
+function openSheet(id, isNew){
+  const s = isNew ? {id:"", manual:true, phones:[]} : (data && data.stops.find(x => x.id === id)); if (!s) return;
+  let key = isNew ? "" : rkey(id); const old = isNew ? null : results[key];
   let work = old ? old.work : guessWork(s.task);
   const chk = Object.assign({modemSeal:"", modemOk:"", connSeal:"", connOk:"", weak:""}, old && old.checks);
   let photos = (old && old.photos ? old.photos.slice() : []);   // existing keys
@@ -650,27 +648,26 @@ function openSheet(id){
     for (const f of files){ try { const c = await compress(f); added.push({...c, url: URL.createObjectURL(c.blob)}); } catch(e){ toast("ما قدرت أقرأ الصورة"); } }
     drawPhotos();
   };
-  sh.innerHTML = `<h3>نتيجة الزيارة · <span class="num">${esc(id)}</span></h3>
-    ${s.task?`<div class="task"><span>المهمة:</span>${esc(s.task)}</div>`:""}
+  sh.innerHTML = `<h3>${isNew ? "➕ توثيق زيارة" : `نتيجة الزيارة · <span class="num">${esc(id)}</span>`}</h3>
+    ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
     <label class="lbl" for="fullIn">رقم الاشتراك (10 خانات)</label>
-    <input class="inp num" id="fullIn" inputmode="numeric" maxlength="10" dir="ltr" value="${esc((old && old.full) || stopFull(s))}">
+    <input class="inp num" id="fullIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="0010132777" value="${isNew ? "" : esc((old && old.full) || stopFull(s))}">
     <p class="hint">أول 3 خانات رقم البلدة (اربد 001، جرش 004…). تأكد منه قبل الحفظ.</p>
-    <div class="lbl">نوع العمل</div>
+    <div class="lbl">المهمة *</div>
     <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
     <div class="lbl">الفحص</div>
     <div class="chk" id="chkBox"></div>
     <div class="lbl">الصور (أول صورة = صورة العداد)</div>
     <div class="photos" id="phBox"></div>
     <div class="row"><button type="button" class="btn" id="camBtn">📷 كاميرا</button><button type="button" class="btn" id="galBtn">🖼️ من المعرض</button></div>
-    <div class="lbl">الملاحظة: اختر جاهزة أو اكتب</div>
-    <div class="tpls">${NOTES.map((n,i)=>`<button type="button" class="opt" data-n="${i}">${esc(n)}</button>`).join("")}</div>
-    <textarea id="noteIn" placeholder="الإجراء الفعلي اللي تم عند المشترك">${esc(old ? old.note : "")}</textarea>
+    <label class="lbl" for="noteIn">الملاحظة *</label>
+    <textarea id="noteIn" placeholder="اكتب الإجراء الفعلي اللي تم عند المشترك">${esc(old ? old.note : "")}</textarea>
     <div class="row"><button type="button" class="btn primary" id="saveRes">حفظ وتم</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
-    ${old?`<button type="button" class="btn danger" id="undoRes">${old.logged?"حذف النتيجة (موثّقة)":"إلغاء تم"}</button>`:""}`;
+    ${old?`<button type="button" class="btn danger" id="undoRes">${s.manual ? "حذف الزيارة" : old.logged ? "حذف النتيجة (موثّقة)" : "إلغاء تم"}</button>`:""}`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0;
   drawChecks(); drawPhotos();
+  if (isNew) setTimeout(() => $("#fullIn").focus(), 250);
   sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
-  sh.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { $("#noteIn").value = NOTES[+b.dataset.n]; });
   $("#camBtn").onclick = () => { $("#camIn").value = ""; $("#camIn").onchange = e => onFiles(e.target.files); $("#camIn").click(); };
   $("#galBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = e => onFiles(e.target.files); $("#galIn").click(); };
   $("#closeSh").onclick = closeSheet;
@@ -678,21 +675,37 @@ function openSheet(id){
     const note = $("#noteIn").value.trim();
     const full = clean10($("#fullIn").value);
     if (full.length !== 10) return toast("رقم الاشتراك لازم يكون 10 خانات");
-    if (String(parseInt(full.slice(3), 10)) !== String(parseInt(clean10(id), 10))) return toast("آخر 7 خانات لازم تطابق رقم المشترك " + id);
-    if (!work) return toast("اختار نوع العمل");
-    if (!note) return toast("اكتب الملاحظة أو اختار وحدة جاهزة");
+    const newId = String(parseInt(full.slice(3), 10));
+    if (!+newId) return toast("رقم المشترك غلط");
+    if (!s.manual && newId !== String(parseInt(clean10(id), 10))) return toast("آخر 7 خانات لازم تطابق رقم المشترك " + id);
+    if (!work) return toast("اختار المهمة");
+    if (!note) return toast("اكتب الملاحظة");
+    const sameDay = data && data.date === todayStr();
+    if (s.manual && newId !== s.id && data && (isNew ? sameDay : true) && data.stops.some(x => x.id === newId && x !== s))
+      return toast("المشترك " + newId + " موجود بالقائمة — افتحه من بطاقته");
+    if (isNew && !sameDay) data = {date: todayStr(), area:"", town: String(parseInt(full.slice(0,3),10)), stops: []};
+    if (!isNew && s.manual && newId !== s.id && old){ queueDelete(old); delete results[key]; }
+    if (s.manual) s.id = newId;
+    if (isNew) data.stops.push(s);
+    key = rkey(s.id);
     try {
       for (const k of removed) await IDB.del(k);
       for (const a of added){ const k = key + "|" + Date.now() + Math.random().toString(36).slice(2,6); await IDB.put(k, {blob:a.blob, w:a.w, h:a.h}); photos.push(k); }
       if (added.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
     } catch(e){ toast("مشكلة بحفظ الصور — جرّب مرة ثانية"); return; }
     s.full = full; put(STORE, data);
-    results[key] = {date:data.date, id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
+    results[key] = {date:data.date, id:s.id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
       stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || []};
-    put(RES, results); closeSheet(); render(); toast("انحفظت نتيجة " + id); syncAll();
+    put(RES, results); closeSheet(); view = "v"; render(); toast((isNew ? "انضافت الزيارة " : "انحفظت نتيجة ") + s.id); syncAll();
   };
-  if (old) $("#undoRes").onclick = async () => { for (const k of (old.photos||[])) await IDB.del(k).catch(()=>{}); queueDelete(old); delete results[key]; put(RES, results); closeSheet(); render(); toast("انلغت"); syncAll(); };
+  if (old) $("#undoRes").onclick = async e => {
+    const b = e.currentTarget;
+    if (s.manual && !b.dataset.sure){ b.dataset.sure = "1"; b.textContent = "متأكد؟ اضغط مرة ثانية للحذف"; return; }
+    for (const k of (old.photos||[])) await IDB.del(k).catch(()=>{});
+    queueDelete(old); delete results[key]; put(RES, results);
+    if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
+    closeSheet(); render(); toast(s.manual ? "انحذفت الزيارة" : "انلغت"); syncAll(); };
 }
 function closeSheet(){ $("#sheetBg").hidden = true; }
 $("#sheetBg").addEventListener("click", e => { if (e.target.id === "sheetBg") closeSheet(); });
@@ -713,7 +726,7 @@ function renderDocs(){
       <div class="line"><span class="full num">${fn}</span><span class="sp" style="flex:1"></span>
         <button class="btn sm" data-editfull="${esc(r.k)}" type="button" aria-label="تعديل رقم الاشتراك">✏️</button>
         <button class="btn sm primary" data-copy="${fn}" type="button">نسخ الرقم</button></div>
-      <div class="line"><span class="lbl">نوع العمل:</span><span class="work">${esc(r.work)}</span></div>
+      <div class="line"><span class="lbl">المهمة:</span><span class="work">${esc(r.work)}</span></div>
       <div class="line"><span class="note">${esc(r.note)}</span>
         <button class="btn sm" data-copy="${esc(r.note)}" type="button">نسخ الملاحظة</button></div>
       ${checksText(r.checks)?`<div class="line"><span class="checks" style="flex:1">${esc(checksText(r.checks))}</span>
@@ -756,8 +769,8 @@ async function exportExcel(){
   const wb = new ExcelJS.Workbook(); wb.creator = "زياراتي";
   const ws = wb.addWorksheet("الزيارات", {views:[{rightToLeft:true, state:"frozen", ySplit:1}]});
   const cols = [
-    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["وقت الإنجاز",11],["نوع العمل",14],
-    ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["المهمة",30],["التلفون",14],
+    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["وقت الإنجاز",11],["المهمة",14],
+    ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["الطلب",30],["التلفون",14],
     ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22]
   ];
   ws.columns = cols.map(([h,w]) => ({header:h, width:w}));
@@ -807,76 +820,6 @@ async function exportExcel(){
   const shx = $("#shX"); if (shx) shx.onclick = () => navigator.share({files:[file], title:name}).catch(()=>{});
 }
 
-// ---------- manual visit (add / edit) ----------
-function openStopForm(editId){
-  const s0 = editId && data ? data.stops.find(x => x.id === editId) : null;
-  let refs = s0 && s0.refs ? s0.refs.slice() : [];
-  const added = [], removed = [];
-  const sh = $("#sheet");
-  const coordsTxt = s0 && hasC(s0) ? `${s0.lat}, ${s0.lng}` : "";
-  sh.innerHTML = `<h3>${s0 ? "تعديل الزيارة" : "➕ زيارة جديدة"}</h3>
-    <label class="lbl" for="mFull">رقم الاشتراك (10 خانات) *</label>
-    <input class="inp num" id="mFull" inputmode="numeric" maxlength="10" dir="ltr" placeholder="0010132777" value="${esc(s0 ? stopFull(s0) : "")}">
-    <p class="hint">أول 3 خانات رقم البلدة، والـ 7 الباقيات رقم المشترك.</p>
-    <label class="lbl" for="mCoords">الإحداثيات (اختياري)</label>
-    <input class="inp" id="mCoords" dir="ltr" placeholder="32.5653, 35.8793 أو رابط خرائط جوجل" value="${esc(coordsTxt)}">
-    <p class="hint" id="mCoordsHint">${coordsTxt ? "✓ " + coordsTxt : "الصق الإحداثيات أو رابط الموقع، وبيطلعلك زر «اذهب»."}</p>
-    <label class="lbl" for="mPhones">التلفون (اختياري)</label>
-    <input class="inp" id="mPhones" inputmode="tel" dir="ltr" placeholder="0791234567" value="${esc(s0 ? s0.phones.map(p => p[0]).join(" ، ") : "")}">
-    <label class="lbl" for="mTask">المهمة (اختياري)</label>
-    <input class="inp" id="mTask" placeholder="مثلاً: معالجة اتصال وبرمجة" value="${esc(s0 && s0.task || "")}">
-    <label class="lbl" for="mAddr">العنوان / ملاحظة للموقع (اختياري)</label>
-    <input class="inp" id="mAddr" value="${esc(s0 && s0.addr || "")}">
-    <div class="lbl">صور من الواتساب للرجوع إلها (اختياري)</div>
-    <div class="photos" id="mRefs"></div>
-    <button type="button" class="btn" id="mRefBtn">📎 إضافة صور من المعرض</button>
-    <div class="row"><button type="button" class="btn primary" id="mSave">حفظ</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
-    ${s0 ? `<button type="button" class="btn danger" id="mDel">حذف الزيارة</button>` : ""}`;
-  $("#sheetBg").hidden = false; sh.scrollTop = 0;
-  const drawRefs = async () => {
-    const all = [...refs.map(k => ({k})), ...added.map((a,i) => ({a,i}))];
-    $("#mRefs").innerHTML = all.map(x => `<div class="thumb"><img alt="" ${x.k?`data-pk="${x.k}"`:`data-new="${x.i}"`}>
-      <button type="button" class="x" ${x.k?`data-rk="${x.k}"`:`data-rn="${x.i}"`} aria-label="حذف الصورة">×</button></div>`).join("");
-    $("#mRefs").querySelectorAll("img[data-new]").forEach(im => im.src = added[+im.dataset.new].url);
-    await fillThumbs($("#mRefs"));
-    $("#mRefs").querySelectorAll("img").forEach(im => im.onclick = () => viewPhoto(im.src));
-    $("#mRefs").querySelectorAll("[data-rk]").forEach(b => b.onclick = () => { removed.push(b.dataset.rk); refs = refs.filter(k => k !== b.dataset.rk); drawRefs(); });
-    $("#mRefs").querySelectorAll("[data-rn]").forEach(b => b.onclick = () => { added.splice(+b.dataset.rn, 1); drawRefs(); });
-  };
-  drawRefs();
-  $("#mCoords").oninput = e => { const c = parseCoords(e.target.value); $("#mCoordsHint").textContent = e.target.value.trim() ? (c ? `✓ ${c.lat}, ${c.lng}` : "ما قدرت أقرأ الإحداثيات — مثال: 32.5653, 35.8793") : "الصق الإحداثيات أو رابط الموقع، وبيطلعلك زر «اذهب»."; };
-  $("#mRefBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = async e => { for (const f of e.target.files){ try { const c = await compress(f, 1600, 0.8); added.push({...c, url:URL.createObjectURL(c.blob)}); } catch(err){ toast("ما قدرت أقرأ الصورة"); } } drawRefs(); }; $("#galIn").click(); };
-  $("#closeSh").onclick = closeSheet;
-  $("#mSave").onclick = async () => {
-    const full = clean10($("#mFull").value);
-    if (full.length !== 10) return toast("رقم الاشتراك لازم يكون 10 خانات");
-    const id = String(parseInt(full.slice(3), 10)), town = String(parseInt(full.slice(0, 3), 10));
-    if (!+id) return toast("رقم المشترك غلط");
-    const ct = $("#mCoords").value.trim(), c = ct ? parseCoords(ct) : null;
-    if (ct && !c) return toast("الإحداثيات مش مفهومة — مثال: 32.5653, 35.8793");
-    const pt = $("#mPhones").value.trim(), phones = parsePhones(pt);
-    if (pt && !phones.length) return toast("رقم التلفون مش مفهوم — مثال: 0791234567");
-    if (!data || data.date !== todayStr()){ data = {date: todayStr(), area:"", town, stops: []}; }
-    if (data.stops.some(x => x.id === id && x !== s0)) return toast("المشترك " + id + " موجود بالقائمة");
-    try {
-      for (const k of removed) await IDB.del(k);
-      for (const a of added){ const k = "ref|" + data.date + "|" + id + "|" + Date.now() + Math.random().toString(36).slice(2,6); await IDB.put(k, {blob:a.blob, w:a.w, h:a.h}); refs.push(k); }
-    } catch(e){ return toast("مشكلة بحفظ الصور"); }
-    const stop = Object.assign(s0 || {}, {id, full, town, manual:true, task:$("#mTask").value.trim(), addr:$("#mAddr").value.trim(),
-      phones: phones.map(p => [p, 0]), lat: c ? c.lat : null, lng: c ? c.lng : null, refs});
-    if (!s0) data.stops.push(stop);
-    else if (s0.id !== editId && results[rkey(editId)]){ const r = results[rkey(editId)]; delete results[rkey(editId)]; queueDelete(r); r.id = id; r.full = full; r.sent = false; r.v = (r.v||0)+1; results[rkey(id)] = r; put(RES, results); }
-    put(STORE, data); closeSheet(); view = "v"; render(); toast(s0 ? "انحفظ التعديل" : "انضافت الزيارة " + id); if (s0) syncAll();
-  };
-  if (s0) $("#mDel").onclick = async e => {
-    const b = e.currentTarget;
-    if (!b.dataset.sure){ b.dataset.sure = "1"; b.textContent = "متأكد؟ اضغط مرة ثانية للحذف"; return; }
-    for (const k of (s0.refs||[])) await IDB.del(k).catch(()=>{});
-    const r = results[rkey(s0.id)];
-    if (r){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s0.id)]; put(RES, results); }
-    data.stops = data.stops.filter(x => x !== s0); put(STORE, data); closeSheet(); render(); toast("انحذفت الزيارة"); syncAll();
-  };
-}
 function editFull(k){
   const r = results[k]; if (!r) return;
   const sh = $("#sheet");
