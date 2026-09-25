@@ -208,9 +208,19 @@ select.inp{appearance:auto}
 .sync.ok{background:var(--done-bg);color:var(--done)}
 .hint{font-size:12.5px;color:var(--muted);margin:0}
 .postbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:14px;padding:10px 12px}
-.postbar span{flex:1;min-width:120px;font-size:13.5px;font-weight:600;color:var(--gold-deep)}
+.postbar .pb-link{flex:1;min-width:130px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;background:transparent;padding:0;cursor:pointer;font:600 13.5px var(--sans);color:var(--gold-deep);text-align:start}
+.more{font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:3px;opacity:.85}
+.pl-sec{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pl-sec .pl-h{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;font-weight:700;font-size:14px}
+.pl-sec.wait .pl-h{background:var(--gold-soft);color:var(--gold-deep)}
+.pl-sec.sent .pl-h{background:var(--done-bg);color:var(--done)}
+.pl-sec .hint{padding:10px 12px}
+.pl-row{display:flex;flex-direction:column;gap:1px;padding:9px 12px;border-top:1px solid var(--line-2)}
+.pl-row .num{font-weight:700;font-size:15px;letter-spacing:.04em}
+.pl-row .pl-meta{font-size:12.5px;color:var(--muted)}
+.pl-row.del .num{text-decoration:line-through;color:var(--danger)}
 .postbar .btn{flex:none}
-.posted{display:flex;align-items:center;gap:6px;justify-content:center;background:var(--done-bg);color:var(--done);border-radius:12px;padding:11px;font-weight:600;font-size:14px}
+.posted{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;width:100%;border:0;cursor:pointer;background:var(--done-bg);color:var(--done);border-radius:12px;padding:11px;font:600 14px var(--sans)}
 .fullrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
 .fullrow .num{font-size:15px;font-weight:600}
 .fullrow .tag{font-size:11px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:1px 7px}
@@ -331,20 +341,37 @@ function pendingPost(){
 function postBtnHtml(id, big){
   if (!cfgReady()) return "";
   const p = pendingPost(), tot = p.n + p.del;
-  if (!tot) return big ? `<div class="posted">${ic("check")} تم ترحيل جميع الزيارات إلى رئيس القسم</div>` : "";
+  if (!tot) return big ? `<button type="button" class="posted" data-postlist>${ic("check")} تم ترحيل جميع الزيارات إلى رئيس القسم<span class="more">عرض ›</span></button>` : "";
   const label = p.onlyToday ? "ترحيل زيارات اليوم" : "ترحيل الزيارات";
   const cnt = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : `${n} ${n <= 10 ? few : many}`;
   const what = [p.n ? cnt(p.n, "زيارة واحدة", "زيارتان", "زيارات", "زيارة") + " لم تُرحّل بعد" : "",
     p.del ? cnt(p.del, "حذف واحد", "حذفان", "عمليات حذف", "عملية حذف") + " بانتظار الترحيل" : ""].filter(Boolean).join(" · ");
-  return `<div class="postbar"><span>${what}</span><button class="btn primary" id="${id}" type="button">${ic("cloud")} ${label}</button></div>`;
+  return `<div class="postbar"><button type="button" class="pb-link" data-postlist>${what}<span class="more">عرض الزيارات ›</span></button><button class="btn primary" id="${id}" type="button">${ic("cloud")} ${label}</button></div>`;
 }
+// list of saved visits split into «لم تُرحّل بعد» and «مُرحّلة»
+function openPostList(){
+  const all = Object.values(results).sort((a, b) => (a.date === b.date ? 0 : dmy(b.date) - dmy(a.date)) || String(a.at).localeCompare(String(b.at)));
+  const un = all.filter(r => !r.sent), done = all.filter(r => r.sent), dq = get(DELQ, []), today = todayStr();
+  const row = (r, ok) => { const f = resFull(r), tn = townName(parseInt(f.slice(0, 3), 10));
+    return `<div class="pl-row${ok ? " ok" : ""}"><span class="num">${esc(f)}</span><span class="pl-meta">${esc([tn, r.work].filter(Boolean).join(" · "))}${r.date !== today ? ` · <span class="num">${esc(r.date)}</span>` : ""}</span></div>`; };
+  const sec = (title, n, body, cls) => `<div class="pl-sec ${cls}"><div class="pl-h">${title} <b class="num">${n}</b></div>${body || `<p class="hint">لا يوجد</p>`}</div>`;
+  const sh = $("#sheet"), p = pendingPost();
+  sh.innerHTML = `<h3>الزيارات والترحيل</h3>
+    ${sec("لم تُرحّل بعد", un.length + dq.length, un.map(r => row(r, false)).join("") + dq.map(d => `<div class="pl-row del"><span class="num">${esc(d.full || d.id)}</span><span class="pl-meta">حذف بانتظار الترحيل${d.date !== today ? ` · <span class="num">${esc(d.date)}</span>` : ""}</span></div>`).join(""), "wait")}
+    ${sec("مُرحّلة إلى رئيس القسم", done.length, done.map(r => row(r, true)).join(""), "sent")}
+    <div class="row">${p.n + p.del && cfgReady() ? `<button type="button" class="btn primary" id="postBtnL">${ic("cloud")} ${p.onlyToday ? "ترحيل زيارات اليوم" : "ترحيل الزيارات"}</button>` : ""}<button type="button" class="btn" id="closeSh">إغلاق</button></div>`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0;
+  $("#closeSh").onclick = closeSheet;
+  const b = $("#postBtnL"); if (b) b.onclick = e => confirmTap(e.currentTarget, () => { closeSheet(); b.disabled = true; syncAll(true); }, "اضغط مرة أخرى للتأكيد");
+}
+const dmy = d => { const q = String(d || "").split("/"); return q.length === 3 ? new Date(+q[2], +q[1] - 1, +q[0]).getTime() : 0; };
 function wirePost(id){
   const b = $("#" + id); if (!b) return;
   b.onclick = e => confirmTap(e.currentTarget, () => { b.disabled = true; b.textContent = "جاري الترحيل…"; syncAll(true); }, "اضغط مرة أخرى للتأكيد");
 }
 function queueDelete(r){
   if (!r || !r.sent) return;
-  const q = get(DELQ, []); q.push({deleted:true, tech:r.tech || cfg.name, date:r.date, id:r.id}); put(DELQ, q);
+  const q = get(DELQ, []); q.push({deleted:true, tech:r.tech || cfg.name, date:r.date, id:r.id, full:resFull(r)}); put(DELQ, q);
 }
 let syncing = false, syncAgain = false;
 async function syncAll(manual){
@@ -1185,6 +1212,7 @@ let tt;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
 
 document.addEventListener("click", e => {
+  if (e.target.closest("[data-postlist]")){ openPostList(); return; }
   if (selMode){
     const card = e.target.closest("[data-card]");
     if (card && !e.target.closest("button, a")){ const id = card.dataset.card; sel.has(id) ? sel.delete(id) : sel.add(id); render(); return; }
@@ -1223,7 +1251,7 @@ async function takeShared(){
   } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
 }
 (async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 24;
+const APP_VERSION = 25;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
