@@ -173,6 +173,17 @@ textarea{width:100%;min-height:78px;box-sizing:border-box;border:1px solid var(-
 .chk .opts.full{margin-top:-2px;padding-inline-start:14px}
 .chk .opts.full .opt{background:var(--surface);font-size:13.5px;padding:8px 12px}
 .chk .opts.full .opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chk .mph{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-inline-start:14px}
+.chk .mslot{display:flex;flex-direction:column;gap:6px;min-width:0}
+.chk .mslot .lbl{font-size:12.5px;margin:0}
+.chk .mthumb{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.chk .mthumb img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.chk .mthumb.empty{border:1.5px dashed var(--gold-line);color:var(--muted);cursor:pointer;align-content:center;justify-items:center;gap:4px}
+.chk .mthumb.empty .ic{width:24px;height:24px;color:var(--gold-deep)}
+.chk .mthumb.empty small{font-size:11.5px}
+.chk .mthumb .x{position:absolute;top:6px;inset-inline-start:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:17px;line-height:1;cursor:pointer}
+.chk .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.chk .mbtns .btn{padding-inline:6px;font-size:12px}
 .chk .alertnote{margin:0;display:flex;gap:7px;align-items:flex-start;font-size:13px;font-weight:600;line-height:1.55;color:var(--danger);background:var(--danger-bg);border-radius:10px;padding:8px 10px}
 .chk .alertnote .ic{flex:none;width:17px;height:17px;margin-top:1px}
 .photos{display:flex;gap:8px;flex-wrap:wrap}
@@ -342,6 +353,8 @@ function fixText(c){
   if (!c || c.weak !== "no" || !c.fixed) return "";
   return c.fixed === "yes" ? "تمت" + (FIX_HOW[c.fixHow] ? ` (${FIX_HOW[c.fixHow]})` : "") : "لم تتم" + (NOT_FIXED[c.notFixed] ? ` — ${NOT_FIXED[c.notFixed]}` : "");
 }
+const photoKeys = r => (r && r.photos || []).concat(Object.values(r && r.modemPhotos || {}).filter(Boolean));
+const needModemPhotos = c => !!c && c.weak === "no" && c.fixed === "yes" && c.fixHow === "replace";
 const fixAlert = c => c && c.weak === "no" && c.fixed === "no" && NOT_FIXED[c.notFixed] ? c.notFixed : "";
 function checksText(c){
   if (!c) return "";
@@ -370,12 +383,19 @@ async function payloadFor(r){
     if (!sent.includes(pk)){ const v = await IDB.get(pk).catch(()=>null); if (v) item.b64 = await blobToB64(v.blob); }
     photos.push(item);
   }
+  const mphotos = [];
+  for (const [slot, pk] of Object.entries(r.modemPhotos || {})){
+    if (!pk) continue;
+    const item = {slot, k: pk};
+    if (!sent.includes(pk)){ const v = await IDB.get(pk).catch(()=>null); if (v) item.b64 = await blobToB64(v.blob); }
+    mphotos.push(item);
+  }
   const hasLoc = st.lat != null && st.lng != null;
   return {name:cfg.name, key:cfg.key, date:r.date, id:r.id, full:resFull(r), work:r.work, note:r.note,
     modem:sealTxt(c.modemSeal, c.modemOk), conn:sealTxt(c.connSeal, c.connOk), weak:c.weak ? YN[c.weak] : "",
     fix:fixText(c), alert:fixAlert(c),
     task:st.task || "", phone:st.phone || "", coords: hasLoc ? `${st.lat}, ${st.lng}` : "لا يوجد",
-    map: hasLoc ? `https://www.google.com/maps?q=${st.lat},${st.lng}` : "", photos};
+    map: hasLoc ? `https://www.google.com/maps?q=${st.lat},${st.lng}` : "", photos, mphotos};
 }
 // what is waiting to be posted: unsent visits + deletions of visits that were already posted
 function pendingPost(){
@@ -433,7 +453,7 @@ async function syncAll(manual){
       try {
         const body = await payloadFor(r); await postScript(body);
         const cur = results[k];
-        if (cur && (cur.v || 0) === v){ cur.sent = true; cur.tech = body.tech; cur.sentPhotos = body.photos.map(x => x.k); }
+        if (cur && (cur.v || 0) === v){ cur.sent = true; cur.tech = body.tech; cur.sentPhotos = body.photos.map(x => x.k).concat(body.mphotos.map(x => x.k)); }
         ok++;
       } catch(e){ fail++; if (e.auth){ authLost = true; break; } if (manual && fail === 1) toast("تعذّر الإرسال: " + e.message); }
     }
@@ -800,7 +820,7 @@ function render(){
   wireSel(get(HIDE,false) ? S.filter(s => !done[s.id]) : S);
   fillThumbs(main).then(() => main.querySelectorAll(".card img[data-pk]").forEach(im => im.onclick = () => viewPhoto(im.src)));
   $("#exportBtn").onclick = exportExcel;
-  $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ (r.photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
+  $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ photoKeys(r).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
 }
 
 // ---------- result sheet ----------
@@ -859,6 +879,7 @@ function openSheet(id, isNew){
   const chk = Object.assign({modemSeal:"", modemOk:"", connSeal:"", connOk:"", weak:"", fixed:"", fixHow:"", notFixed:""}, old && old.checks);
   let photos = (old && old.photos ? old.photos.slice() : []);   // existing keys
   const added = [], removed = [];
+  const mph = Object.assign({old:"", new:""}, old && old.modemPhotos), mphAdd = {old:null, new:null}, mphDrop = [];   // old/new modem photos
   const sh = $("#sheet");
   const full0 = isNew ? "" : clean10((old && old.full) || stopFull(s));
   let town = full0.length === 10 ? parseInt(full0.slice(0, 3), 10) : (isNew ? (recentTowns()[0] || 0) : 0);
@@ -866,6 +887,28 @@ function openSheet(id, isNew){
   const sub0 = full0.length === 10 ? String(parseInt(full0.slice(3), 10) || "") : (isNew ? "" : String(parseInt(clean10(s.id), 10) || ""));
   const yn = (f, dis) => `<span class="yn">${["yes","no"].map(v=>`<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}" ${dis?"disabled":""}>${YN[v]}</button>`).join("")}</span>`;
   const pick = (f, opts) => Object.entries(opts).map(([v, t]) => `<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}">${t}</button>`).join("");
+  const pickModem = (sl, src) => {
+    const inp = src === "cam" ? $("#camIn") : $("#galIn"); inp.value = "";
+    inp.onchange = async e => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      try { const c = await compress(f);
+        if (mphAdd[sl]) URL.revokeObjectURL(mphAdd[sl].url);
+        if (mph[sl]){ mphDrop.push(mph[sl]); mph[sl] = ""; }
+        mphAdd[sl] = {...c, url: URL.createObjectURL(c.blob)}; drawChecks();
+      } catch(err){ toast("تعذّرت قراءة الصورة"); }
+    };
+    inp.click();
+  };
+  const wireModem = () => {
+    const box = $("#chkBox");
+    box.querySelectorAll("[data-mimg]").forEach(async im => { const sl = im.dataset.mimg; im.src = mphAdd[sl] ? mphAdd[sl].url : await photoUrl(mph[sl]); im.onclick = e => { e.stopPropagation(); viewPhoto(im.src); }; });
+    box.querySelectorAll(".mthumb.empty").forEach(t => t.onclick = () => pickModem(t.dataset.mpick, "cam"));
+    box.querySelectorAll("[data-mcam]").forEach(b => b.onclick = () => pickModem(b.dataset.mcam, "cam"));
+    box.querySelectorAll("[data-mgal]").forEach(b => b.onclick = () => pickModem(b.dataset.mgal, "gal"));
+    box.querySelectorAll("[data-mx]").forEach(b => b.onclick = e => { e.stopPropagation(); const sl = b.dataset.mx;
+      if (mphAdd[sl]){ URL.revokeObjectURL(mphAdd[sl].url); mphAdd[sl] = null; } else if (mph[sl]){ mphDrop.push(mph[sl]); mph[sl] = ""; }
+      drawChecks(); });
+  };
   const drawChecks = () => {
     $("#chkBox").innerHTML = `
       <span class="q">هل ختم المودم موجود؟</span>${yn("modemSeal")}
@@ -875,8 +918,13 @@ function openSheet(id, isNew){
       <span class="q">هل يوجد ضعف شبكة؟</span>${yn("weak")}
       ${chk.weak === "no" ? `<span class="q">هل تم فعلياً معالجة الاتصال؟</span>${yn("fixed")}` : ""}
       ${chk.weak === "no" && chk.fixed === "yes" ? `<span class="q sub2 full">كيف تمت معالجة الاتصال؟</span><div class="opts full">${pick("fixHow", FIX_HOW)}</div>` : ""}
+      ${needModemPhotos(chk) ? `<div class="mph full">${["old", "new"].map(sl => `<div class="mslot">
+        <div class="lbl">${sl === "old" ? "صورة المودم القديم" : "صورة المودم الجديد"} *</div>
+        <div class="mthumb${mph[sl] || mphAdd[sl] ? "" : " empty"}" data-mpick="${sl}">${mph[sl] || mphAdd[sl] ? `<img alt="" data-mimg="${sl}"><button type="button" class="x" data-mx="${sl}" aria-label="حذف الصورة">×</button>` : `${ic("camera")}<small>اضغط للتصوير</small>`}</div>
+        <div class="mbtns"><button type="button" class="btn sm" data-mcam="${sl}">${ic("camera")} كاميرا</button><button type="button" class="btn sm" data-mgal="${sl}">${ic("image")} المعرض</button></div></div>`).join("")}</div>` : ""}
       ${chk.weak === "no" && chk.fixed === "no" ? `<span class="q sub2 full">ما السبب؟</span><div class="opts full">${pick("notFixed", NOT_FIXED)}</div>
         ${chk.notFixed ? `<p class="alertnote full">${ic("alert")} ${chk.notFixed === "noresp" ? "سيصل تنبيه للمسؤول لاتخاذ الإجراء اللازم بخصوص العداد" : "سيصل تنبيه للمسؤول لتذكيرك بالتنسيق مع المشترك للعودة واستبدال المودم"}، عند ترحيل الزيارة.</p>` : ""}` : ""}`;
+    wireModem();
     $("#chkBox").querySelectorAll("[data-f]").forEach(b => b.onclick = () => {
       const f = b.dataset.f; chk[f] = chk[f] === b.dataset.v ? "" : b.dataset.v;
       if (f === "modemSeal" && chk.modemSeal !== "yes") chk.modemOk = "";
@@ -961,6 +1009,10 @@ function openSheet(id, isNew){
       if (chk.fixed === "yes" && !chk.fixHow) return toast("اختر كيف تمت معالجة الاتصال");
       if (chk.fixed === "no" && !chk.notFixed) return toast("اختر سبب عدم معالجة الاتصال");
     }
+    if (needModemPhotos(chk)){
+      if (!mph.old && !mphAdd.old) return toast("أضف صورة المودم القديم");
+      if (!mph.new && !mphAdd.new) return toast("أضف صورة المودم الجديد");
+    }
     const sameDay = data && data.date === todayStr();
     if (s.manual && newId !== s.id && data && (isNew ? sameDay : true) && data.stops.some(x => x.id === newId && x !== s))
       return toast("المشترك " + newId + " موجود في القائمة — افتحه من بطاقته");
@@ -972,12 +1024,19 @@ function openSheet(id, isNew){
     try {
       for (const k of removed) await IDB.del(k);
       for (const a of added){ const k = key + "|" + Date.now() + Math.random().toString(36).slice(2,6); await IDB.put(k, {blob:a.blob, w:a.w, h:a.h}); photos.push(k); }
+      if (!needModemPhotos(chk)) for (const sl of ["old", "new"]){ if (mph[sl]) mphDrop.push(mph[sl]); mph[sl] = ""; mphAdd[sl] = null; }
+      for (const k of mphDrop) await IDB.del(k).catch(()=>{});
+      for (const sl of ["old", "new"]) if (mphAdd[sl]){
+        const k = key + "|m" + sl + "|" + Date.now() + Math.random().toString(36).slice(2,6);
+        await IDB.put(k, {blob:mphAdd[sl].blob, w:mphAdd[sl].w, h:mphAdd[sl].h}); mph[sl] = k;
+      }
       if (added.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
     } catch(e){ toast("حدثت مشكلة في حفظ الصور — حاول مرة أخرى"); return; }
     s.full = full; put(STORE, data);
     results[key] = {date:data.date, id:s.id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
       stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
-      v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || []};
+      v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || [],
+      modemPhotos: needModemPhotos(chk) ? {old: mph.old, new: mph.new} : undefined};
     put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تم حفظ الزيارة " : "تم حفظ نتيجة ") + s.id + " — تُرحّل عند الضغط على «ترحيل»");
   };
   if (old){
@@ -989,7 +1048,7 @@ async function deleteMany(ids){
   if (!data || !ids.length) return;
   for (const id of ids){
     const r = results[rkey(id)];
-    if (r){ for (const k of (r.photos||[])) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[rkey(id)]; }
+    if (r){ for (const k of photoKeys(r)) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[rkey(id)]; }
   }
   const set = new Set(ids);
   data.stops = data.stops.filter(x => !set.has(x.id));
@@ -1018,13 +1077,13 @@ const selHead = (s, i) => selMode
 async function deleteVisit(id){
   const s = data && data.stops.find(x => x.id === id); if (!s) return;
   const key = rkey(id), r = results[key];
-  if (r){ for (const k of (r.photos||[])) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[key]; put(RES, results); }
+  if (r){ for (const k of photoKeys(r)) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[key]; put(RES, results); }
   if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
   closeSheet(); render(); toast(s.manual ? "تم حذف الزيارة " + id : "تم إلغاء نتيجة " + id); syncAll();
 }
 async function deleteResult(k){
   const r = results[k]; if (!r) return;
-  for (const p of (r.photos||[])) await IDB.del(p).catch(()=>{});
+  for (const p of photoKeys(r)) await IDB.del(p).catch(()=>{});
   queueDelete(r); delete results[k]; put(RES, results);
   if (data && data.date === r.date){ const s = data.stops.find(x => x.id === r.id); if (s && s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); } }
   syncDone(); render(); toast("تم حذف الزيارة " + r.id); syncAll();
@@ -1088,7 +1147,7 @@ function renderDocs(){
         <button class="btn sm" data-copy="${esc(r.note)}" type="button">نسخ الملاحظة</button></div>
       ${checksText(r.checks)?`<div class="line"><span class="checks" style="flex:1">${esc(checksText(r.checks))}</span>
         <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
-      ${(r.photos||[]).length?`<div class="photos">${r.photos.map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}</div>`:""}
+      ${photoKeys(r).length?`<div class="photos">${(r.photos||[]).map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}${Object.entries(r.modemPhotos||{}).filter(([,k]) => k).map(([sl,k])=>`<div class="thumb"><img alt="" data-pk="${esc(k)}"><span class="tag0">${sl === "old" ? "المودم القديم" : "المودم الجديد"}</span></div>`).join("")}</div>`:""}
       <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span>
         ${cfgReady() ? (r.sent ? `<span class="sync ok">${ic("check")} رُحّلت</span>` : `<span class="sync">لم تُرحّل بعد</span>`) : ""}<span style="flex:1"></span>
         <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتُها ✓"}</button></div>
@@ -1108,7 +1167,7 @@ function renderDocs(){
   main.querySelectorAll("[data-delres]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, () => deleteResult(b.dataset.delres), "متأكد؟ اضغط مرة أخرى"));
   wirePost("sendBtn"); const su = $("#setupBtn"); if (su) su.onclick = openSettings;
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
-  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
+  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ photoKeys(results[k]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
 }
 $("#tabV").onclick = () => { view = "v"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
 $("#tabM").onclick = () => { view = "m"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
@@ -1212,7 +1271,7 @@ async function exportExcel(){
   const cols = [
     ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["المهمة",14],
     ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["معالجة الاتصال",24],["الطلب",30],["التلفون",14],
-    ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22]
+    ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22],["المودم القديم",22],["المودم الجديد",22]
   ];
   ws.columns = cols.map(([h,w]) => ({header:h, width:w}));
   const hr = ws.getRow(1); hr.height = 24;
@@ -1232,8 +1291,14 @@ async function exportExcel(){
     row.getCell(4).font = {bold:true, color:{argb: r ? "FF2E7D32" : "FFB3261E"}};
     if (hasC(s)) row.getCell(14).font = {color:{argb:"FF2B5DA8"}, underline:true};
     if (fixAlert(c)) row.getCell(10).font = {bold:true, color:{argb:"FFB3261E"}};
-    const pks = (r && r.photos || []).slice(0, 3);
-    if (pks.length){
+    const pks = (r && r.photos || []).slice(0, 3), mk = r && r.modemPhotos ? [r.modemPhotos.old, r.modemPhotos.new] : [];
+    for (const [n, pk] of mk.entries()){
+      if (!pk) continue;
+      const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
+      const id = wb.addImage({buffer: await v.blob.arrayBuffer(), extension:"jpeg"}), sc = Math.min(150 / v.w, 150 / v.h);
+      ws.addImage(id, {tl:{col:18 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
+    }
+    if (pks.length || mk.some(Boolean)){
       row.height = 120;
       for (const [n, pk] of pks.entries()){
         const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
@@ -1434,7 +1499,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 30;
+const APP_VERSION = 31;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
