@@ -1,0 +1,1562 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#172B48" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0B1424" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="زياراتي">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>زياراتي</title>
+<style>
+@font-face{font-family:"Plex";src:url(plex-400.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex";src:url(plex-600.woff2) format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex";src:url(plex-700.woff2) format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Wordmark";src:url(data:font/woff2;base64,d09GMgABAAAAAAXUAA4AAAAADZwAAAV6AAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGlQbgwochB4GYD9TVEFUKgBMColEhzYBNgIkA1wLNAAEIAWDZgcgG2MLCB6FcTM9UGmiiPWFSxc8z7Opf+57QFMg8W7LlJlnTNQqKum+S/PFVMPzxNXe361bOIH1MDvt1qgb4yaNcFGihHYbIJ/a4dGYqzt+WHOdWEl4JzRKmSiHuidLNNPQxCUkoliEROVl0xDn4DDixjUen/ZJEUoIAIyjaCJCRMVpCUMIYYEpymM4JmPShIj1hlG4fxEnwDbNBnq6bks+iX1vTS2JU026kwQDkM1SQKhpPyGhc117mkFAUTQQYLDNsMnTBEQIm+acbAYl4WkECCEcwhWim5vq1RNKUIgBRIBwnYxIGCf9YgrY4HjEIhAy0kjjTJEyL05ZYpUNLmxbSHK2HInYnU8s+A6PoNxfM6gXDt6hNQ6VX4fGU5fKgFjEcJO27CSK0CJAgEWcJCUsJSVHWBSByHNbJUU924pHIPIa2U3u0OxsPo348f8fiMt9aaq5IM1gHus6uvH+kvFlwg30Y9oPI374B+WxQC4g1h7SB+LdzBLgGCJfq6O5m8/5WzyZIp1yLGor0iJMQ7caJx0oTSQMCVP0RmHwAKePUsLifXzWo9hswjGCHRET6wfCzU1WWIgxLusYEwgjTAuyPRSNIXFotQoL0MI0hZ93OAFmrGlyeBWDSSKEdRF1TdZJhaYMci7iQGIQATmPRMiGYmG7vIprDOVp+lphC/E9cre6YD5tuEGSwI4SoQcoHjtMUSgiV47klhZnYZdmC3AJDYdxGMW36l5MqLcqBjbjmWWDH4ucM88LXznbuI4LrYnWJmPL/90wn3IisAIgtfoQ8BiECBCQIGB4jL2amtNiAooAZKzuBUABDRI0AQmGBcAWoKjeRGuK5VubsllQSrO+o+/6ps96noAbJwH4YCJkAnIHasESAFdOcvnTDJo2gIiolm0ueLbheBiB1BbZfNfbCDn7j+TkRIwct+7MZ199/WExi4yDr7rsCueQyy+n/tbBWYex40iROvjSSyUsDhEDOC3dJKs2ReQD2I1q7IALEkLVobglyK+fuOYC0WHsq6++/nrbltXWP68pff2NNxZf84C02KWnnpdsKCx0Bu4ZVtBedNZdjlPAihAH/3Z2Hnu/HPKAM3AfB9+rFxZ4a5wVoRunnzcw8t5k4a+/WylVuV+TxU/dkSE5H1iRwd47roq+c6m7MAWvZd7NnFkJ9a3l0z76Jd33yXdeqh5X4nNIpqyOHV8ih7TMN9nyUnVKdYcPQ7opTv73niP+uTvZo3/1xLnTVq0fuU3WjOT6zMmZU2vcytFPfH7yxHWqbeGOAz6PT9y17dxHd5daJ7lvJJ5YO7A61ndK2y0XP1Gct1P6YuctHmg0PPhE5vIMP/GsIdEh+R+EiaKuA9UjilzAImACTefI7XIkORhy+RwShKDAVMGG/GqCcAst9//7qLJWYvkLso/LaBYp5mT7hxja2wS6kgez12Sne1Ly1a2rGSSbs9W9ajsCFFb+Hr21Krzkt4DWXwK83PbBcQCfv7v74Ow1iaG+SXtg5QcQfET8RMCCD3r5ktxaefmVH4Okj0iWuwLKecaZlv0WTmz2IVbnI7I2+BqZBkzqNZLFlTQA2fSfpCSH77GQJFh5JMM8JgFo1LCV7UCadHKBW4GiiZhbaUrA4zQt5XmaYbj/aaahGQoWdQ6PGISyjWbiphydvi+2Wpdu++jVokmzNI8vZZa5psc5fT5PPgcans8uDRp08GzWr1ELzw69urRqUCfNs1K/tGZdevXxTNIsLa1bn0VmmqlJC/Pq/WrNUKdLh5lqtGvRKG0f3RrM1Duq7nRtg002Q8rCq3RpV883Q6qw0mIrbbHROovbSV3P6VD3oqQcKBQuY7oWXTp5YzSk35Am/WBRo1eRbHP9tJxr/7/KBwAAAA==) format("woff2");font-weight:700;font-display:block}
+/* «Midnight & Gold»: deep navy for structure, champagne gold for accents */
+:root{
+  color-scheme:light;
+  --bg:#F3F1EC; --surface:#FFFFFF; --surface-2:#F8F6F2; --ink:#131A26; --muted:#6A6E78; --line:#E6E1D8; --line-2:#EFEBE4;
+  --accent:#16263F; --accent-ink:#FFFFFF; --accent-soft:#EAEEF5;
+  --gold:#C9A45C; --gold-deep:#8A6726; --gold-soft:#F7F0E1; --gold-line:#E6D3A9; --gold-ic:#E3C27E;
+  --hdr-1:#1D3558; --hdr-2:#0A1526;
+  --warn:#8A5A00; --warn-bg:#FFF6E3; --warn-line:#F0D496;
+  --info:#2A5595; --info-bg:#EAF0FA;
+  --done:#2B7A4F; --done-bg:#ECF5EF;
+  --danger:#B42318; --danger-bg:#FDECEA;
+  --shadow:0 1px 2px rgba(19,26,38,.04),0 8px 24px rgba(19,26,38,.07);
+  --sans:"Plex",system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+  --mono:"Plex",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0A0F17; --surface:#121925; --surface-2:#172031; --ink:#E8ECF2; --muted:#98A2B3; --line:#243044; --line-2:#1B2434;
+    --accent:#D8B46A; --accent-ink:#171204; --accent-soft:#272113;
+    --gold:#D8B46A; --gold-deep:#E6C888; --gold-soft:#231E12; --gold-line:#4A3D20; --gold-ic:#171204;
+    --hdr-1:#172A45; --hdr-2:#060B14;
+    --warn:#F2C063; --warn-bg:#2A2112; --warn-line:#5A4418;
+    --info:#93B6F2; --info-bg:#16223A;
+    --done:#7CCB9C; --done-bg:#12261B;
+    --danger:#F28B82; --danger-bg:#3A1714;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto;padding-inline:16px;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;letter-spacing:.01em}
+.ic{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+/* app bar */
+header{position:relative;display:flex;align-items:center;gap:11px;margin:calc(-14px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 48px;color:#fff;border-radius:0 0 26px 26px;overflow:hidden;
+  background:radial-gradient(120% 90% at 90% -30%,rgba(216,180,106,.22),transparent 55%),radial-gradient(80% 80% at 0% 120%,rgba(59,94,143,.35),transparent 60%),linear-gradient(150deg,var(--hdr-1),var(--hdr-2))}
+header::after{content:"";position:absolute;inset-inline:22px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(216,180,106,.55),transparent)}
+header .logo{flex:none;width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(216,180,106,.4);display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+header .logo svg{width:32px;height:32px}
+header .t{flex:1;min-width:0}
+h1{font-family:"Wordmark",var(--sans);font-size:25px;margin:0;font-weight:700;line-height:1.25;letter-spacing:0;background:linear-gradient(180deg,#FFFFFF 30%,#F2DFB4);-webkit-background-clip:text;background-clip:text;color:transparent}
+header .sub{color:rgba(236,226,204,.78);margin:1px 0 0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .btn{background:rgba(255,255,255,.07);border-color:rgba(216,180,106,.42);color:#F3E3BF;box-shadow:none}
+header .btn:active{background:rgba(255,255,255,.15)}
+header .btn.icon-only{width:42px;padding:0}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+/* tabs float over the app bar and stay reachable while scrolling */
+.tabs{position:sticky;top:calc(8px + env(safe-area-inset-top,0px));z-index:6;margin-top:-46px;display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);padding:5px;border-radius:16px;box-shadow:0 10px 28px rgba(10,21,38,.14)}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:600 13.5px/1.35 var(--sans);padding:10px 6px;border-radius:12px;cursor:pointer;transition:background .15s,color .15s}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:inset 0 -2px 0 var(--gold),0 3px 10px rgba(22,38,63,.25)}
+.summary{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:7px 14px;font-size:13px;color:var(--muted);display:inline-flex;align-items:baseline;gap:6px}
+.stat b{color:var(--gold-deep);font-size:18px;font-weight:700}
+.progress{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#B98C3E,var(--gold),#EBD39B);border-radius:99px;transition:width .25s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 14px var(--sans);padding:9px 14px;text-decoration:none;cursor:pointer;min-height:44px;transition:background .15s,border-color .15s,transform .08s}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:3px solid var(--gold-soft);outline-offset:1px;border-color:var(--gold)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);background-image:linear-gradient(180deg,rgba(255,255,255,.07),transparent);box-shadow:0 2px 6px rgba(22,38,63,.18)}
+.btn.primary .ic{color:var(--gold-ic)}
+.btn.big{width:100%;font-size:15.5px;min-height:52px;border-radius:14px}
+.btn.big .ic{width:20px;height:20px}
+.btn.sm{min-height:38px;padding:6px 11px;font-size:13px;border-radius:10px;gap:5px}
+.btn.sm .ic{width:16px;height:16px}
+.routes{display:flex;flex-direction:column;gap:8px}
+.alerts{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:16px;padding:14px 16px}
+.alerts h2{font-size:14.5px;margin:0 0 8px;color:var(--warn);font-weight:700}
+.alerts ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.alerts li{font-size:14px;display:flex;gap:8px;align-items:baseline}
+.alerts li::before{content:"";flex:none;width:6px;height:6px;border-radius:99px;background:var(--warn);transform:translateY(-3px)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.bar label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
+.bar input[type=checkbox]{accent-color:var(--accent);width:17px;height:17px}
+.bar .grp{display:flex;gap:6px;flex-wrap:wrap}
+#list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px}
+.card.done{background:var(--done-bg);border-color:transparent;box-shadow:none}
+.card.done .body{display:none}
+.hide-done .card.done{display:none}
+.head{display:flex;align-items:center;gap:10px}
+.seq{flex:none;width:32px;height:32px;border-radius:10px;background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep);display:grid;place-items:center;font:700 14px var(--sans)}
+.card.done .seq{background:var(--done);border-color:var(--done);color:#fff}
+.sid{font:700 21px var(--mono);letter-spacing:.02em}
+.head .sp{flex:1}
+.toggle{border-radius:99px;padding-inline:14px}
+.card.done .toggle{background:var(--done);border-color:var(--done);color:#fff}
+.body{display:flex;flex-direction:column;gap:12px}
+.task{background:var(--accent-soft);color:var(--ink);border-radius:12px;padding:9px 12px;font-size:14px;font-weight:600;border-inline-start:3px solid var(--gold)}
+.task span{color:var(--gold-deep);font-weight:700;margin-inline-end:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;font-weight:600;border-radius:8px;padding:3px 9px;background:var(--info-bg);color:var(--info)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.coords{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.coords .num{color:var(--ink);font-size:15px;font-weight:600}
+.nocoord{background:var(--warn-bg);border:1px dashed var(--warn-line);border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:4px}
+.nocoord strong{color:var(--warn);font-size:14.5px}
+.nocoord dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px}
+.nocoord dt{color:var(--muted)}
+.nocoord dd{margin:0}
+.addr{font-size:13px;color:var(--muted)}
+.phones{display:flex;flex-direction:column;border-top:1px solid var(--line-2)}
+.ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:10px 0;border-bottom:1px solid var(--line-2)}
+.ph:last-child{border-bottom:0}
+.ph .num{font-size:15.5px;font-weight:600;user-select:all;letter-spacing:0}
+.ph .cnt{font-size:12px;color:var(--muted);font-weight:600}
+.ph .tag{font-size:11.5px;color:var(--info);background:var(--info-bg);border-radius:6px;padding:1px 7px}
+.ph.main .num{font-weight:700;font-size:16px}
+.ph .acts{display:flex;gap:5px;margin-inline-start:auto}
+.ph .acts .btn.sm{padding-inline:9px}
+.btn.call{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.wa{color:var(--done)}
+.empty{background:var(--surface);border:1px dashed var(--gold-line);border-radius:18px;padding:26px 18px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty p{margin:0;color:var(--muted)}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 0}
+.toast{position:fixed;inset-inline:0;bottom:calc(20px + env(safe-area-inset-bottom,0px));margin:auto;width:max-content;max-width:90%;background:#16263F;color:#fff;border:1px solid rgba(216,180,106,.35);padding:10px 16px;border-radius:12px;font-size:13.5px;box-shadow:0 10px 28px rgba(10,21,38,.25);opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:30}
+.toast.on{opacity:1;transform:none}
+@media (prefers-color-scheme: dark){.toast{background:#E8ECF2;color:#0A0F17;border-color:transparent}}
+.res{font-size:13px;color:var(--done);font-weight:600}
+.res .ic{width:14px;height:14px;vertical-align:-2px}
+.sheet-bg{position:fixed;inset:0;background:rgba(7,12,21,.55);z-index:10;display:flex;align-items:flex-end;justify-content:center;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.sheet{background:var(--surface);width:100%;max-width:620px;border-radius:26px 26px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto;box-shadow:0 -10px 34px rgba(0,0,0,.18);border-top:1px solid var(--gold-line)}
+.sheet::before{content:"";flex:none;align-self:center;width:44px;height:4px;border-radius:99px;background:var(--gold-line);margin-bottom:4px}
+.sheet h3{margin:0;font-size:18px;font-weight:700}
+.lbl{font-size:13px;color:var(--muted);font-weight:600}
+.lbl .ic{width:15px;height:15px}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:600 14px var(--sans);border-radius:11px;padding:9px 14px;cursor:pointer;text-align:start;transition:background .15s,border-color .15s}
+.opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:inset 0 -2px 0 var(--gold)}
+.tpls{display:flex;flex-direction:column;gap:6px}
+.tpls .opt{width:100%;font-size:13.5px}
+textarea{width:100%;min-height:78px;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:15px/1.6 var(--sans);background:var(--surface-2);color:var(--ink);resize:vertical}
+.row{display:flex;gap:8px}
+.row .btn{flex:1}
+.btn.danger{color:var(--danger)}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.doc.logged{opacity:.55;box-shadow:none}
+.doc .full{font:700 21px var(--mono);letter-spacing:.03em}
+.doc .line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.doc .work{background:var(--gold-soft);color:var(--gold-deep);border:1px solid var(--gold-line);border-radius:9px;padding:4px 11px;font-weight:700}
+.doc .note{flex:1;min-width:200px;font-size:14px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:11px;padding:9px 11px}
+.doc .meta{font-size:12px;color:var(--muted);font-weight:600}
+.dhead{font-size:12.5px;color:var(--gold-deep);font-weight:700;margin-top:4px;letter-spacing:.02em}
+.chk{display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center;background:var(--surface-2);border:1px solid var(--line-2);border-radius:14px;padding:12px 14px}
+.chk .q{font-size:14px;font-weight:600}
+.chk .q.sub2{font-weight:400;color:var(--muted);padding-inline-start:14px}
+.yn{display:flex;gap:6px}
+.yn .opt{min-width:56px;text-align:center;padding:7px 10px;background:var(--surface)}
+.yn .opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:none}
+.yn .opt[aria-pressed="true"][data-v="no"]{background:var(--danger);border-color:var(--danger);color:#fff}
+.yn .opt:disabled{opacity:.35}
+.chk .full{grid-column:1/-1}
+.chk .opts.full{margin-top:-2px;padding-inline-start:14px}
+.chk .opts.full .opt{background:var(--surface);font-size:13.5px;padding:8px 12px}
+.chk .opts.full .opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chk .mph{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-inline-start:14px}
+.chk .mslot{display:flex;flex-direction:column;gap:6px;min-width:0}
+.chk .mslot .lbl{font-size:12.5px;margin:0}
+.chk .mthumb{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.chk .mthumb img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.chk .mthumb.empty{border:1.5px dashed var(--gold-line);color:var(--muted);cursor:pointer;align-content:center;justify-items:center;gap:4px}
+.chk .mthumb.empty .ic{width:24px;height:24px;color:var(--gold-deep)}
+.chk .mthumb.empty small{font-size:11.5px}
+.chk .mthumb .x{position:absolute;top:6px;inset-inline-start:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:17px;line-height:1;cursor:pointer}
+.chk .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.chk .mbtns .btn{padding-inline:6px;font-size:12px}
+.mshare{display:flex;flex-direction:column}
+.msrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}
+.msrow:first-child{border-top:0}
+.msinfo b{display:block;font-size:15px}
+.msinfo span{font-size:12.5px;color:var(--muted)}
+.msph{display:flex;gap:5px}
+.msph img{width:46px;height:46px;border-radius:9px;object-fit:cover;border:1px solid var(--line)}
+.btn.done{background:var(--surface-2);border-color:var(--line);color:var(--muted);box-shadow:none}
+.chk .alertnote{margin:0;display:flex;gap:7px;align-items:flex-start;font-size:13px;font-weight:600;line-height:1.55;color:var(--danger);background:var(--danger-bg);border-radius:10px;padding:8px 10px}
+.chk .alertnote .ic{flex:none;width:17px;height:17px;margin-top:1px}
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{position:relative;width:78px;height:78px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .x{position:absolute;top:3px;inset-inline-end:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font:700 14px var(--sans);cursor:pointer}
+.thumb .tag0{position:absolute;bottom:0;inset-inline:0;background:rgba(22,38,63,.9);color:#F3E3BF;font-size:10.5px;font-weight:600;text-align:center;padding:1px 0}
+.checks{font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:7px 11px}
+.checks .ic{width:15px;height:15px;color:var(--done)}
+.townrow{display:flex;gap:8px}
+.townrow .tb{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:12px;padding:9px 13px;cursor:pointer;font:600 12px var(--sans);text-align:start;transition:border-color .15s}
+.townrow .tb b{font:700 16px var(--sans);color:var(--ink)}
+.townrow .tb:active{border-color:var(--gold)}
+.townrow .tb.num-b{flex:0 0 34%}
+.townrow .tb.num-b b{font-family:var(--mono);letter-spacing:.04em}
+.townrow .tb.empty b{color:var(--danger)}
+.fullprev{font-size:13px;color:var(--muted)}
+.fullprev:empty{display:none}
+.inp.fullauto{background:var(--gold-soft);border-color:var(--gold-line);color:var(--ink);font-weight:700;font-size:17px;letter-spacing:.08em;pointer-events:none}
+.fullprev .num{color:var(--ink);font-weight:700;font-size:15px}
+.picker{position:fixed;inset:0;z-index:15;background:var(--surface);display:flex;flex-direction:column}
+.picker .ph{display:flex;align-items:center;gap:8px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;border-bottom:1px solid var(--gold-line);flex-wrap:nowrap}
+.picker .ph h3{flex:1;margin:0;font-size:18px;font-weight:700}
+.picker .ps{padding:12px 16px}
+.picker .pl{flex:1;overflow:auto;padding:0 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.picker .pi{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line-2);background:transparent;color:var(--ink);padding:13px 6px;font:500 16px var(--sans);cursor:pointer;text-align:start;border-radius:0}
+.picker .pi .n{margin-inline-start:auto;font:600 15px var(--mono);color:var(--muted)}
+.picker .pi.cur{background:var(--gold-soft);border-radius:10px}
+.picker .pi.cur .n{color:var(--gold-deep)}
+.picker .sec{font-size:12px;color:var(--gold-deep);font-weight:700;padding:12px 6px 4px}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:20;display:flex;align-items:center;justify-content:center}
+.viewer img{max-width:100%;max-height:100%}
+.inp{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:15px var(--sans);background:var(--surface-2);color:var(--ink)}
+.inp:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft);background:var(--surface)}
+.inp.num{font-size:16px;font-weight:600;letter-spacing:.04em}
+select.inp{appearance:auto}
+.sync{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;border-radius:99px;padding:2px 10px;background:var(--warn-bg);color:var(--warn)}
+.sync .ic{width:13px;height:13px}
+.sync.ok{background:var(--done-bg);color:var(--done)}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.postbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:14px;padding:10px 12px}
+.postbar .pb-link{flex:1;min-width:130px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;background:transparent;padding:0;cursor:pointer;font:600 13.5px var(--sans);color:var(--gold-deep);text-align:start}
+.more{font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:3px;opacity:.85}
+.pl-sec{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pl-sec .pl-h{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;font-weight:700;font-size:14px}
+.pl-sec.wait .pl-h{background:var(--gold-soft);color:var(--gold-deep)}
+.pl-sec.sent .pl-h{background:var(--done-bg);color:var(--done)}
+.pl-sec .hint{padding:10px 12px}
+.pl-row{display:flex;flex-direction:column;gap:1px;padding:9px 12px;border-top:1px solid var(--line-2)}
+.pl-row .num{font-weight:700;font-size:15px;letter-spacing:.04em}
+.pl-row .pl-meta{font-size:12.5px;color:var(--muted)}
+.pl-row.del .num{text-decoration:line-through;color:var(--danger)}
+.postbar .btn{flex:none}
+.posted{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;width:100%;border:0;cursor:pointer;background:var(--done-bg);color:var(--done);border-radius:12px;padding:11px;font:600 14px var(--sans)}
+.fullrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.fullrow .num{font-size:15px;font-weight:600}
+.fullrow .tag{font-size:11px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:1px 7px}
+.selbox{width:24px;height:24px;flex:none;accent-color:var(--accent);pointer-events:none;margin:4px}
+.selecting .card .body{display:none}
+.card.selected{outline:2px solid var(--gold);outline-offset:-1px}
+.selbar{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));z-index:5;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--gold-line);border-radius:14px;padding:8px;box-shadow:var(--shadow)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.lock{position:fixed;inset:0;z-index:40;overflow:auto;display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 18px calc(20px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(120% 70% at 90% -10%,rgba(216,180,106,.22),transparent 55%),radial-gradient(90% 60% at 0% 110%,rgba(59,94,143,.35),transparent 60%),linear-gradient(160deg,#1D3558,#0A1526)}
+.lock-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--gold-line);border-radius:24px;padding:22px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.lock-logo{align-self:center;width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(160deg,#1D3558,#0A1526);border:1px solid rgba(216,180,106,.5)}
+.lock-logo svg{width:44px;height:44px}
+.lock-title{font-family:"Wordmark",var(--sans);font-size:28px;margin:0;text-align:center;color:var(--ink)}
+.lock-sub{margin:-6px 0 4px;text-align:center;color:var(--muted);font-weight:600}
+.lock .inp.num{font-size:20px;letter-spacing:.3em;text-align:center}
+.lk-err{color:var(--danger);text-align:center;min-height:1em}
+.lk-err:empty{display:none}
+.lk-links{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+.lk-link{border:0;background:transparent;color:var(--gold-deep);font:600 13.5px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;align-self:center;padding:4px}
+#admBody,#lkAdm{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+#admBody>.btn,#lkAdm>.btn{width:100%}
+.acct{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.acct b{font-size:16px}
+.techs{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tech{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;padding:9px 10px;border-top:1px solid var(--line-2)}
+.tech:first-child{border-top:0}
+.tech.off b{color:var(--muted);text-decoration:line-through}
+.tech .tag{font-size:11px;font-weight:600;color:var(--danger);background:var(--danger-bg);border-radius:6px;padding:1px 7px}
+.tech .acts{display:flex;gap:5px;margin-inline-start:auto}
+.tech .tname{border:0;background:transparent;padding:4px 0;font:inherit;color:inherit;cursor:pointer;text-align:start;display:flex;align-items:center;gap:6px}
+.tech .tname::after{content:"▾";color:var(--muted);font-size:13px}
+.tech .tname[aria-expanded="true"]::after{content:"▴"}
+.tech .pwline{flex-basis:100%;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:10px;padding:8px 10px}
+.tech .pwline[hidden]{display:none}
+.tech .pwline .pw{font-size:20px;font-weight:700;letter-spacing:.18em;color:var(--gold-deep);margin-inline-end:auto}
+.passbox{background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:center}
+.passbox .big{font-size:30px;font-weight:700;letter-spacing:.25em;color:var(--gold-deep)}
+details summary{list-style:revert}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div class="logo"><svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3D896"/><stop offset=".5" stop-color="#D6AE5E"/><stop offset="1" stop-color="#A97C2F"/></linearGradient></defs><path d="M161.2,282.3 A118,118 0 1 1 350.8,282.3 L261.7,402.3 Q256,415 250.3,402.3 Z" fill="url(#lgGold)"/><circle cx="256" cy="212" r="84" fill="#12233B"/><g transform="translate(256 213) scale(.82) translate(-256 -214)"><path d="M272 138 L206 232 L250 232 L236 290 L306 190 L262 190 Z" fill="url(#lgGold)" stroke="url(#lgGold)" stroke-width="7" stroke-linejoin="round"/></g></svg></div>
+    <div class="t">
+      <h1>زياراتي</h1>
+      <p class="sub" id="sub">—</p>
+    </div>
+    <button class="btn icon-only" id="setBtn" type="button" aria-label="الإعدادات"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d='M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915' /><circle cx='12' cy='12' r='3' /></svg></button>
+    <button class="btn" id="importBtn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d='M12 15V3' /><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' /><path d='m7 10 5 5 5-5' /></svg> استيراد</button>
+    <input type="file" id="fileIn" accept=".zip,application/zip,application/x-zip-compressed,.json,application/json" hidden>
+    <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galIn" accept="image/*" multiple hidden>
+  </header>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabV" aria-selected="true">خط السير</button>
+    <button type="button" role="tab" id="tabM" aria-selected="false">الزيارات المُدخلة</button>
+    <button type="button" role="tab" id="tabD" aria-selected="false">التوثيق</button>
+  </div>
+  <div id="main"></div>
+  <p class="foot">الإحداثيات: القيمة الأكثر تكراراً، وعند التساوي الأقدم · أرقام الهواتف مرتبة من الأكثر تكراراً</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="viewer" id="viewer" hidden><img id="viewerImg" alt="صورة الزيارة"></div>
+<div class="lock" id="lock" hidden><div class="lock-card" id="lockCard"></div></div>
+<div class="sheet-bg" id="sheetBg" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+const STORE = "visits.data.v1", RES = "visits.results.v1", HIDE = "visits.hide.v1", SHOWLOG = "visits.showlogged.v1";
+const WORKS = ["معالجة اتصال","تركيب مودم","جلب قراءة","توزيع فواتير"];
+const NOTES = ["تم برمجة العداد مرتبط بالزمن ومعالجة الاتصال","تم برمجة العداد مرتبط بالزمن ويوجد ضعف شبكة","تم برمجة العداد مرتبط بالزمن , تم اجراء اللازم ولم يتصل","تم برمجة العداد مرتبط بالزمن و وجد العداد متصل","وجد العداد مبدل ومتصل , تم برمجة العداد مرتبط بالزمن عن بعد","وجد العداد مبدل ومتصل , تم برمجة العداد مرتبط بالزمن"];
+const ICONS = {"gear":"<path d='M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915' /><circle cx='12' cy='12' r='3' />","import":"<path d='M12 15V3' /><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' /><path d='m7 10 5 5 5-5' />","trash":"<path d='M10 11v6' /><path d='M14 11v6' /><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6' /><path d='M3 6h18' /><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' />","cloud":"<path d='M12 13v8' /><path d='M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242' /><path d='m8 17 4-4 4 4' />","plus":"<path d='M5 12h14' /><path d='M12 5v14' />","excel":"<path d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z' /><path d='M14 2v5a1 1 0 0 0 1 1h5' /><path d='M8 13h2' /><path d='M14 13h2' /><path d='M8 17h2' /><path d='M14 17h2' />","edit":"<path d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z' /><path d='m15 5 4 4' />","camera":"<path d='M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z' /><circle cx='12' cy='13' r='3' />","image":"<rect width='18' height='18' x='3' y='3' rx='2' ry='2' /><circle cx='9' cy='9' r='2' /><path d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' />","share":"<circle cx='18' cy='5' r='3' /><circle cx='6' cy='12' r='3' /><circle cx='18' cy='19' r='3' /><line x1='8.59' x2='15.42' y1='13.51' y2='17.49' /><line x1='15.41' x2='8.59' y1='6.51' y2='10.49' />","select":"<path d='M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344' /><path d='m9 11 3 3L22 4' />","phone":"<path d='M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384' />","wa":"<path d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719' />","copy":"<rect width='14' height='14' x='8' y='8' rx='2' ry='2' /><path d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' />","check":"<path d='M20 6 9 17l-5-5' />","nav":"<polygon points='3 11 22 2 13 21 11 13 3 11' />","map":"<path d='M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z' /><path d='M15 5.764v15' /><path d='M9 3.236v15' />","users":"<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' /><path d='M16 3.128a4 4 0 0 1 0 7.744' /><path d='M22 21v-2a4 4 0 0 0-3-3.87' /><circle cx='9' cy='7' r='4' />","install":"<rect width='14' height='20' x='5' y='2' rx='2' ry='2' /><path d='M12 18h.01' />","link":"<path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71' /><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' />","alert":"<path d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3' /><path d='M12 9v4' /><path d='M12 17h.01' />","download":"<path d='M12 15V3' /><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' /><path d='m7 10 5 5 5-5' />","pin":"<path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0' /><circle cx='12' cy='10' r='3' />"};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const get = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } };
+const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+
+let data = get(STORE, null);
+// ---------- photo storage (IndexedDB) ----------
+const IDB = (() => {
+  let dbp;
+  const db = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("visits-photos", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("p");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const run = (mode, fn) => db().then(d => new Promise((res, rej) => {
+    const t = d.transaction("p", mode), req = fn(t.objectStore("p"));
+    t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+  }));
+  return { put: (k, v) => run("readwrite", s => s.put(v, k)), get: k => run("readonly", s => s.get(k)), del: k => run("readwrite", s => s.delete(k)) };
+})();
+async function compress(file, max = 1280, q = 0.72){
+  let bmp; try { bmp = await createImageBitmap(file, {imageOrientation:"from-image"}); } catch(e) { bmp = await createImageBitmap(file); }
+  const sc = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width*sc); c.height = Math.round(bmp.height*sc);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", q));
+  return {blob, w:c.width, h:c.height};
+}
+const urlCache = {};
+async function photoUrl(k){ if (urlCache[k]) return urlCache[k]; const v = await IDB.get(k).catch(()=>null); return v ? (urlCache[k] = URL.createObjectURL(v.blob)) : ""; }
+async function fillThumbs(root){ for (const img of root.querySelectorAll("img[data-pk]")) img.src = await photoUrl(img.dataset.pk); }
+function viewPhoto(src){ $("#viewerImg").src = src; $("#viewer").hidden = false; }
+$("#viewer").onclick = () => { $("#viewer").hidden = true; };
+const YN = {yes:"نعم", no:"لا"};
+const FIX_HOW = {replace:"استبدال المودم", restart:"تشريت المودم أو reset للعداد"};
+const NOT_FIXED = {noresp:"العداد لا يستجيب", nomodem:"عدم توفر مودم بحوزة الفني"};
+function fixText(c){
+  if (!c || c.weak !== "no" || !c.fixed) return "";
+  return c.fixed === "yes" ? "تمت" + (FIX_HOW[c.fixHow] ? ` (${FIX_HOW[c.fixHow]})` : "") : "لم تتم" + (NOT_FIXED[c.notFixed] ? ` — ${NOT_FIXED[c.notFixed]}` : "");
+}
+const photoKeys = r => (r && r.photos || []).concat(Object.values(r && r.modemPhotos || {}).filter(Boolean));
+const needModemPhotos = c => !!c && c.weak === "no" && c.fixed === "yes" && c.fixHow === "replace";
+const fixAlert = c => c && c.weak === "no" && c.fixed === "no" && NOT_FIXED[c.notFixed] ? c.notFixed : "";
+function checksText(c){
+  if (!c) return "";
+  const seal = (name, has, ok) => has === "no" ? `${name}: غير موجود` : has === "yes" ? `${name}: موجود${ok==="yes"?" وسليم":ok==="no"?" وغير سليم":""}` : "";
+  return [seal("ختم المودم", c.modemSeal, c.modemOk), seal("ختم الكونيكشن", c.connSeal, c.connOk), c.weak ? `ضعف شبكة: ${YN[c.weak]}` : "", fixText(c) ? `معالجة الاتصال: ${fixText(c)}` : ""].filter(Boolean).join(" · ");
+}
+
+// ---------- settings + sync to Google Sheet ----------
+const CFG = "visits.cfg.v1", DELQ = "visits.delq.v1";
+let cfg = Object.assign({name:"", url:"", token:"", auto:false, team:[]}, get(CFG, {}));
+const cfgReady = () => !!(cfg.url && cfg.name && cfg.key);   // signed in with a technician account
+const sealTxt = (has, ok) => has === "no" ? "غير موجود" : has === "yes" ? (ok === "yes" ? "موجود وسليم" : ok === "no" ? "موجود وغير سليم" : "موجود") : "";
+const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const unb64url = s => decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
+const blobToB64 = b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(b); });
+async function postScript(body){
+  const res = await fetch(cfg.url, {method:"POST", body: JSON.stringify(body)});
+  const j = await res.json();
+  if (!j.ok){ const e = new Error(j.error || "فشل"); e.auth = !!j.auth; throw e; }
+  return j;
+}
+async function payloadFor(r){
+  const c = r.checks || {}, st = r.stop || {}, sent = r.sentPhotos || [], photos = [];
+  for (const pk of (r.photos || [])){
+    const item = {k: pk};
+    if (!sent.includes(pk)){ const v = await IDB.get(pk).catch(()=>null); if (v) item.b64 = await blobToB64(v.blob); }
+    photos.push(item);
+  }
+  const mphotos = [];
+  for (const [slot, pk] of Object.entries(r.modemPhotos || {})){
+    if (!pk) continue;
+    const item = {slot, k: pk};
+    if (!sent.includes(pk)){ const v = await IDB.get(pk).catch(()=>null); if (v) item.b64 = await blobToB64(v.blob); }
+    mphotos.push(item);
+  }
+  const hasLoc = st.lat != null && st.lng != null;
+  return {name:cfg.name, key:cfg.key, date:r.date, id:r.id, full:resFull(r), work:r.work, note:r.note,
+    modem:sealTxt(c.modemSeal, c.modemOk), conn:sealTxt(c.connSeal, c.connOk), weak:c.weak ? YN[c.weak] : "",
+    fix:fixText(c), alert:fixAlert(c),
+    task:st.task || "", phone:st.phone || "", coords: hasLoc ? `${st.lat}, ${st.lng}` : "لا يوجد",
+    map: hasLoc ? `https://www.google.com/maps?q=${st.lat},${st.lng}` : "", photos, mphotos};
+}
+// what is waiting to be posted: unsent visits + deletions of visits that were already posted
+function pendingPost(){
+  const un = Object.values(results).filter(r => !r.sent), dq = get(DELQ, []);
+  const days = new Set(un.map(r => r.date).concat(dq.map(d => d.date)));
+  return {n: un.length, del: dq.length, onlyToday: [...days].every(d => d === todayStr())};
+}
+function postBtnHtml(id, big){
+  if (!cfgReady()) return "";
+  const p = pendingPost(), tot = p.n + p.del;
+  if (!tot) return big ? `<button type="button" class="posted" data-postlist>${ic("check")} تم ترحيل جميع الزيارات إلى رئيس القسم<span class="more">عرض ›</span></button>` : "";
+  const label = p.onlyToday ? "ترحيل زيارات اليوم" : "ترحيل الزيارات";
+  const cnt = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : `${n} ${n <= 10 ? few : many}`;
+  const what = [p.n ? cnt(p.n, "زيارة واحدة", "زيارتان", "زيارات", "زيارة") + " لم تُرحّل بعد" : "",
+    p.del ? cnt(p.del, "حذف واحد", "حذفان", "عمليات حذف", "عملية حذف") + " بانتظار الترحيل" : ""].filter(Boolean).join(" · ");
+  return `<div class="postbar"><button type="button" class="pb-link" data-postlist>${what}<span class="more">عرض الزيارات ›</span></button><button class="btn primary" id="${id}" type="button">${ic("cloud")} ${label}</button></div>`;
+}
+// list of saved visits split into «لم تُرحّل بعد» and «مُرحّلة»
+function openPostList(){
+  const all = Object.values(results).sort((a, b) => (a.date === b.date ? 0 : dmy(b.date) - dmy(a.date)) || String(a.at).localeCompare(String(b.at)));
+  const un = all.filter(r => !r.sent), done = all.filter(r => r.sent), dq = get(DELQ, []), today = todayStr();
+  const row = (r, ok) => { const f = resFull(r), tn = townName(parseInt(f.slice(0, 3), 10));
+    return `<div class="pl-row${ok ? " ok" : ""}"><span class="num">${esc(f)}</span><span class="pl-meta">${esc([tn, r.work].filter(Boolean).join(" · "))}${r.date !== today ? ` · <span class="num">${esc(r.date)}</span>` : ""}</span></div>`; };
+  const sec = (title, n, body, cls) => `<div class="pl-sec ${cls}"><div class="pl-h">${title} <b class="num">${n}</b></div>${body || `<p class="hint">لا يوجد</p>`}</div>`;
+  const sh = $("#sheet"), p = pendingPost();
+  sh.innerHTML = `<h3>الزيارات والترحيل</h3>
+    ${sec("لم تُرحّل بعد", un.length + dq.length, un.map(r => row(r, false)).join("") + dq.map(d => `<div class="pl-row del"><span class="num">${esc(d.full || d.id)}</span><span class="pl-meta">حذف بانتظار الترحيل${d.date !== today ? ` · <span class="num">${esc(d.date)}</span>` : ""}</span></div>`).join(""), "wait")}
+    ${sec("مُرحّلة إلى رئيس القسم", done.length, done.map(r => row(r, true)).join(""), "sent")}
+    <div class="row">${p.n + p.del && cfgReady() ? `<button type="button" class="btn primary" id="postBtnL">${ic("cloud")} ${p.onlyToday ? "ترحيل زيارات اليوم" : "ترحيل الزيارات"}</button>` : ""}<button type="button" class="btn" id="closeSh">إغلاق</button></div>`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0;
+  $("#closeSh").onclick = closeSheet;
+  const b = $("#postBtnL"); if (b) b.onclick = e => confirmTap(e.currentTarget, () => { closeSheet(); b.disabled = true; syncAll(true); }, "اضغط مرة أخرى للتأكيد");
+}
+const dmy = d => { const q = String(d || "").split("/"); return q.length === 3 ? new Date(+q[2], +q[1] - 1, +q[0]).getTime() : 0; };
+function wirePost(id){
+  const b = $("#" + id); if (!b) return;
+  b.onclick = e => confirmTap(e.currentTarget, () => { b.disabled = true; b.textContent = "جاري الترحيل…"; syncAll(true); }, "اضغط مرة أخرى للتأكيد");
+}
+function queueDelete(r){
+  if (!r || !r.sent) return;
+  const q = get(DELQ, []); q.push({deleted:true, tech:r.tech || cfg.name, date:r.date, id:r.id, full:resFull(r)}); put(DELQ, q);
+}
+let syncing = false, syncAgain = false;
+async function syncAll(manual){
+  if (!manual) return;                       // visits are posted only with the «ترحيل زيارات اليوم» button
+  if (!cfgReady()){ toast("يرجى ضبط الإعدادات أولاً"); openSettings(); return; }
+  if (syncing){ syncAgain = true; return; }
+  syncing = true; let ok = 0, fail = 0, authLost = false; const postedNow = [];
+  try {
+    const q = get(DELQ, []);
+    while (q.length){ try { await postScript({...q[0], name:cfg.name, key:cfg.key}); q.shift(); put(DELQ, q); } catch(e){ fail++; if (e.auth) authLost = true; break; } }
+    for (const k of Object.keys(results)){
+      const r = results[k]; if (!r || r.sent) continue;
+      const v = r.v || 0;
+      try {
+        const body = await payloadFor(r); await postScript(body);
+        const cur = results[k];
+        if (cur && (cur.v || 0) === v){ cur.sent = true; cur.tech = body.tech; cur.sentPhotos = body.photos.map(x => x.k).concat(body.mphotos.map(x => x.k)); postedNow.push(k); }
+        ok++;
+      } catch(e){ fail++; if (e.auth){ authLost = true; break; } if (manual && fail === 1) toast("تعذّر الإرسال: " + e.message); }
+    }
+  } finally { syncing = false; }
+  put(RES, results);
+  if (syncAgain){ syncAgain = false; setTimeout(() => syncAll(manual), 50); }
+  render();
+  if (authLost){ cfg.key = ""; cfg.pv = ""; put(CFG, cfg); lockNow(); toast("انتهت صلاحية الدخول (تغيّرت كلمة السر أو أُوقف الحساب) — سجّل الدخول من جديد"); return; }
+  if (fail) toast(`تعذّر ترحيل ${fail} — تحقّق من الإنترنت واضغط «ترحيل» مرة أخرى`);
+  else if (ok) toast(`تم ترحيل ${ok} زيارة إلى رئيس القسم ✓`);
+  else toast("تم الترحيل ✓");
+  const ms = postedNow.filter(k => results[k] && results[k].modemPhotos && !results[k].mShared);
+  if (ms.length) setTimeout(() => openModemShare(ms), 500);
+}
+
+// ---------- old/new modem photos → WhatsApp group (share sheet: WhatsApp ← group ← send) ----------
+const modemCaption = r => { const f = resFull(r), tn = townName(parseInt(f.slice(0, 3), 10));
+  return ["استبدال مودم", f, tn, r.tech || cfg.name, r.date].filter(Boolean).join(" · ") + "\nالصورة الأولى: المودم القديم · الثانية: المودم الجديد"; };
+async function shareModem(k, btn){
+  const r = results[k]; if (!r || !r.modemPhotos) return;
+  const f = resFull(r), files = [];
+  for (const sl of ["old", "new"]){
+    const pk = r.modemPhotos[sl], v = pk && await IDB.get(pk).catch(()=>null);
+    if (v) files.push(new File([v.blob], `modem-${sl}-${f}.jpg`, {type:"image/jpeg"}));
+  }
+  if (!files.length) return toast("صور المودم غير موجودة على هذا الهاتف");
+  const text = modemCaption(r);
+  const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.innerHTML = `${ic("check")} أُرسلت`; } };
+  if (navigator.canShare && navigator.canShare({files})){
+    try { await navigator.share({files, text}); mark(); }
+    catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
+    return;
+  }
+  // devices without file sharing (e.g. a computer): save the two photos and copy the text
+  files.forEach(fl => { const a = document.createElement("a"); a.href = URL.createObjectURL(fl); a.download = fl.name; document.body.appendChild(a); a.click(); a.remove(); });
+  try { await navigator.clipboard.writeText(text); } catch(e){}
+  mark(); toast("حُفظت الصورتان في التنزيلات ونُسخ النص — أرسلها على واتساب");
+}
+function openModemShare(keys){
+  keys = keys.filter(k => results[k] && results[k].modemPhotos); if (!keys.length) return;
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>إرسال صور المودم</h3>
+    <p class="hint">استبدلت المودم في ${keys.length === 1 ? "زيارة واحدة" : keys.length === 2 ? "زيارتين" : keys.length + (keys.length <= 10 ? " زيارات" : " زيارة")}. أرسل الصورتين إلى جروب واتساب:</p>
+    <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r);
+      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${esc(townName(parseInt(f.slice(0, 3), 10)))}</span></div>
+        <div class="msph"><img data-pk="${esc(r.modemPhotos.old)}" alt="المودم القديم"><img data-pk="${esc(r.modemPhotos.new)}" alt="المودم الجديد"></div>
+        <button type="button" class="btn primary sm${r.mShared ? " done" : ""}" data-mshare="${esc(k)}">${r.mShared ? `${ic("check")} أُرسلت` : `${ic("share")} إرسال`}</button></div>`; }).join("")}</div>
+    <p class="hint">بعد «إرسال»: اختر واتساب ← الجروب ← إرسال.</p>
+    <button type="button" class="btn" id="closeSh">إغلاق</button>`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0; $("#closeSh").onclick = closeSheet;
+  fillThumbs(sh);
+  sh.querySelectorAll("[data-mshare]").forEach(b => b.onclick = () => shareModem(b.dataset.mshare, b));
+}
+
+// ---------- install helpers ----------
+let deferredInstall = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); wireInstall(); });
+window.addEventListener("appinstalled", () => { deferredInstall = null; const b = $("#instBox"); if (b) b.innerHTML = installBlock(); toast("تم تثبيت التطبيق ✓"); });
+function installBlock(){
+  if (isStandalone()) return `<div class="checks">${ic("check")} التطبيق مثبّت على الشاشة الرئيسية</div>`;
+  if (deferredInstall) return `<button type="button" class="btn big" id="instBtn">${ic("install")} تثبيت التطبيق على الشاشة</button>`;
+  if (isIOS) return `<div class="checks">على الآيفون: استخدم متصفح <b>Safari</b> وافتح الروابط منه مباشرة، ولا حاجة إلى تثبيته.</div>`;
+  return `<div class="checks">من قائمة المتصفح <b>⋮</b> ← <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b></div>`;
+}
+function wireInstall(){ const b = $("#instBtn"); if (b) b.onclick = async () => { deferredInstall.prompt(); await deferredInstall.userChoice.catch(()=>{}); deferredInstall = null; const x = $("#instBox"); if (x) x.innerHTML = installBlock(); }; }
+async function shareOrCopy(text, label){
+  if (navigator.share){ try { await navigator.share({text}); return; } catch(e){ if (e && e.name === "AbortError") return; } }
+  try { await navigator.clipboard.writeText(text); toast(label + " — الصقه في واتساب"); }
+  catch(e){ prompt("انسخ الرابط", text); }
+}
+
+// ---------- settings ----------
+function openSettings(){
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>الإعدادات</h3>
+    <div class="acct"><div><div class="lbl">المستخدم</div><b>${esc(cfg.name || "—")}</b></div>
+      <button type="button" class="btn" id="logoutBtn">تسجيل الخروج</button></div>
+    <div id="instBox">${isStandalone() ? "" : installBlock()}</div>
+    <details id="admBox">
+      <summary class="lbl" style="cursor:pointer">${ic("users")} إدارة الفنيين (للمسؤول فقط)</summary>
+      <div id="admBody"></div>
+    </details>
+    <button type="button" class="btn" id="closeSh">إغلاق</button>
+    <p class="hint" style="text-align:center">الإصدار ${APP_VERSION}</p>`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
+  $("#closeSh").onclick = closeSheet;
+  $("#logoutBtn").onclick = () => { closeSheet(); lockNow(); };
+  $("#admBox").ontoggle = () => { if ($("#admBox").open) drawAdmin(); };
+}
+function drawAdmin(box){
+  box = box || $("#admBody"); const again = () => drawAdmin(box);
+  if (!cfg.adminOk){
+    box.innerHTML = `<p class="hint">هذا القسم للمسؤول: إضافة الفنيين وكلمات السر ورابط الانضمام.</p>
+      <label class="lbl" for="admUrl">رابط الربط مع Google Sheet</label>
+      <input class="inp" id="admUrl" dir="ltr" value="${esc(cfg.url)}" placeholder="https://script.google.com/macros/s/…/exec">
+      <label class="lbl" for="admTok">رمز المسؤول</label>
+      <input class="inp" id="admTok" type="password" dir="ltr" autocomplete="off" value="${esc(cfg.token || "")}">
+      <button type="button" class="btn primary" id="admGo">دخول المسؤول</button>`;
+    $("#admGo").onclick = async () => {
+      const url = ($("#admUrl").value.trim().match(/https:\/\/script\.google\.com\/\S+?\/exec/) || [""])[0], tok = $("#admTok").value.trim();
+      if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) return toast("يجب أن يبدأ الرابط بـ script.google.com وينتهي بـ exec");
+      try {
+        const v = await (await fetch(url, {method:"POST", body: JSON.stringify({action:"techs"})})).json();
+        if (!v.ok || !Array.isArray(v.techs)) return toast("سكربت الجدول ما زال بالإصدار القديم — حدّثه واعمل (Deploy) بنسخة جديدة (New version)");
+        const j = await (await fetch(url, {method:"POST", body: JSON.stringify({ping:true, token:tok})})).json();
+        if (!j.ok) return toast(j.error || "رمز المسؤول غير صحيح");
+        if (url !== cfg.url){ cfg.url = url; cfg.key = ""; cfg.pv = ""; }
+        cfg.token = tok; cfg.adminOk = true; put(CFG, cfg); again();
+      } catch(e){ toast("تعذّر الوصول إلى السكربت — تحقّق من الرابط والإنترنت"); }
+    };
+    return;
+  }
+  box.innerHTML = `<p class="hint">جاري تحميل الفنيين…</p>`;
+  const call = async body => { const j = await (await fetch(cfg.url, {method:"POST", body: JSON.stringify({...body, token:cfg.token})})).json(); if (!j.ok) throw new Error(j.error || "فشل"); return j; };
+  const newPass = () => String(100000 + crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
+  const showPass = (name, pass) => {
+    $("#admMsg").innerHTML = `<div class="passbox"><div>كلمة سر <b>${esc(name)}</b>:</div><div class="num big">${pass}</div>
+      <p class="hint">أعطها له بنفسك. يمكنك رؤيتها لاحقاً بالضغط على اسمه.</p>
+      <button type="button" class="btn" id="passShare">${ic("share")} إرسالها له</button></div>`;
+    $("#passShare").onclick = () => shareOrCopy(`كلمة سرك في تطبيق «زياراتي»: ${pass}`, "تم نسخ كلمة السر");
+  };
+  const load = async () => {
+    let list = [];
+    try { list = (await call({action:"admin_list"})).techs; if (!Array.isArray(list)) throw new Error("سكربت الجدول ما زال بالإصدار القديم — حدّثه واعمل (Deploy) بنسخة جديدة (New version)"); }
+    catch(e){ box.innerHTML = `<p class="hint">${esc(e.message)}</p>`; if (/رمز/.test(e.message)){ cfg.adminOk = false; put(CFG, cfg); } return; }
+    box.innerHTML = `<div id="admMsg"></div>
+      <div class="techs">${list.map(t => `<div class="tech${t.active ? "" : " off"}"><button type="button" class="tname" data-tn="${esc(t.name)}" aria-expanded="false"><b>${esc(t.name)}</b></button>${t.active ? "" : `<span class="tag">موقوف</span>`}
+        <span class="acts"><button type="button" class="btn sm" data-tp="${esc(t.name)}">كلمة سر جديدة</button>
+        <button type="button" class="btn sm" data-ta="${esc(t.name)}" data-on="${t.active ? 0 : 1}">${t.active ? "إيقاف" : "تفعيل"}</button>
+        <button type="button" class="btn sm danger" data-td="${esc(t.name)}">${ic("trash")}</button></span><div class="pwline" hidden></div></div>`).join("") || `<p class="hint">لا يوجد فنيون بعد — أضف أول فني.</p>`}</div>
+      ${list.length ? `<p class="hint">اضغط على اسم أي فني لعرض كلمة سره الحالية.</p>` : ""}
+      <label class="lbl" for="admNew">إضافة فني</label>
+      <div class="row"><input class="inp" id="admNew" placeholder="الاسم الكامل"><button type="button" class="btn primary" id="admAdd" style="flex:0 0 auto">إضافة</button></div>
+      <button type="button" class="btn" id="admLink">${ic("share")} رابط الانضمام للزملاء</button>
+      <p class="hint">الرابط لا يحتوي أي رمز سري: الزميل يفتحه ثم يدخل باسمه وكلمة السر التي تعطيه إياها.</p>
+      <button type="button" class="btn" id="admOut">خروج المسؤول</button>`;
+    $("#admAdd").onclick = async () => {
+      const name = $("#admNew").value.trim().replace(/\s+/g, " "); if (!name) return toast("اكتب اسم الفني");
+      if (list.some(t => t.name === name)) return toast("الاسم موجود — استخدم «كلمة سر جديدة»");
+      const pass = newPass();
+      try { await call({action:"admin_set", name, pass}); await load(); showPass(name, pass); } catch(e){ toast(e.message); }
+    };
+    box.querySelectorAll("[data-tn]").forEach(b => b.onclick = async () => {
+      const row = b.closest(".tech"), line = row.querySelector(".pwline"), name = b.dataset.tn;
+      if (!line.hidden){ line.hidden = true; line.innerHTML = ""; b.setAttribute("aria-expanded", "false"); return; }
+      line.hidden = false; b.setAttribute("aria-expanded", "true"); line.innerHTML = `<span class="hint">جاري العرض…</span>`;
+      try {
+        const j = await call({action:"admin_get", name});
+        if (typeof j.pass !== "string") throw new Error("سكربت الجدول ما زال بالإصدار 4 — حدّثه للإصدار 5 واعمل (Deploy) بنسخة جديدة");
+        if (!j.pass){ line.innerHTML = `<span class="hint">أُنشئت كلمة سره قبل هذا التحديث، وستظهر هنا بعد أن يفتح التطبيق مرة وهو متصل بالإنترنت. أو اضغط «كلمة سر جديدة».</span>`; return; }
+        line.innerHTML = `<span class="lbl">كلمة السر:</span><span class="num pw">${esc(j.pass)}</span><button type="button" class="btn sm" data-copy="${esc(j.pass)}">${ic("copy")} نسخ</button><button type="button" class="btn sm" data-ps>${ic("share")} إرسالها له</button>`;
+        line.querySelector("[data-ps]").onclick = () => shareOrCopy(`كلمة سرك في تطبيق «زياراتي»: ${j.pass}`, "تم نسخ كلمة السر");
+      } catch(e){ line.innerHTML = `<span class="hint">${esc(/طلب غير معروف/.test(e.message) ? "سكربت الجدول ما زال بالإصدار 4 — حدّثه للإصدار 5 واعمل (Deploy) بنسخة جديدة" : e.message)}</span>`; }
+    });
+    box.querySelectorAll("[data-tp]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, async () => {
+      const name = b.dataset.tp, pass = newPass();
+      try { await call({action:"admin_set", name, pass}); await load(); showPass(name, pass); } catch(err){ toast(err.message); }
+    }, "تأكيد؟ القديمة ستتوقف"));
+    box.querySelectorAll("[data-ta]").forEach(b => b.onclick = async () => {
+      try { await call({action: b.dataset.on === "1" ? "admin_enable" : "admin_disable", name: b.dataset.ta}); await load(); } catch(e){ toast(e.message); }
+    });
+    box.querySelectorAll("[data-td]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, async () => {
+      try { await call({action:"admin_delete", name: b.dataset.td}); await load(); } catch(err){ toast(err.message); }
+    }, "حذف الحساب؟"));
+    $("#admLink").onclick = () => {
+      const link = location.origin + location.pathname + "#cfg=" + b64url(JSON.stringify({url: cfg.url}));
+      shareOrCopy("انضم إلى تطبيق «زياراتي» 👇\nافتح الرابط، ثم ادخل باسمك وكلمة السر التي أعطيتك إياها:\n" + link, "تم نسخ رابط الانضمام");
+    };
+    $("#admOut").onclick = () => { cfg.adminOk = false; put(CFG, cfg); again(); };
+  };
+  load();
+}
+$("#setBtn").onclick = openSettings;
+
+let results = get(RES, {});
+let done = {}, view = "v", selMode = false; const sel = new Set();
+const rkey = id => data.date + "|" + id;
+function syncDone(){ done = {}; if (data) data.stops.forEach(s => { if (results[rkey(s.id)]) done[s.id] = true; }); }
+const AR_DIG = s => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+const clean10 = s => AR_DIG(s).replace(/\D/g, "");
+const todayStr = () => { const d = new Date(); return String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear(); };
+function parseCoords(t){
+  const m = AR_DIG(t).replace(/٫/g,".").match(/(-?\d{1,2}\.\d{3,})\s*[,،\s]\s*(-?\d{1,3}\.\d{3,})/);
+  return m ? {lat:+(+m[1]).toFixed(6), lng:+(+m[2]).toFixed(6)} : null;
+}
+const parsePhones = t => (AR_DIG(t).match(/(?:\+?962|0)?7[789]\d{7}/g) || []).map(x => "0" + x.replace(/^\+?962|^0/, "")).filter((x,i,a) => a.indexOf(x) === i);
+const stopFull = s => (s && s.full) || fullNum((s && s.town) || (data && data.town) || "1", s.id);
+const resFull = r => r.full || fullNum(r.town, r.id);
+const fullNum = (town, id) => String(town || "1").replace(/\D/g,"").padStart(3,"0") + String(id).replace(/\D/g,"").padStart(7,"0");
+function guessWork(task){ task = task || "";
+  if (/اتصال|برمجة/.test(task)) return WORKS[0];
+  if (/مودم/.test(task)) return WORKS[1];
+  if (/قراء/.test(task)) return WORKS[2];
+  if (/فاتور|فواتير/.test(task)) return WORKS[3];
+  return ""; }
+
+function dist(a, b){
+  const R = 6371000, t = Math.PI/180;
+  const dLat = (b.lat-a.lat)*t, dLng = (b.lng-a.lng)*t;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+const hasC = s => s.lat != null && s.lng != null;
+const navUrl = s => `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving`;
+const intl = p => "962" + p.replace(/^0/, "");
+
+// ---------- load data from link (#d=...) ----------
+async function fromHash(h){
+  const own = h === undefined; h = own ? location.hash : h;
+  const cm = h.match(/^#cfg=([A-Za-z0-9_-]+)/);
+  if (cm){
+    try { const c = JSON.parse(unb64url(cm[1]));
+      if (c.url && c.url !== cfg.url){ cfg.url = c.url; cfg.key = ""; cfg.pv = ""; }
+      put(CFG, cfg); }
+    catch(e){ toast("رابط الانضمام غير مكتمل أو تالف"); }
+    if (own) history.replaceState(null, "", location.pathname);
+    return true;
+  }
+  const m = h.match(/^#d=([A-Za-z0-9_-]+)/);
+  if (!m) return false;
+  try {
+    const b64 = m[1].replace(/-/g,"+").replace(/_/g,"/");
+    const bin = Uint8Array.from(atob(b64 + "===".slice((b64.length+3)%4)), c => c.charCodeAt(0));
+    const txt = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+    setData(JSON.parse(txt));
+    toast("تم تحميل زيارات " + (data.date || "اليوم"));
+  } catch(e) { toast("الرابط غير مكتمل أو تالف — اطلب رابطاً جديداً"); }
+  if (own) history.replaceState(null, "", location.pathname);
+  return true;
+}
+function setData(d){
+  if (!d || !Array.isArray(d.stops)) throw new Error("bad");
+  const key = d.date + "|" + d.stops.map(s=>s.id).join(",");
+  if (data && data.date === d.date){
+    const ids = new Set(d.stops.map(s => s.id));
+    data.stops.filter(s => s.manual && !ids.has(s.id)).forEach(s => d.stops.push(s));
+  }
+  data = d; put(STORE, d);
+}
+
+// ---------- ordering from current location ----------
+function orderFrom(start){
+  const withC = data.stops.filter(hasC), noC = data.stops.filter(s => !hasC(s));
+  const out = []; let cur = start; const left = withC.slice();
+  while (left.length){
+    let bi = 0, bd = Infinity;
+    left.forEach((s,i) => { const d = dist(cur, s); if (d < bd) { bd = d; bi = i; } });
+    cur = left.splice(bi,1)[0]; out.push(cur);
+  }
+  // put stops without coordinates right after a stop sharing a phone, else at the end
+  noC.forEach(s => {
+    const ph = new Set(s.phones.map(p=>p[0]));
+    let at = -1; out.forEach((o,i) => { if (o.phones.some(p=>ph.has(p[0]))) at = i; });
+    if (at >= 0) out.splice(at+1, 0, s); else out.push(s);
+  });
+  data.stops = out; put(STORE, data); render();
+}
+function sortByLocation(){
+  if (!navigator.geolocation) return toast("الموقع غير متاح على هذا الجهاز");
+  toast("جاري تحديد موقعك…");
+  navigator.geolocation.getCurrentPosition(
+    p => { orderFrom({lat:p.coords.latitude, lng:p.coords.longitude}); toast("تم ترتيب المسار انطلاقاً من موقعك"); },
+    () => toast("تعذّر تحديد موقعك — فعّل خدمة الموقع (GPS)"),
+    {enableHighAccuracy:true, timeout:15000}
+  );
+}
+
+// ---------- alerts computed from the data ----------
+function alerts(){
+  const S = data.stops, out = [], seen = new Set();
+  const c = S.filter(hasC);
+  for (let i=0;i<c.length;i++) for (let j=i+1;j<c.length;j++){
+    const d = dist(c[i], c[j]);
+    if (d <= 30) out.push(`نفس النقطة: <span class="num">${c[i].id}</span> + <span class="num">${c[j].id}</span> (~${Math.max(10,Math.round(d/10)*10)}م)`);
+  }
+  const phones = {};
+  S.forEach(s => s.phones.forEach(([p]) => (phones[p] ||= new Set()).add(s.id)));
+  Object.entries(phones).forEach(([p, ids]) => { if (ids.size > 1) out.push(`الرقم <span class="num">${p}</span> لـ ${ids.size} مشتركين: ${[...ids].map(x=>`<span class="num">${x}</span>`).join(" + ")} ← مكالمة واحدة`); });
+  const hods = {};
+  S.forEach(s => { if (s.land && s.land.hod) (hods[s.land.hod] ||= []).push(s); });
+  Object.entries(hods).forEach(([h, arr]) => { if (arr.length > 1) out.push(`حوض ${esc(h)}: ` + arr.map(s=>`قطعة ${esc(s.land.qeta)} (<span class="num">${s.id}</span>)`).join(" · ")); });
+  S.forEach(s => (s.warn||[]).forEach(w => out.push(`<span class="num">${s.id}</span>: ${esc(w)}`)));
+  return out;
+}
+function sharedMap(){
+  const m = {};
+  data.stops.forEach(s => s.phones.forEach(([p]) => (m[p] ||= new Set()).add(s.id)));
+  return m;
+}
+function routeLinks(){
+  const pts = [];
+  data.stops.filter(hasC).filter(s => !done[s.id]).forEach(s => { if (!pts.some(p => dist(p,s) < 25)) pts.push(s); });
+  const links = [];
+  for (let i=0; i<pts.length; i+=10){
+    const chunk = pts.slice(i, i+10), dest = chunk[chunk.length-1];
+    const wp = chunk.slice(0,-1).map(p=>`${p.lat},${p.lng}`).join("|");
+    links.push({from:i+1, to:i+chunk.length, url:`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}${wp?`&waypoints=${encodeURIComponent(wp)}`:""}&travelmode=driving`});
+  }
+  return links;
+}
+
+// ---------- render ----------
+function render(){
+  const planned = data ? data.stops.filter(s => !s.manual) : [], manualN = data ? data.stops.filter(s => s.manual).length : 0;
+  $("#tabV").hidden = !planned.length;
+  if (view === "v" && !planned.length) view = "m";
+  $("#tabV").setAttribute("aria-selected", view==="v"); $("#tabM").setAttribute("aria-selected", view==="m"); $("#tabD").setAttribute("aria-selected", view==="d");
+  $("#tabM").textContent = "الزيارات المُدخلة" + (manualN ? ` (${manualN})` : "");
+  if (view !== "v") $("#app").classList.remove("hide-done");
+  $("#app").classList.toggle("selecting", selMode);
+  if (view === "m") return renderManual();
+  const pending = Object.values(results).filter(r=>!r.logged).length;
+  $("#tabD").textContent = "التوثيق" + (pending ? ` (${pending})` : "");
+  if (view === "d") return renderDocs();
+  syncDone();
+  const main = $("#main");
+  if (!data){
+    $("#sub").textContent = "لا توجد زيارات محمّلة";
+    main.innerHTML = `<div class="empty">
+      ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)}</p>` : ""}
+      <p>لا توجد زيارات اليوم. بعد إنجاز أي زيارة، اضغط <b>توثيق زيارة</b> وسجّل ما تم.</p>
+      <button class="btn primary big" type="button" id="addBtn0">${ic("plus")} توثيق زيارة</button>
+      <button class="btn" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف</button></div>`;
+    $("#addBtn0").onclick = () => openSheet(null, true);
+    return;
+  }
+  const S = data.stops.filter(s => !s.manual), n = S.filter(s=>done[s.id]).length, noC = S.filter(s=>!hasC(s)).length;
+  $("#sub").textContent = [data.date, data.area].filter(Boolean).join(" · ");
+  const al = alerts(), routes = routeLinks(), sh = sharedMap();
+  let prev = null;
+  const cards = S.map((s,i) => {
+    const chips = [];
+    const same = S.filter(o => o !== s && hasC(o) && hasC(s) && dist(o,s) <= 30).map(o=>o.id);
+    if (same.length) chips.push(`<span class="chip">نفس الموقع مع <span class="num">${same.join("، ")}</span></span>`);
+    (s.warn||[]).forEach(w => chips.push(`<span class="chip warn">${esc(w)}</span>`));
+    (s.notes||[]).forEach(w => chips.push(`<span class="chip">${esc(w)}</span>`));
+    let loc;
+    if (hasC(s)){
+      const d = prev ? Math.round(dist(prev,s)/10)*10 : null; prev = s;
+      loc = `<div class="coords"><span class="num">${(+s.lat).toFixed(4)}, ${(+s.lng).toFixed(4)}</span>
+        <button class="btn sm" data-copy="${s.lat},${s.lng}" type="button">نسخ</button>
+        <span>${d!=null ? `~${d}م من الموقع السابق` : "أول موقع"}</span></div>
+        <a class="btn primary big" href="${navUrl(s)}" target="_blank" rel="noopener">${ic("nav")} اذهب ← خرائط جوجل</a>`;
+    } else {
+      loc = `<div class="nocoord"><strong>${s.land ? "لا توجد إحداثيات، لكن توجد بيانات للأراضي" : "لا توجد إحداثيات"}</strong>
+        ${s.land || s.addr ? `<dl>${s.land?`<dt>الحوض</dt><dd>${esc(s.land.hod)}</dd><dt>القطعة</dt><dd>${esc(s.land.qeta)}</dd>`:""}${s.addr?`<dt>العنوان</dt><dd>${esc(s.addr)}</dd>`:""}</dl>` : ""}</div>`;
+    }
+    const extra = hasC(s) && (s.land || s.addr) ? `<div class="addr">${s.land?`حوض ${esc(s.land.hod)} – قطعة ${esc(s.land.qeta)}`:""}${s.land&&s.addr?" · ":""}${esc(s.addr||"")}</div>` : "";
+    const phones = s.phones.map(([p,c,tag],j) => {
+      const others = [...sh[p]].filter(x=>x!==s.id);
+      return `<div class="ph${j===0?" main":""}">
+        <span class="num">${esc(p)}</span>${c?`<span class="cnt">×${c}</span>`:""}
+        ${tag?`<span class="tag">${esc(tag)}</span>`:""}${others.length?`<span class="tag">مشترك مع ${others.join("، ")}</span>`:""}
+        <span class="acts">
+          <a class="btn sm call" href="tel:${esc(p)}">اتصال</a>
+          <a class="btn sm wa" href="https://wa.me/${intl(p)}" target="_blank" rel="noopener">واتساب</a>
+          <button class="btn sm" data-copy="${esc(p)}" type="button">نسخ</button>
+        </span></div>`;
+    }).join("") || `<div class="ph"><span class="cnt">لا توجد أرقام هواتف</span></div>`;
+    return `<article class="card${done[s.id]?" done":""}${sel.has(s.id)?" selected":""}" data-card="${esc(s.id)}">
+      <div class="head">${selHead(s, i)}<span class="sid num">${esc(s.id)}</span>
+        <button class="btn sm" data-copy="${esc(s.id)}" type="button" aria-label="نسخ رقم الاشتراك">نسخ</button>
+        <span class="sp"></span>
+        ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الموقع">${ic("trash")}</button>
+        <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button>`}</div>
+      ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · ${ic("camera")} ${results[rkey(s.id)].photos.length}`:""}</div>`:""}
+      <div class="body">
+        <div class="fullrow"><span class="lbl">رقم الاشتراك:</span><span class="num">${esc(stopFull(s))}</span>${s.full?"":`<span class="tag">مقترح</span>`}
+          <span style="flex:1"></span></div>
+        ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
+
+        ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
+        ${(s.refs||[]).length?`<div class="lbl">${s.auto ? "قُرئت آلياً — الصور الأصلية للمراجعة:" : "الصور الأصلية:"}</div><div class="photos">${s.refs.map(k=>`<div class="thumb"><img alt="صورة أصلية" data-pk="${esc(k)}"></div>`).join("")}</div>`:""}
+        ${s.manual ? "" : `${loc}${extra}<div class="phones">${phones}</div>`}
+      </div></article>`;
+  }).join("");
+
+  main.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="summary">
+        <span class="stat"><b class="num">${S.length}</b>موقع</span>
+        <span class="stat"><b class="num">${n}</b>تم</span>
+        ${noC?`<span class="stat"><b class="num">${noC}</b>بدون إحداثيات</span>`:""}
+      </div>
+      <div class="progress"><i style="width:${S.length?n/S.length*100:0}%"></i></div>
+      ${postBtnHtml("postBtnV")}
+      <div class="routes">${routes.map((r,k)=>`<a class="btn primary big" href="${r.url}" target="_blank" rel="noopener">${ic("map")} ${routes.length>1?`المسار (${r.from}–${r.to}) على الخريطة`:"افتح المسار كاملاً على الخريطة"}</a>`).join("")}</div>
+      ${al.length?`<section class="alerts"><h2>تنبيهات</h2><ul>${al.map(a=>`<li><span>${a}</span></li>`).join("")}</ul></section>`:""}
+      <div class="bar">
+        <label for="hideDone"><input type="checkbox" id="hideDone" ${get(HIDE,false)?"checked":""}> إخفاء المُنجَز</label>
+        <span class="grp"><button class="btn sm" id="exportBtn" type="button">${ic("excel")} Excel</button><button class="btn sm" id="locBtn" type="button">رتّب من موقعي</button>
+        <button class="btn sm" id="selBtn" type="button">${ic("select")} تحديد</button>
+        <button class="btn sm" id="resetBtn" type="button">تصفير</button></span>
+      </div>
+      ${selBar(get(HIDE,false) ? S.filter(s => !done[s.id]) : S)}
+      <div id="list">${cards}</div>
+    </div>`;
+  $("#app").classList.toggle("hide-done", get(HIDE,false));
+  $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
+  $("#locBtn").onclick = sortByLocation; wirePost("postBtnV");
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
+  $("#selBtn").onclick = () => { selMode = !selMode; sel.clear(); render(); };
+  wireSel(get(HIDE,false) ? S.filter(s => !done[s.id]) : S);
+  fillThumbs(main).then(() => main.querySelectorAll(".card img[data-pk]").forEach(im => im.onclick = () => viewPhoto(im.src)));
+  $("#exportBtn").onclick = exportExcel;
+  $("#resetBtn").onclick = () => { S.forEach(s => { const r = results[rkey(s.id)]; if (r && !r.logged){ photoKeys(r).forEach(pk => IDB.del(pk).catch(()=>{})); queueDelete(r); delete results[rkey(s.id)]; } }); syncAll(); put(RES, results); render(); toast("تم تصفير زيارات اليوم"); };
+}
+
+// ---------- result sheet ----------
+const TOWN_LIST = [[1,"اربد"],[2,"الرمثا"],[3,"المفرق"],[4,"جرش"],[5,"الحصن"],[6,"الطره"],[7,"الشجره"],[8,"حواره"],[9,"الصريح"],[10,"عجلون"],[11,"عين جنا"],[12,"ايدون"],[13,"الطيبه"],[14,"النعيمه"],[15,"دير يوسف"],[16,"عبين عبلين"],[17,"حرثا"],[18,"دير ابي سعيد"],[19,"صما"],[20,"المزار"],[21,"كفرنجه"],[22,"سوف"],[23,"صخره"],[24,"عنجره"],[25,"بيت راس"],[26,"كفر يوبا"],[27,"بشرى"],[28,"كفر اسد"],[29,"حكما"],[30,"الخالديه"],[31,"المغير"],[32,"قميم"],[33,"كتم"],[34,"المنشيه"],[35,"كفرالما"],[36,"بليلا"],[37,"حوشا"],[38,"صمد"],[39,"ناطفه"],[40,"حوفا الوسطيه"],[41,"سما الروسان"],[42,"الزعتري"],[43,"ايدون بني حسن"],[44,"زحر"],[45,"الابراهيميه"],[46,"البويضه"],[47,"كفر سوم"],[48,"سموع"],[49,"زمال"],[50,"سوم"],[51,"قم"],[52,"بريقا"],[53,"كفرخل"],[54,"سال"],[55,"دير السعنه"],[56,"سميا"],[57,"الضليل"],[58,"ججين"],[59,"كفرعان"],[60,"م.شهيد عزمي المفتي"],[61,"جحفيه"],[62,"مخيم سوف"],[63,"خرجا"],[64,"مرو"],[65,"كفر جايز"],[66,"علعال"],[67,"عزريت"],[68,"حريما"],[69,"ابواللوقس"],[70,"الخريبه"],[71,"السيله"],[72,"القصفه"],[73,"الخناصري"],[74,"حبراص"],[75,"يبلا"],[76,"تقبل"],[77,"الرفيد"],[78,"مقبله"],[79,"سحم"],[80,"سمر"],[81,"الحمراء"],[82,"مخيم غزه"],[83,"حاتم"],[84,"ابدر"],[85,"المزيريب"],[86,"ام قيس"],[87,"ملكا"],[88,"المنصوره"],[89,"مخربا"],[90,"دير الليات"],[91,"الحداده"],[92,"الاشرفيه"],[93,"عقربا"],[94,"دوقره"],[95,"الزعتره"],[96,"الوصفيه"],[97,"برشتا"],[98,"الخراج"],[99,"ساكب"],[100,"ريمون"],[101,"حبكا"],[102,"روضة بسمه"],[103,"نحله"],[104,"الكته"],[105,"صبحا وصبحيه"],[106,"سبع الصير"],[107,"عمره وعميره"],[108,"ام الجمال"],[109,"حوفا المزار"],[110,"جمحا"],[111,"زقريط الفوقا"],[112,"قفقفا"],[113,"المزه"],[114,"ثغرة الجب"],[115,"منشية الكعيبر"],[116,"الحرش"],[117,"سما السرحان"],[118,"مغير السرحان"],[119,"حور"],[120,"السعيديه"],[121,"الباعج"],[122,"فاع"],[123,"تبنه"],[124,"العاقب"],[125,"جنين الصفا"],[126,"كفرراكب"],[127,"جفين"],[128,"كفرابيل"],[129,"عمراوه"],[130,"الذنيبه"],[131,"زوبيا"],[132,"باعون"],[133,"راسون"],[134,"اوصره"],[135,"عرجان"],[136,"بيت يافا"],[137,"فوعرا"],[138,"كفر رحتا"],[139,"شطنا"],[140,"رحابا"],[141,"جديتا"],[142,"بيت ايدس"],[143,"ام النعام الشرقيه"],[144,"ام النعام الغربيه"],[145,"الدجنيه"],[146,"رحاب المفرق"],[147,"رباع السرحان"],[148,"منصورة المفرق"],[149,"بويضة الحوامده"],[150,"المدور"],[151,"حمامة العموش"],[152,"طيب اسم"],[153,"الغدير الابيض"],[154,"رجم السبع الشمالي"],[155,"سامتا"],[156,"كفرعوان"],[157,"كفركيفيا"],[158,"برما"],[159,"الجزازه"],[160,"المجدل"],[161,"زقريط الخضرا"],[162,"هامتا وعليمون"],[163,"نادره"],[164,"الاشرفيه / المفرق"],[165,"نايفه"],[166,"صالحيه المفرق"],[167,"زملة الامير غازي"],[168,"حميديه وبستان"],[169,"بويضةالعليمات"],[170,"خشاع السليتين"],[171,"منشية القبلان"],[172,"الدفيانه"],[173,"ام القطين"],[174,"عنبه"],[175,"هام"],[176,"النهضه"],[177,"رأس منيف"],[178,"مشرف الباعج"],[179,"ام السرب"],[180,"الزبيديه"],[181,"الكوم الاحمر"],[182,"جابر السرحان"],[183,"صيدور"],[184,"دير ورق"],[185,"البويضه الغربيه"],[186,"المكيفته"],[187,"ام الجدايل"],[188,"حيان الشرقي"],[189,"حيان الغربي"],[190,"الزنيه"],[191,"روضة الامير محمد"],[192,"بلعما"],[193,"ابوالقين"],[194,"الرشايده"],[195,"كوم الرف"],[196,"جبا"],[197,"ام الزيتون"],[198,"الدندنيه"],[199,"ام بطيمه"],[200,"حلاوه"],[201,"خربة الوهادنه"],[202,"الهاشميه"],[203,"الرحمانيه"],[204,"المصطبه"],[205,"جبه"],[206,"تلعة الرز"],[207,"سلحوب"],[208,"مرصع"],[209,"السويلمه"],[210,"الاكيدر"],[211,"مشيرفة جرش"],[212,"اشتفينا"],[213,"راجب"],[214,"الساخنه"],[215,"السفينه"],[216,"بلاص"],[217,"الكفير"],[218,"مندح"],[219,"زبده الوسطيه"],[220,"القاسميه"],[221,"مشيرفة الرمثا"],[222,"منشية القنو"],[223,"عين بني حسن"],[224,"حيان المشرف"],[225,"المزرعه"],[226,"النزهه"],[227,"دبين"],[228,"الدقمسه"],[229,"ابسر ابو علي"],[230,"صنعار"],[231,"محنا"],[232,"الخشيبه"],[233,"المجر"],[234,"قريع"],[235,"حمامة العليمات"],[236,"المناره المفرق"],[237,"عين النبي"],[238,"الخريشيه"],[239,"الغدير الاخضر"],[240,"البستان"],[241,"النبي هود"],[242,"بلدة قاسم"],[243,"روضة الامير علي بن الحسين"],[244,"المنيصه"],[245,"خربة الشواهد"],[246,"الرأس الاخضر"],[247,"الثغره والعصفوره"],[248,"اليرموك"],[249,"الصهاه"],[250,"السعاده"],[251,"دير الصماديه"],[252,"اسعره"],[253,"المرجم"],[254,"بير الداليه"],[255,"الخشيبه الفوقا"],[256,"الرفاعيات"],[257,"دحل"],[258,"المفردات"],[259,"عين جملا"],[260,"الفواره"],[261,"المنيفه"],[262,"الحسينات"],[263,"ام القنطره شرقيه"],[264,"نجده"],[265,"الرقه"],[266,"المعمريه"],[267,"الزعفران"],[268,"الرياشي"],[269,"حويجه"],[270,"الحازيه وعنيبه"],[271,"القدم"],[272,"عين البستان"],[273,"العباره"],[274,"الفيصليه"],[275,"البشريه"],[276,"الحرفوشيه"],[277,"الرايه"],[278,"الطياره"],[279,"روضة الامير حمزه بن الحسين"],[280,"حمراء سحيم"],[281,"المطله"],[282,"الجبيه"],[283,"دير الكهف"],[284,"الحراره"],[285,"حميد و الكرم"],[286,"الجبارات"],[287,"مخيم اربد"],[288,"ام الينابيع"],[289,"زملة الطرقي"],[290,"هويشان"],[291,"رحبة ركاد"],[292,"الخيريه"],[293,"سراس"],[294,"الخارجه"],[295,"الرحمات"],[296,"دير القن"],[297,"مدور القن"],[298,"خشاع القن"],[299,"تل رماح"],[300,"أم حسين"],[301,"المريجيب"],[302,"الفحيليه"],[303,"السبطه"],[304,"أم جوزه"],[305,"عصيم"],[306,"ثغرة زبيد"],[307,"دحوس"],[308,"الفيحاء"],[309,"الحرث والعقده"],[310,"الجنيديه"],[311,"مثناة راجل"],[312,"الجدعاء"],[313,"منصورة القن"],[314,"السليم"],[315,"ارينبه"],[316,"المشرفه"],[317,"خربة البرز"],[318,"الرابية"],[319,"خريسان"],[320,"ام رامح"],[321,"منشية السلطه"],[322,"الهاشميه/المفرق"],[323,"منشية الخليفه"],[324,"روضة بني هاشم"],[325,"عالية الشويعر"],[326,"الهونه"],[327,"منشية/بلدية المعراض"],[328,"وزارة الاشغال / انارة شوارع"],[329,"انارة سلطة وادي الاردن"],[500,"الرمثا/1"],[501,"الرمثا/2"],[502,"الرمثا/3"],[503,"الرمثا/4"],[504,"الرمثا/5"],[505,"الرمثا/6"],[506,"الرمثا/7"],[507,"الرمثا/8"],[508,"الرمثا/9"],[509,"الرمثا/10"],[510,"الرمثا/11"],[511,"الرمثا/12"],[512,"مدينة الحسن الصناعيه"],[513,"مجلس الخدمات المشتركه"],[900,"اتفاقيات تخصيص"]];
+const TOWN_BY = new Map(TOWN_LIST.map(([n, name]) => [n, name]));
+const townName = n => TOWN_BY.get(+n) || "";
+const pad3 = n => String(+n || 0).padStart(3, "0");
+const normAr = t => AR_DIG(t).replace(/[\u064B-\u0652\u0640]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ").trim();
+const TOWN_KEY = TOWN_LIST.map(([n, name]) => [n, name, normAr(name), normAr(name).replace(/ /g, "")]);
+const RECENT_T = "visits.towns.recent";
+const recentTowns = () => { try { return (JSON.parse(localStorage.getItem(RECENT_T)) || []).filter(n => TOWN_BY.has(n)); } catch(e){ return []; } };
+function rememberTown(n){ try { localStorage.setItem(RECENT_T, JSON.stringify([+n, ...recentTowns().filter(x => x !== +n)].slice(0, 6))); } catch(e){} }
+// full-screen town picker: mode "name" (Arabic keyboard) or "num" (number pad)
+function pickTown(mode, cur, onPick){
+  const el = document.createElement("div"); el.className = "picker"; el.setAttribute("role", "dialog");
+  el.innerHTML = `<div class="ph"><h3>${mode === "num" ? "رقم البلدة" : "اسم البلدة"}</h3><button type="button" class="btn sm" data-x>إغلاق</button></div>
+    <div class="ps"><input class="inp ${mode === "num" ? "num" : ""}" ${mode === "num" ? 'inputmode="numeric" dir="ltr"' : ""} placeholder="${mode === "num" ? "اكتب رقم البلدة، مثل 4" : "اكتب جزءاً من اسم البلدة"}" autocomplete="off"></div>
+    <div class="pl"></div>`;
+  document.body.appendChild(el);
+  const inp = el.querySelector("input"), list = el.querySelector(".pl");
+  const row = ([n, name]) => `<button type="button" class="pi${+cur === n ? " cur" : ""}" data-n="${n}"><span>${esc(name)}</span><span class="n">${pad3(n)}</span></button>`;
+  const draw = () => {
+    const q = inp.value.trim();
+    let items, head = "";
+    if (!q){
+      const rec = recentTowns();
+      head = rec.length ? `<div class="sec">المستخدمة مؤخراً</div>${rec.map(n => row([n, townName(n)])).join("")}<div class="sec">كل البلدات</div>` : "";
+      items = TOWN_LIST;
+    } else if (/^\d+$/.test(AR_DIG(q))){
+      const d = String(+AR_DIG(q));
+      items = TOWN_LIST.filter(([n]) => String(n).startsWith(d)).sort((a, b) => (String(a[0]) === d ? -1 : 0) - (String(b[0]) === d ? -1 : 0) || a[0] - b[0]);
+    } else {
+      const k = normAr(q), k2 = k.replace(/ /g, "");
+      items = TOWN_KEY.filter(t => t[2].includes(k) || t[3].includes(k2)).sort((a, b) => (b[2].startsWith(k) - a[2].startsWith(k)) || a[0] - b[0]);
+    }
+    list.innerHTML = head + (items.map(row).join("") || `<div class="sec">لا توجد بلدة بهذا ${mode === "num" ? "الرقم" : "الاسم"}</div>`);
+  };
+  const close = () => el.remove();
+  el.querySelector("[data-x]").onclick = close;
+  list.onclick = e => { const b = e.target.closest("[data-n]"); if (!b) return; rememberTown(+b.dataset.n); onPick(+b.dataset.n); close(); };
+  inp.oninput = draw;
+  inp.onkeydown = e => { if (e.key === "Enter"){ const b = list.querySelector("[data-n]"); if (b) b.click(); } };
+  draw(); setTimeout(() => inp.focus(), 60);
+}
+// two linked buttons (name | number) that set the same town
+function townButtons(box, get, set){
+  const n = get(), nm = townName(n);
+  box.innerHTML = `<button type="button" class="tb${nm ? "" : " empty"}" data-tm="name"><span>اسم البلدة</span><b>${nm ? esc(nm) : "اختر"}</b></button>
+    <button type="button" class="tb num-b${nm ? "" : " empty"}" data-tm="num"><span>رقم البلدة</span><b>${nm ? pad3(n) : "---"}</b></button>`;
+  box.querySelectorAll("[data-tm]").forEach(b => b.onclick = () => pickTown(b.dataset.tm, get(), v => { set(v); townButtons(box, get, set); }));
+}
+function openSheet(id, isNew){
+  const s = isNew ? {id:"", manual:true, phones:[]} : (data && data.stops.find(x => x.id === id)); if (!s) return;
+  let key = isNew ? "" : rkey(id); const old = isNew ? null : results[key];
+  let work = old ? old.work : guessWork(s.task);
+  const chk = Object.assign({modemSeal:"", modemOk:"", connSeal:"", connOk:"", weak:"", fixed:"", fixHow:"", notFixed:""}, old && old.checks);
+  let photos = (old && old.photos ? old.photos.slice() : []);   // existing keys
+  const added = [], removed = [];
+  const mph = Object.assign({old:"", new:""}, old && old.modemPhotos), mphAdd = {old:null, new:null}, mphDrop = [];   // old/new modem photos
+  const sh = $("#sheet");
+  const full0 = isNew ? "" : clean10((old && old.full) || stopFull(s));
+  let town = full0.length === 10 ? parseInt(full0.slice(0, 3), 10) : (isNew ? (recentTowns()[0] || 0) : 0);
+  if (!TOWN_BY.has(town)) town = 0;
+  const sub0 = full0.length === 10 ? String(parseInt(full0.slice(3), 10) || "") : (isNew ? "" : String(parseInt(clean10(s.id), 10) || ""));
+  const yn = (f, dis) => `<span class="yn">${["yes","no"].map(v=>`<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}" ${dis?"disabled":""}>${YN[v]}</button>`).join("")}</span>`;
+  const pick = (f, opts) => Object.entries(opts).map(([v, t]) => `<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}">${t}</button>`).join("");
+  const pickModem = (sl, src) => {
+    const inp = src === "cam" ? $("#camIn") : $("#galIn"); inp.value = "";
+    inp.onchange = async e => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      try { const c = await compress(f);
+        if (mphAdd[sl]) URL.revokeObjectURL(mphAdd[sl].url);
+        if (mph[sl]){ mphDrop.push(mph[sl]); mph[sl] = ""; }
+        mphAdd[sl] = {...c, url: URL.createObjectURL(c.blob)}; drawChecks();
+      } catch(err){ toast("تعذّرت قراءة الصورة"); }
+    };
+    inp.click();
+  };
+  const wireModem = () => {
+    const box = $("#chkBox");
+    box.querySelectorAll("[data-mimg]").forEach(async im => { const sl = im.dataset.mimg; im.src = mphAdd[sl] ? mphAdd[sl].url : await photoUrl(mph[sl]); im.onclick = e => { e.stopPropagation(); viewPhoto(im.src); }; });
+    box.querySelectorAll(".mthumb.empty").forEach(t => t.onclick = () => pickModem(t.dataset.mpick, "cam"));
+    box.querySelectorAll("[data-mcam]").forEach(b => b.onclick = () => pickModem(b.dataset.mcam, "cam"));
+    box.querySelectorAll("[data-mgal]").forEach(b => b.onclick = () => pickModem(b.dataset.mgal, "gal"));
+    box.querySelectorAll("[data-mx]").forEach(b => b.onclick = e => { e.stopPropagation(); const sl = b.dataset.mx;
+      if (mphAdd[sl]){ URL.revokeObjectURL(mphAdd[sl].url); mphAdd[sl] = null; } else if (mph[sl]){ mphDrop.push(mph[sl]); mph[sl] = ""; }
+      drawChecks(); });
+  };
+  const drawChecks = () => {
+    $("#chkBox").innerHTML = `
+      <span class="q">هل ختم المودم موجود؟</span>${yn("modemSeal")}
+      <span class="q sub2">هل وُجد سليماً؟</span>${yn("modemOk", chk.modemSeal!=="yes")}
+      <span class="q">هل ختم الكونيكشن موجود؟</span>${yn("connSeal")}
+      <span class="q sub2">هل وُجد سليماً؟</span>${yn("connOk", chk.connSeal!=="yes")}
+      <span class="q">هل يوجد ضعف شبكة؟</span>${yn("weak")}
+      ${chk.weak === "no" ? `<span class="q">هل تم فعلياً معالجة الاتصال؟</span>${yn("fixed")}` : ""}
+      ${chk.weak === "no" && chk.fixed === "yes" ? `<span class="q sub2 full">كيف تمت معالجة الاتصال؟</span><div class="opts full">${pick("fixHow", FIX_HOW)}</div>` : ""}
+      ${needModemPhotos(chk) ? `<div class="mph full">${["old", "new"].map(sl => `<div class="mslot">
+        <div class="lbl">${sl === "old" ? "صورة المودم القديم" : "صورة المودم الجديد"} *</div>
+        <div class="mthumb${mph[sl] || mphAdd[sl] ? "" : " empty"}" data-mpick="${sl}">${mph[sl] || mphAdd[sl] ? `<img alt="" data-mimg="${sl}"><button type="button" class="x" data-mx="${sl}" aria-label="حذف الصورة">×</button>` : `${ic("camera")}<small>اضغط للتصوير</small>`}</div>
+        <div class="mbtns"><button type="button" class="btn sm" data-mcam="${sl}">${ic("camera")} كاميرا</button><button type="button" class="btn sm" data-mgal="${sl}">${ic("image")} المعرض</button></div></div>`).join("")}</div>` : ""}
+      ${chk.weak === "no" && chk.fixed === "no" ? `<span class="q sub2 full">ما السبب؟</span><div class="opts full">${pick("notFixed", NOT_FIXED)}</div>
+        ${chk.notFixed ? `<p class="alertnote full">${ic("alert")} ${chk.notFixed === "noresp" ? "سيصل تنبيه للمسؤول لاتخاذ الإجراء اللازم بخصوص العداد" : "سيصل تنبيه للمسؤول لتذكيرك بالتنسيق مع المشترك للعودة واستبدال المودم"}، عند ترحيل الزيارة.</p>` : ""}` : ""}`;
+    wireModem();
+    $("#chkBox").querySelectorAll("[data-f]").forEach(b => b.onclick = () => {
+      const f = b.dataset.f; chk[f] = chk[f] === b.dataset.v ? "" : b.dataset.v;
+      if (f === "modemSeal" && chk.modemSeal !== "yes") chk.modemOk = "";
+      if (f === "connSeal" && chk.connSeal !== "yes") chk.connOk = "";
+      if (chk.weak !== "no") chk.fixed = "";
+      if (chk.fixed !== "yes") chk.fixHow = "";
+      if (chk.fixed !== "no") chk.notFixed = "";
+      drawChecks();
+    });
+  };
+  const drawPhotos = async () => {
+    const all = [...photos.map(k => ({k})), ...added.map((a,i) => ({a, i}))];
+    $("#phBox").innerHTML = all.map((x,n) => `<div class="thumb"><img alt="" ${x.k?`data-pk="${x.k}"`:`data-new="${x.i}"`}>
+      <button type="button" class="x" ${x.k?`data-rk="${x.k}"`:`data-rn="${x.i}"`} aria-label="حذف الصورة">×</button>${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")
+      || `<span class="sub" style="margin:0">لا توجد صور</span>`;
+    $("#phBox").querySelectorAll("img[data-new]").forEach(im => im.src = added[+im.dataset.new].url);
+    await fillThumbs($("#phBox"));
+    $("#phBox").querySelectorAll("img").forEach(im => im.onclick = () => viewPhoto(im.src));
+    $("#phBox").querySelectorAll("[data-rk]").forEach(b => b.onclick = () => { removed.push(b.dataset.rk); photos = photos.filter(k => k !== b.dataset.rk); drawPhotos(); });
+    $("#phBox").querySelectorAll("[data-rn]").forEach(b => b.onclick = () => { added.splice(+b.dataset.rn, 1); drawPhotos(); });
+  };
+  const onFiles = async files => {
+    for (const f of files){ try { const c = await compress(f); added.push({...c, url: URL.createObjectURL(c.blob)}); } catch(e){ toast("تعذّرت قراءة الصورة"); } }
+    drawPhotos();
+  };
+  sh.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${isNew ? "توثيق زيارة" : `نتيجة الزيارة · <span class="num">${esc(id)}</span>`}</h3>
+    ${old ? `<button type="button" class="btn sm danger" id="delTop">${ic("trash")} ${s.manual ? "حذف" : "إلغاء"}</button>` : ""}</div>
+    ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
+    <div class="lbl">البلدة *</div>
+    <div class="townrow" id="townBox"></div>
+    <label class="lbl" for="subIn">رقم المشترك *</label>
+    <input class="inp num" id="subIn" inputmode="numeric" maxlength="7" dir="ltr" placeholder="مثال: 1121" value="${esc(sub0)}" ${s.manual ? "" : "readonly"}>
+    <label class="lbl" for="fullOut">رقم المشترك كاملاً (10 خانات)</label>
+    <input class="inp num fullauto" id="fullOut" dir="ltr" readonly tabindex="-1" placeholder="يُعبّأ تلقائياً">
+    <div class="fullprev" id="fullPrev"></div>
+    <div class="lbl">المهمة *</div>
+    <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
+    <div class="lbl">الفحص</div>
+    <div class="chk" id="chkBox"></div>
+    <div class="lbl">الصور (أول صورة = صورة العداد)</div>
+    <div class="photos" id="phBox"></div>
+    <div class="row"><button type="button" class="btn" id="camBtn">${ic("camera")} كاميرا</button><button type="button" class="btn" id="galBtn">${ic("image")} من المعرض</button></div>
+    <label class="lbl" for="noteIn">الملاحظة *</label>
+    <textarea id="noteIn" placeholder="اكتب الإجراء الفعلي الذي تم لدى المشترك">${esc(old ? old.note : "")}</textarea>
+    <div class="row"><button type="button" class="btn primary" id="saveRes">حفظ</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>
+    ${old?`<button type="button" class="btn danger" id="undoRes">${s.manual ? "حذف الزيارة" : old.logged ? "حذف النتيجة (موثّقة)" : "إلغاء الإنجاز"}</button>`:""}`;
+  $("#sheetBg").hidden = false; sh.scrollTop = 0;
+  drawChecks(); drawPhotos();
+  // full number (read-only) = town (3 digits, from the buttons) + subscriber as typed, zero-padded to 7: الرمثا + 1121 -> 0020001121
+  const subD = () => clean10($("#subIn").value);
+  const fullVal = () => { const d = subD(); return town && d && d.length <= 7 && +d ? pad3(town) + d.padStart(7, "0") : ""; };
+  const drawFull = () => {
+    const f = fullVal(), d = subD();
+    $("#fullOut").value = f;
+    $("#fullPrev").textContent = f ? "" : !town ? "اختر البلدة من الزرّين أعلاه" : d ? "" : "اكتب رقم المشترك كما هو، مثل 1121";
+  };
+  const drawTown = () => townButtons($("#townBox"), () => town, v => {
+    town = v; drawTown(); drawFull();
+    const f = $("#subIn"); if (!f.readOnly && !subD()) f.focus();
+  });
+  drawTown();
+  $("#subIn").oninput = drawFull;
+  drawFull();
+  if (isNew) setTimeout(() => (town ? $("#subIn") : $("#townBox button")).focus(), 250);
+  sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
+  $("#camBtn").onclick = () => { $("#camIn").value = ""; $("#camIn").onchange = e => onFiles(e.target.files); $("#camIn").click(); };
+  $("#galBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = e => onFiles(e.target.files); $("#galIn").click(); };
+  $("#closeSh").onclick = closeSheet;
+  $("#saveRes").onclick = async () => {
+    const note = $("#noteIn").value.trim();
+    if (!town) return toast("اختر البلدة");
+    const full = fullVal();
+    if (!full) return toast("اكتب رقم المشترك");
+    const newId = String(parseInt(full.slice(3), 10));
+    if (!+newId) return toast("رقم المشترك غير صحيح");
+    rememberTown(parseInt(full.slice(0, 3), 10));
+    if (!s.manual && newId !== String(parseInt(clean10(id), 10))) return toast("يجب أن تطابق الخانات السبع الأخيرة رقم المشترك " + id);
+    if (!work) return toast("اختر المهمة");
+    if (!note) return toast("اكتب الملاحظة");
+    if (chk.weak === "no"){
+      if (!chk.fixed) return toast("أجب في الفحص: هل تم فعلياً معالجة الاتصال؟");
+      if (chk.fixed === "yes" && !chk.fixHow) return toast("اختر كيف تمت معالجة الاتصال");
+      if (chk.fixed === "no" && !chk.notFixed) return toast("اختر سبب عدم معالجة الاتصال");
+    }
+    if (needModemPhotos(chk)){
+      if (!mph.old && !mphAdd.old) return toast("أضف صورة المودم القديم");
+      if (!mph.new && !mphAdd.new) return toast("أضف صورة المودم الجديد");
+    }
+    const sameDay = data && data.date === todayStr();
+    if (s.manual && newId !== s.id && data && (isNew ? sameDay : true) && data.stops.some(x => x.id === newId && x !== s))
+      return toast("المشترك " + newId + " موجود في القائمة — افتحه من بطاقته");
+    if (isNew && !sameDay) data = {date: todayStr(), area:"", town: String(parseInt(full.slice(0,3),10)), stops: []};
+    if (!isNew && s.manual && newId !== s.id && old){ queueDelete(old); delete results[key]; }
+    if (s.manual) s.id = newId;
+    if (isNew) data.stops.push(s);
+    key = rkey(s.id);
+    try {
+      for (const k of removed) await IDB.del(k);
+      for (const a of added){ const k = key + "|" + Date.now() + Math.random().toString(36).slice(2,6); await IDB.put(k, {blob:a.blob, w:a.w, h:a.h}); photos.push(k); }
+      if (!needModemPhotos(chk)) for (const sl of ["old", "new"]){ if (mph[sl]) mphDrop.push(mph[sl]); mph[sl] = ""; mphAdd[sl] = null; }
+      for (const k of mphDrop) await IDB.del(k).catch(()=>{});
+      for (const sl of ["old", "new"]) if (mphAdd[sl]){
+        const k = key + "|m" + sl + "|" + Date.now() + Math.random().toString(36).slice(2,6);
+        await IDB.put(k, {blob:mphAdd[sl].blob, w:mphAdd[sl].w, h:mphAdd[sl].h}); mph[sl] = k;
+      }
+      if (added.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+    } catch(e){ toast("حدثت مشكلة في حفظ الصور — حاول مرة أخرى"); return; }
+    s.full = full; put(STORE, data);
+    results[key] = {date:data.date, id:s.id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
+      stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
+      v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || [],
+      modemPhotos: needModemPhotos(chk) ? {old: mph.old, new: mph.new} : undefined,
+      mShared: !!(old && old.mShared && needModemPhotos(chk) && !mphAdd.old && !mphAdd.new && !mphDrop.length)};
+    put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تم حفظ الزيارة " : "تم حفظ نتيجة ") + s.id + " — تُرحّل عند الضغط على «ترحيل»");
+  };
+  if (old){
+    const del = e => confirmTap(e.currentTarget, () => deleteVisit(s.id), "هل أنت متأكد؟ اضغط مرة أخرى");
+    $("#undoRes").onclick = del; $("#delTop").onclick = del;
+  }
+}
+async function deleteMany(ids){
+  if (!data || !ids.length) return;
+  for (const id of ids){
+    const r = results[rkey(id)];
+    if (r){ for (const k of photoKeys(r)) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[rkey(id)]; }
+  }
+  const set = new Set(ids);
+  data.stops = data.stops.filter(x => !set.has(x.id));
+  put(STORE, data); put(RES, results);
+  sel.clear(); selMode = false; closeSheet(); render();
+  toast(ids.length === 1 ? "تم حذف " + ids[0] : `تم حذف المحدد (${ids.length})`); syncAll();
+}
+function selBar(list){
+  if (!selMode) return "";
+  const all = list.length && list.every(s => sel.has(s.id));
+  return `<div class="selbar">
+    <button type="button" class="btn sm" id="selAll">${all ? "إلغاء تحديد الكل" : "تحديد الكل"}</button>
+    <button type="button" class="btn sm danger" id="selDel" ${sel.size ? "" : "disabled"}>${ic("trash")} حذف المحدد (${sel.size})</button>
+    <span style="flex:1"></span>
+    <button type="button" class="btn sm" id="selExit">إنهاء التحديد</button></div>`;
+}
+function wireSel(list){
+  const a = $("#selAll"); if (!a) return;
+  a.onclick = () => { const all = list.every(s => sel.has(s.id)); if (all) sel.clear(); else list.forEach(s => sel.add(s.id)); render(); };
+  $("#selDel").onclick = e => confirmTap(e.currentTarget, () => deleteMany([...sel]), `تأكيد حذف ${sel.size}؟ اضغط مرة أخرى`);
+  $("#selExit").onclick = () => { selMode = false; sel.clear(); render(); };
+}
+const selHead = (s, i) => selMode
+  ? `<input type="checkbox" class="selbox" ${sel.has(s.id) ? "checked" : ""} aria-label="تحديد ${esc(s.id)}" tabindex="-1">`
+  : `<span class="seq">${i+1}</span>`;
+async function deleteVisit(id){
+  const s = data && data.stops.find(x => x.id === id); if (!s) return;
+  const key = rkey(id), r = results[key];
+  if (r){ for (const k of photoKeys(r)) await IDB.del(k).catch(()=>{}); queueDelete(r); delete results[key]; put(RES, results); }
+  if (s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); }
+  closeSheet(); render(); toast(s.manual ? "تم حذف الزيارة " + id : "تم إلغاء نتيجة " + id); syncAll();
+}
+async function deleteResult(k){
+  const r = results[k]; if (!r) return;
+  for (const p of photoKeys(r)) await IDB.del(p).catch(()=>{});
+  queueDelete(r); delete results[k]; put(RES, results);
+  if (data && data.date === r.date){ const s = data.stops.find(x => x.id === r.id); if (s && s.manual){ data.stops = data.stops.filter(x => x !== s); put(STORE, data); } }
+  syncDone(); render(); toast("تم حذف الزيارة " + r.id); syncAll();
+}
+function confirmTap(btn, fn, msg){
+  if (!btn.dataset.sure){ btn.dataset.sure = "1"; const t = btn.innerHTML; btn.textContent = msg || "هل أنت متأكد؟ اضغط مرة أخرى";
+    setTimeout(() => { if (btn.isConnected){ delete btn.dataset.sure; btn.innerHTML = t; } }, 4000); return; }
+  fn();
+}
+function closeSheet(){ $("#sheetBg").hidden = true; }
+$("#sheetBg").addEventListener("click", e => { if (e.target.id === "sheetBg") closeSheet(); });
+
+// ---------- entered (manual) visits view ----------
+function renderManual(){
+  const main = $("#main"), M = data ? data.stops.filter(s => s.manual) : [];
+  $("#sub").textContent = [data ? data.date : todayStr(), cfg.name].filter(Boolean).join(" · ");
+  const cards = M.map((s, i) => { const r = results[rkey(s.id)] || {};
+    return `<article class="card done${sel.has(s.id)?" selected":""}" data-card="${esc(s.id)}">
+      <div class="head">${selHead(s, i)}<span class="sid num">${esc(s.id)}</span><span class="sp"></span>
+        ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">${ic("trash")}</button>
+        <button class="btn sm" data-done="${esc(s.id)}" type="button">${ic("edit")} تعديل</button>`}</div>
+      <div class="res"><span class="num">${esc(stopFull(s))}</span>${townName(parseInt(stopFull(s).slice(0, 3), 10)) ? ` · ${esc(townName(parseInt(stopFull(s).slice(0, 3), 10)))}` : ""} · ${esc(r.work || "")} · ${esc(r.note || "")}${(r.photos||[]).length ? ` · ${ic("camera")} ${r.photos.length}` : ""}</div>
+    </article>`; }).join("");
+  main.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
+    <button class="btn primary big" id="addBtnM" type="button">${ic("plus")} توثيق زيارة جديدة</button>
+    ${postBtnHtml("postBtnM")}
+    ${M.length ? `<div class="bar"><div class="summary"><span class="stat"><b class="num">${M.length}</b>زيارة مُدخلة</span></div>
+      <button class="btn sm" id="selBtnM" type="button">${ic("select")} تحديد</button></div>${selBar(M)}<div id="list">${cards}</div>
+      <button class="btn" id="exportBtnM" type="button">${ic("excel")} تصدير زيارات اليوم إلى Excel</button>`
+    : `<div class="empty">
+      ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)}</p>` : ""}
+      <p>لا توجد زيارات مُدخلة اليوم. بعد إنجاز أي زيارة، اضغط <b>«توثيق زيارة جديدة»</b> وسجّل ما تم.</p>
+</div>`}
+  </div>`;
+  $("#addBtnM").onclick = () => openSheet(null, true); wirePost("postBtnM");
+  const ex = $("#exportBtnM"); if (ex) ex.onclick = exportExcel;
+  main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
+  const sb = $("#selBtnM"); if (sb) sb.onclick = () => { selMode = !selMode; sel.clear(); render(); };
+  wireSel(M);
+}
+
+// ---------- documentation view ----------
+function renderDocs(){
+  const main = $("#main"), showLogged = get(SHOWLOG, false);
+  let all = Object.entries(results).map(([k,r]) => ({k, ...r}));
+  const pend = all.filter(r => !r.logged).length, logged = all.length - pend;
+  if (!showLogged) all = all.filter(r => !r.logged);
+  all.sort((a,b) => (a.logged - b.logged) || String(a.at).localeCompare(String(b.at)));
+  $("#sub").textContent = pend ? `${pend} زيارة بانتظار التوثيق` : "جميع الزيارات موثّقة";
+  let lastDate = "";
+  const items = all.map(r => {
+    const h = r.date !== lastDate ? `<div class="dhead">${esc(r.date)}</div>` : ""; lastDate = r.date;
+    const fn = resFull(r);
+    return h + `<div class="doc${r.logged?" logged":""}">
+      <div class="line"><span class="full num">${fn}</span>${townName(parseInt(fn.slice(0, 3), 10)) ? `<span class="meta">${esc(townName(parseInt(fn.slice(0, 3), 10)))}</span>` : ""}<span class="sp" style="flex:1"></span>
+        <button class="btn sm" data-editfull="${esc(r.k)}" type="button" aria-label="تعديل رقم الاشتراك">${ic("edit")}</button>
+        <button class="btn sm danger" data-delres="${esc(r.k)}" type="button" aria-label="حذف الزيارة">${ic("trash")}</button>
+        <button class="btn sm primary" data-copy="${fn}" type="button">نسخ الرقم</button></div>
+      <div class="line"><span class="lbl">المهمة:</span><span class="work">${esc(r.work)}</span></div>
+      <div class="line"><span class="note">${esc(r.note)}</span>
+        <button class="btn sm" data-copy="${esc(r.note)}" type="button">نسخ الملاحظة</button></div>
+      ${checksText(r.checks)?`<div class="line"><span class="checks" style="flex:1">${esc(checksText(r.checks))}</span>
+        <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
+      ${photoKeys(r).length?`<div class="photos">${(r.photos||[]).map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}${Object.entries(r.modemPhotos||{}).filter(([,k]) => k).map(([sl,k])=>`<div class="thumb"><img alt="" data-pk="${esc(k)}"><span class="tag0">${sl === "old" ? "المودم القديم" : "المودم الجديد"}</span></div>`).join("")}</div>`:""}
+      ${r.modemPhotos ? `<div class="line"><button class="btn sm${r.mShared ? " done" : ""}" data-mshare="${esc(r.k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال صور المودم للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>` : ""}
+      <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span>
+        ${cfgReady() ? (r.sent ? `<span class="sync ok">${ic("check")} رُحّلت</span>` : `<span class="sync">لم تُرحّل بعد</span>`) : ""}<span style="flex:1"></span>
+        <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتُها ✓"}</button></div>
+    </div>`;
+  }).join("");
+  main.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
+    ${cfgReady() ? postBtnHtml("sendBtn", true) : `<button class="btn" id="setupBtn" type="button">${ic("cloud")} الربط مع رئيس القسم (Google Sheet)</button>`}
+    ${data?`<button class="btn" id="exportBtn2" type="button">${ic("excel")} تصدير زيارات ${esc(data.date)} إلى Excel</button>`:""}
+    <p class="sub" style="margin:0">لكل زيارة: انسخ الرقم ← الصقه ← استعلام ← اختر نوع العمل ← انسخ الملاحظة ← الصقها ← حفظ ← «وثّقتُها»</p>
+    ${logged?`<div class="bar"><label for="showLog"><input type="checkbox" id="showLog" ${showLogged?"checked":""}> عرض الموثّقة (${logged})</label>
+      ${logged?`<button class="btn sm" id="clearLog" type="button">مسح الموثّقة</button>`:""}</div>`:""}
+    ${items || `<div class="empty"><p>لا توجد زيارات بانتظار التوثيق. عند حفظ نتيجة أي زيارة ستظهر هنا.</p></div>`}
+  </div>`;
+  fillThumbs(main).then(() => main.querySelectorAll(".doc img").forEach(im => im.onclick = () => viewPhoto(im.src)));
+  const ex = $("#exportBtn2"); if (ex) ex.onclick = exportExcel;
+  main.querySelectorAll("[data-editfull]").forEach(b => b.onclick = () => editFull(b.dataset.editfull));
+  main.querySelectorAll("[data-mshare]").forEach(b => b.onclick = () => shareModem(b.dataset.mshare));
+  main.querySelectorAll("[data-delres]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, () => deleteResult(b.dataset.delres), "متأكد؟ اضغط مرة أخرى"));
+  wirePost("sendBtn"); const su = $("#setupBtn"); if (su) su.onclick = openSettings;
+  const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
+  const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ photoKeys(results[k]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
+}
+$("#tabV").onclick = () => { view = "v"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
+$("#tabM").onclick = () => { view = "m"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
+$("#tabD").onclick = () => { view = "d"; selMode = false; sel.clear(); render(); scrollTo(0,0); };
+
+// ---------- WhatsApp chat import + on-device reading ----------
+function loadScript(src){ return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+let readerReady = null;
+function loadReader(){
+  return readerReady || (readerReady = (async () => {
+    await loadScript("wa-import.js"); await loadScript("reader.js");
+    const m = await (await fetch("reader-model.json")).json(); VisitReader.setNet(m);
+  })().catch(e => { readerReady = null; throw e; }));
+}
+const TOWNS = {"اربد":"1","إربد":"1","جرش":"4"};
+function nearestOrder(stops){
+  const withC = stops.filter(hasC), noC = stops.filter(s => !hasC(s));
+  if (!withC.length) return stops;
+  let cur = withC.reduce((a, b) => (b.lat > a.lat ? b : a)); const out = [cur]; const left = withC.filter(s => s !== cur);
+  while (left.length){ let bi = 0, bd = Infinity; left.forEach((s, i) => { const d = dist(cur, s); if (d < bd){ bd = d; bi = i; } }); cur = left.splice(bi, 1)[0]; out.push(cur); }
+  noC.forEach(s => { const ph = new Set(s.phones.map(p => p[0])); let at = -1; out.forEach((o, i) => { if (o.phones.some(p => ph.has(p[0]))) at = i; }); if (at >= 0) out.splice(at + 1, 0, s); else out.push(s); });
+  return out;
+}
+async function importWhatsApp(file){
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>استيراد محادثة واتساب</h3><p class="hint" id="impMsg">جاري فتح الملف…</p>`;
+  $("#sheetBg").hidden = false;
+  let files, msgs, day;
+  try {
+    await loadReader();
+    files = await WAImport.readZip(await file.arrayBuffer());
+    const txt = Object.keys(files).find(n => /\.txt$/i.test(n));
+    if (!txt) throw new Error("لم يُعثر على نص المحادثة داخل الملف");
+    msgs = WAImport.parseChat(new TextDecoder("utf-8").decode(await files[txt].get()));
+    day = WAImport.buildDay(msgs);
+  } catch(e){ $("#impMsg").textContent = "تعذّر فتح الملف: " + (e.message || e); sh.insertAdjacentHTML("beforeend", `<button type="button" class="btn" id="closeSh">إغلاق</button>`); $("#closeSh").onclick = closeSheet; return; }
+  const dates = day.dates.length ? day.dates : [day.date];
+  const run = async () => {
+    $("#impGo").disabled = true; $("#impProg").hidden = false;
+    const total = day.subs.reduce((a, s) => a + s.images.length, 0); let doneN = 0;
+    if (data && data.stops) for (const s of data.stops) for (const k of (s.refs || [])) await IDB.del(k).catch(()=>{});
+    const stops = [];
+    for (const sub of day.subs){
+      const reads = [], refs = [];
+      for (const name of sub.images){
+        $("#impMsg").textContent = `جاري قراءة صور المشترك ${sub.id} (${doneN + 1} من ${total})…`;
+        await new Promise(r => setTimeout(r, 0));
+        const f = files[name];
+        if (f){
+          try {
+            const blob = new Blob([await f.get()], {type: "image/jpeg"});
+            const {g, W, H} = await VisitReader.grayFromBlob(blob);
+            reads.push(VisitReader.readGray(g, W, H));
+            const c = await compress(blob, 1600, 0.8);
+            const k = "ref|" + day.date + "|" + sub.id + "|" + refs.length; await IDB.put(k, {blob: c.blob, w: c.w, h: c.h}); refs.push(k);
+          } catch(e){ console.warn(e); }
+        }
+        doneN++; $("#impProg i").style.width = (doneN / total * 100) + "%";
+      }
+      const r = VisitReader.combine(reads);
+      const phones = r.phones.map(o => o.alt.length ? [o.p, o.n, "تحقق من الصورة: قد يكون " + o.alt[0]] : [o.p, o.n]);
+      sub.extraPhones.forEach(p => { if (!phones.some(x => x[0] === p)) phones.push([p, 1, "من الطلب"]); });
+      const warn = [];
+      if (r.lat === null || r.lng === null) warn.push("لم تُقرأ الإحداثيات آلياً — راجع الصور الأصلية");
+      if (!phones.length) warn.push("لم تُقرأ أرقام الهواتف آلياً — راجع الصور الأصلية");
+      stops.push({id: sub.id, lat: r.lat, lng: r.lng, phones, task: sub.task, refs, warn, auto: true});
+    }
+    setData({date: day.date, area: "", town: "1", stops: nearestOrder(stops), auto: true});
+    closeSheet(); view = "v"; render(); scrollTo(0, 0);
+    const bad = stops.filter(s => s.warn.length).length;
+    toast(`تمت قراءة ${stops.length} مشتركاً` + (bad ? ` — ${bad} بحاجة إلى مراجعة` : ""));
+  };
+  const draw = () => {
+    const n = day.subs.length, imgs = day.subs.reduce((a, s) => a + s.images.length, 0);
+    sh.innerHTML = `<h3>استيراد محادثة واتساب</h3>
+      <label class="lbl" for="impDate">التاريخ</label>
+      <select class="inp" id="impDate">${dates.slice().reverse().map(d => `<option ${d === day.date ? "selected" : ""}>${esc(d)}</option>`).join("")}</select>
+      <div class="checks">${n ? `وُجد <b>${n}</b> مشتركاً و<b>${imgs}</b> صورة من «${esc(day.clerk || "")}».` : "لا توجد أرقام اشتراكات مع صور في هذا التاريخ."}</div>
+      <p class="hint">تُقرأ الإحداثيات وأرقام الهواتف من الصور على هاتفك مباشرة، دون إنترنت ودون إرسال أي بيانات. القراءة الآلية قد تخطئ، لذا تُحفظ الصور الأصلية مع كل موقع للمراجعة.</p>
+      <div class="progress" id="impProg" hidden><i style="width:0%"></i></div>
+      <p class="hint" id="impMsg"></p>
+      <div class="row"><button type="button" class="btn primary" id="impGo" ${n ? "" : "disabled"}>قراءة الصور وبناء خط السير</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>`;
+    $("#closeSh").onclick = closeSheet;
+    $("#impDate").onchange = e => { day = WAImport.buildDay(msgs, e.target.value); draw(); };
+    $("#impGo").onclick = run;
+  };
+  draw();
+}
+
+// ---------- Excel export ----------
+function loadExcelJS(){
+  if (window.ExcelJS) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "exceljs.min.js"; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+}
+async function exportExcel(){
+  if (!data) return toast("لا توجد زيارات محمّلة");
+  toast("جاري تجهيز ملف Excel…");
+  try { await loadExcelJS(); } catch(e){ return toast("يلزم الاتصال بالإنترنت في المرة الأولى لتحميل أداة التصدير"); }
+  const wb = new ExcelJS.Workbook(); wb.creator = "زياراتي";
+  const ws = wb.addWorksheet("الزيارات", {views:[{rightToLeft:true, state:"frozen", ySplit:1}]});
+  const cols = [
+    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["المهمة",14],
+    ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["معالجة الاتصال",24],["الطلب",30],["التلفون",14],
+    ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22],["المودم القديم",22],["المودم الجديد",22]
+  ];
+  ws.columns = cols.map(([h,w]) => ({header:h, width:w}));
+  const hr = ws.getRow(1); hr.height = 24;
+  hr.eachCell(c => { c.font = {bold:true, color:{argb:"FFFFFFFF"}}; c.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF0B6E5E"}}; c.alignment = {vertical:"middle", horizontal:"center", wrapText:true}; });
+  const seal = sealTxt;
+  let rowN = 2, doneN = 0;
+  for (const [i, s] of data.stops.entries()){
+    const r = results[rkey(s.id)]; if (r) doneN++;
+    const c = (r && r.checks) || {};
+    const row = ws.getRow(rowN);
+    row.values = [i+1, (r && r.full) || stopFull(s), s.id, r ? "تمت" : "لم تتم",
+      r ? r.work : "", r ? r.note : "",
+      seal(c.modemSeal, c.modemOk), seal(c.connSeal, c.connOk), c.weak ? YN[c.weak] : "", fixText(c), s.task || "",
+      (s.phones && s.phones[0] && s.phones[0][0]) || "", hasC(s) ? `${s.lat}, ${s.lng}` : "لا يوجد",
+      hasC(s) ? {text:"فتح", hyperlink:`https://www.google.com/maps?q=${s.lat},${s.lng}`} : "", r ? (r.logged ? "نعم" : "لا") : ""];
+    row.alignment = {vertical:"middle", wrapText:true};
+    row.getCell(4).font = {bold:true, color:{argb: r ? "FF2E7D32" : "FFB3261E"}};
+    if (hasC(s)) row.getCell(14).font = {color:{argb:"FF2B5DA8"}, underline:true};
+    if (fixAlert(c)) row.getCell(10).font = {bold:true, color:{argb:"FFB3261E"}};
+    const pks = (r && r.photos || []).slice(0, 3), mk = r && r.modemPhotos ? [r.modemPhotos.old, r.modemPhotos.new] : [];
+    for (const [n, pk] of mk.entries()){
+      if (!pk) continue;
+      const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
+      const id = wb.addImage({buffer: await v.blob.arrayBuffer(), extension:"jpeg"}), sc = Math.min(150 / v.w, 150 / v.h);
+      ws.addImage(id, {tl:{col:18 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
+    }
+    if (pks.length || mk.some(Boolean)){
+      row.height = 120;
+      for (const [n, pk] of pks.entries()){
+        const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
+        const buf = await v.blob.arrayBuffer();
+        const id = wb.addImage({buffer:buf, extension:"jpeg"});
+        const sc = Math.min(150 / v.w, 150 / v.h);
+        ws.addImage(id, {tl:{col:15 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
+      }
+    } else row.height = 36;
+    rowN++;
+  }
+  const sum = ws.getRow(rowN + 1);
+  sum.values = ["", `المجموع: ${data.stops.length} زيارة · تمت ${doneN} · لم تتم ${data.stops.length - doneN}`];
+  sum.getCell(2).font = {bold:true};
+  const buf = await wb.xlsx.writeBuffer();
+  const name = `زيارات-${String(data.date).replace(/\//g,"-")}.xlsx`;
+  const file = new File([buf], name, {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const sh = $("#sheet");
+  sh.innerHTML = `<h3>ملف Excel جاهز</h3><p class="sub" style="margin:0">${esc(name)} · ${data.stops.length} زيارة · ${(file.size/1024/1024).toFixed(1)} MB</p>
+    <div class="row"><button type="button" class="btn primary" id="dlX">${ic("download")} تنزيل</button>
+    ${navigator.canShare && navigator.canShare({files:[file]}) ? `<button type="button" class="btn" id="shX">${ic("share")} مشاركة</button>` : ""}</div>
+    <button type="button" class="btn" id="closeSh">إغلاق</button>`;
+  $("#sheetBg").hidden = false;
+  $("#closeSh").onclick = closeSheet;
+  $("#dlX").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast("تم الحفظ في التنزيلات"); };
+  const shx = $("#shX"); if (shx) shx.onclick = () => navigator.share({files:[file], title:name}).catch(()=>{});
+}
+
+function editFull(k){
+  const r = results[k]; if (!r) return;
+  const sh = $("#sheet"), f0 = clean10(resFull(r));
+  let town = parseInt(f0.slice(0, 3), 10); if (!TOWN_BY.has(town)) town = 0;
+  sh.innerHTML = `<h3>رقم الاشتراك · <span class="num">${esc(r.id)}</span></h3>
+    <div class="lbl">البلدة *</div>
+    <div class="townrow" id="townBox"></div>
+    <div class="fullprev" id="fullPrev"></div>
+    <div class="row"><button type="button" class="btn primary" id="efSave">حفظ</button><button type="button" class="btn" id="closeSh">إلغاء</button></div>`;
+  $("#sheetBg").hidden = false;
+  const drawFull = () => { $("#fullPrev").innerHTML = town ? `رقم الاشتراك (10 خانات): <span class="num">${fullNum(town, r.id)}</span>` : "اختر البلدة"; };
+  townButtons($("#townBox"), () => town, v => { town = v; drawFull(); }); drawFull();
+  $("#closeSh").onclick = closeSheet;
+  $("#efSave").onclick = () => {
+    if (!town) return toast("اختر البلدة");
+    const full = fullNum(town, r.id); rememberTown(town);
+    r.full = full; r.town = String(town); r.sent = false; r.v = (r.v||0) + 1;
+    if (data && data.date === r.date){ const s = data.stops.find(x => x.id === r.id); if (s){ s.full = full; put(STORE, data); } }
+    put(RES, results); closeSheet(); render(); toast("تم حفظ الرقم"); syncAll();
+  };
+}
+
+let tt;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
+
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-postlist]")){ openPostList(); return; }
+  if (selMode){
+    const card = e.target.closest("[data-card]");
+    if (card && !e.target.closest("button, a")){ const id = card.dataset.card; sel.has(id) ? sel.delete(id) : sel.add(id); render(); return; }
+  }
+  const c = e.target.closest("[data-copy]");
+  if (c){
+    const v = c.dataset.copy;
+    const fb = () => { const el = c.closest(".ph, .coords, .head, .line")?.querySelector(".num, .note"); if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("حدّد النص وانسخه يدوياً"); };
+    try { navigator.clipboard.writeText(v).then(()=>toast("تم النسخ: " + v), fb); } catch(err){ fb(); }
+    return;
+  }
+  const d = e.target.closest("[data-done]");
+  if (d){ openSheet(d.dataset.done); return; }
+  const cp = e.target.closest("[data-logged]");
+  if (cp){ const r = results[cp.dataset.logged]; if (r){ r.logged = !r.logged; put(RES, results); render(); toast(r.logged ? "تم التوثيق ✓" : "أُعيدت إلى غير موثّقة"); } }
+});
+$("#importBtn").onclick = () => $("#fileIn").click();
+$("#fileIn").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  e.target.value = "";
+  if (/\.zip$/i.test(f.name) || /zip/.test(f.type)) return importWhatsApp(f);
+  try { setData(JSON.parse(await f.text())); render(); toast("تم استيراد " + data.stops.length + " موقع"); }
+  catch(err){ toast("الملف غير صحيح — اختر ملف محادثة واتساب (zip) أو ملف الزيارات"); }
+};
+window.addEventListener("hashchange", async () => { if (await fromHash()){ if (!$("#lock").hidden) drawLock(); else render(); } });
+
+// ---------- lock: the app opens only with the technician's password ----------
+// sessionStorage lives as long as the app is running (also in the background) and is cleared when it is closed.
+const UNLOCK = "visits.unlocked", LOCKT = "visits.lockuntil";
+const isUnlocked = () => { try { return sessionStorage.getItem(UNLOCK) === "1"; } catch(e){ return false; } };
+const setUnlocked = v => { try { v ? sessionStorage.setItem(UNLOCK, "1") : sessionStorage.removeItem(UNLOCK); } catch(e){} };
+async function sha256hex(t){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
+let afterUnlock = null;
+function syncPass(pass){
+  if (!navigator.onLine || !cfg.url || !cfg.name) return;
+  fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"login", name:cfg.name, pass})}).then(r => r.json()).then(j => {
+    if (j && j.v >= 5){ cfg.pwSync = true; if (j.ok && j.key) cfg.key = j.key; put(CFG, cfg); }
+  }).catch(() => {});
+}
+function lockNow(){ setUnlocked(false); showLock(() => { render(); }); }
+function showLock(onOpen){
+  afterUnlock = onOpen; closeSheet(); $("#lock").hidden = false; drawLock();
+}
+function unlockDone(){
+  setUnlocked(true); $("#lock").hidden = true; $("#lockCard").innerHTML = "";
+  const f = afterUnlock; afterUnlock = null; if (f) f();
+}
+function drawLock(mode){
+  const card = $("#lockCard"), LOGO = document.querySelector("header .logo").innerHTML;
+  const head = sub => `<div class="lock-logo">${LOGO}</div><h2 class="lock-title">زياراتي</h2><p class="lock-sub">${sub}</p>`;
+  if (mode === "admin"){
+    card.innerHTML = head("إدارة الحسابات") + `<div id="lkAdm"></div>
+      <button type="button" class="btn big" id="lkBackA">رجوع لتسجيل الدخول</button>`;
+    cfg.adminOk = cfg.adminOk && !!cfg.url; drawAdmin($("#lkAdm")); $("#lkBackA").onclick = () => drawLock();
+    return;
+  }
+  const admLink = `<button type="button" class="lk-link" id="lkAdmin">إدارة الحسابات (للمسؤول)</button>`;
+  const wireAdm = () => { const b = $("#lkAdmin"); if (b) b.onclick = () => drawLock("admin"); };
+  if (!cfg.url){
+    card.innerHTML = head("تطبيق فنيي القسم") + `<p class="hint">افتح رابط الانضمام الذي وصلك من المسؤول، أو الصقه هنا:</p>
+      <input class="inp" id="lkPaste" dir="ltr" placeholder="https://suud113.github.io/…#cfg=…">
+      <button type="button" class="btn primary big" id="lkPasteGo">متابعة</button>` + admLink;
+    wireAdm();
+    $("#lkPasteGo").onclick = async () => { const v = $("#lkPaste").value.trim(), i = v.indexOf("#"); if (i < 0) return toast("الصق الرابط كاملاً"); await fromHash(v.slice(i)); drawLock(); };
+    return;
+  }
+  const until = +(get(LOCKT, 0)), wait = until - Date.now();
+  if (cfg.key && cfg.pv && mode !== "new" && mode !== "again"){           // returning technician: checked on the phone, works offline
+    card.innerHTML = head(`مرحباً ${esc(cfg.name)}`) + `
+      <label class="lbl" for="lkPass">كلمة السر</label>
+      <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
+      <button type="button" class="btn primary big" id="lkGo">دخول</button>
+      <p class="hint lk-err" id="lkErr">${wait > 0 ? `محاولات كثيرة خاطئة — حاول بعد ${Math.ceil(wait / 60000)} دقيقة` : ""}</p>
+      <div class="lk-links"><button type="button" class="lk-link" id="lkForgot">نسيت كلمة السر؟</button><button type="button" class="lk-link" id="lkOther">دخول باسم فني آخر</button></div>`;
+    const go = async () => {
+      if (+(get(LOCKT, 0)) > Date.now()) return;
+      const pv = await sha256hex(cfg.ps + "|" + $("#lkPass").value.trim());
+      if (pv === cfg.pv){ const pw = $("#lkPass").value.trim(); put("visits.fails", 0); unlockDone(); if (!cfg.pwSync) syncPass(pw); return; }
+      const n = (+get("visits.fails", 0)) + 1; put("visits.fails", n); $("#lkPass").value = "";
+      if (n >= 5){ put(LOCKT, Date.now() + 15 * 60000); put("visits.fails", 0); $("#lkErr").textContent = "محاولات كثيرة خاطئة — حاول بعد 15 دقيقة"; }
+      else $("#lkErr").textContent = `كلمة السر غير صحيحة — بقي ${5 - n} محاولات`;
+    };
+    $("#lkGo").onclick = go; $("#lkPass").onkeydown = e => { if (e.key === "Enter") go(); };
+    $("#lkForgot").onclick = () => drawLock("again");
+    $("#lkOther").onclick = () => {
+      const p = pendingPost();
+      if (p.n + p.del) return toast(`يوجد ${p.n + p.del} لم تُرحّل لـ ${cfg.name} — ادخل باسمه ورحّلها أولاً`);
+      drawLock("new");
+    };
+    setTimeout(() => $("#lkPass") && $("#lkPass").focus(), 200);
+    return;
+  }
+  // first sign-in on this phone: needs the internet once
+  card.innerHTML = head("تسجيل الدخول") + (mode === "again" ? `<p class="hint">اطلب كلمة سرك من المسؤول، ثم ادخل بها هنا (يلزم الإنترنت).</p>` : "") + `<div class="lbl">اختر اسمك</div><div class="opts" id="lkNames"><p class="hint">جاري تحميل الأسماء…</p></div>
+    <label class="lbl" for="lkPass">كلمة السر</label>
+    <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
+    <button type="button" class="btn primary big" id="lkGo">دخول</button>
+    <p class="hint lk-err" id="lkErr"></p>
+    ${cfg.key && cfg.pv ? `<button type="button" class="lk-link" id="lkBack">رجوع</button>` : ""}` + admLink;
+  wireAdm();
+  let picked = "";
+  const bk = $("#lkBack"); if (bk) bk.onclick = () => drawLock();
+  fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"techs"})}).then(r => r.json()).then(j => {
+    if (!j || !j.ok || !Array.isArray(j.techs)){ $("#lkNames").innerHTML = `<p class="hint">سكربت الجدول ما زال بالإصدار القديم — حدّثه واعمل (Deploy) بنسخة جديدة (New version)</p>`; return; }
+    const names = j.techs;
+    if (names.includes(cfg.name) && mode !== "new") picked = cfg.name;
+    $("#lkNames").innerHTML = names.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n === picked}">${esc(n)}</button>`).join("") || `<p class="hint">لا توجد حسابات بعد — اطلب من المسؤول إنشاء حسابك.</p>`;
+    $("#lkNames").querySelectorAll("[data-nm]").forEach(b => b.onclick = () => { picked = b.dataset.nm; $("#lkNames").querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", x === b)); $("#lkPass").focus(); });
+  }).catch(() => { $("#lkNames").innerHTML = `<p class="hint">يلزم الاتصال بالإنترنت لأول دخول على هذا الهاتف.</p>`; });
+  const go = async () => {
+    const pass = $("#lkPass").value.trim();
+    if (!picked) return toast("اختر اسمك"); if (!pass) return toast("اكتب كلمة السر");
+    const p = pendingPost();
+    if (cfg.acct && cfg.name && picked !== cfg.name && p.n + p.del) return toast(`يوجد ${p.n + p.del} لم تُرحّل لـ ${cfg.name} — ادخل باسمه ورحّلها أولاً`);
+    $("#lkGo").disabled = true; $("#lkErr").textContent = "";
+    try {
+      const j = await (await fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"login", name:picked, pass})})).json();
+      if (!j.ok){ $("#lkErr").textContent = j.error || "تعذّر الدخول"; $("#lkPass").value = ""; return; }
+      if (cfg.acct && cfg.name && cfg.name !== j.name){ results = {}; put(RES, results); put(DELQ, []); }   // another technician's (already posted) history leaves this phone
+      const ps = [...crypto.getRandomValues(new Uint8Array(16))].map(x => x.toString(16).padStart(2, "0")).join("");
+      cfg.name = j.name; cfg.key = j.key; cfg.ps = ps; cfg.acct = true; cfg.pwSync = j.v >= 5; cfg.pv = await sha256hex(ps + "|" + pass); put(CFG, cfg);
+      put("visits.fails", 0); put(LOCKT, 0); unlockDone();
+    } catch(e){ $("#lkErr").textContent = "تعذّر الاتصال — تحقّق من الإنترنت"; }
+    finally { const b = $("#lkGo"); if (b) b.disabled = false; }
+  };
+  $("#lkGo").onclick = go; $("#lkPass").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+async function takeShared(){
+  if (!/[?&]share=1/.test(location.search)) return;
+  history.replaceState(null, "", location.pathname + location.hash);
+  try {
+    const c = await caches.open("share-inbox"), r = await c.match("shared"); if (!r) return toast("لم يصل الملف — جرّب المشاركة مرة أخرى");
+    const name = decodeURIComponent(r.headers.get("x-name") || "chat.zip"), f = new File([await r.blob()], name, {type: r.headers.get("content-type") || "application/zip"});
+    await c.delete("shared");
+    if (/\.zip$/i.test(name) || /zip/.test(f.type)) importWhatsApp(f);
+    else toast("الملف المُشارك ليس ملف محادثة — اختر «تصدير الدردشة» مع الوسائط");
+  } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
+}
+(async () => {
+  if (!cfg.adminOk && (cfg.token || cfg.team)){ delete cfg.token; delete cfg.team; put(CFG, cfg); }
+  await fromHash();
+  const open = async () => { render(); await takeShared(); };
+  if (isUnlocked() && cfgReady()) open(); else showLock(open);
+})();
+const APP_VERSION = 32;
+if ("serviceWorker" in navigator){
+  const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
+  navigator.serviceWorker.register("sw.js", {updateViaCache: "none"}).then(r => r.update()).catch(()=>{});
+}
+</script>
+</body>
+</html>
