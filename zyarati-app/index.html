@@ -478,8 +478,7 @@ async function syncAll(manual){
 }
 
 // ---------- old/new modem photos → WhatsApp group (share sheet: WhatsApp ← group ← send) ----------
-const modemCaption = r => { const f = resFull(r), tn = townName(parseInt(f.slice(0, 3), 10));
-  return ["استبدال مودم", f, tn, r.tech || cfg.name, r.date].filter(Boolean).join(" · ") + "\nالصورة الأولى: المودم القديم · الثانية: المودم الجديد"; };
+const modemCaption = r => resFull(r);   // the message is only the 10-digit subscriber number
 async function shareModem(k, btn){
   const r = results[k]; if (!r || !r.modemPhotos) return;
   const f = resFull(r), files = [];
@@ -1551,7 +1550,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 32;
+const APP_VERSION = 33;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
