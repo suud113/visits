@@ -771,6 +771,7 @@ function openSheet(id, isNew){
   const full0 = isNew ? "" : clean10((old && old.full) || stopFull(s));
   let town = full0.length === 10 ? parseInt(full0.slice(0, 3), 10) : (isNew ? (recentTowns()[0] || 0) : 0);
   if (!TOWN_BY.has(town)) town = 0;
+  const sub0 = full0.length === 10 ? full0.slice(3) : (isNew ? "" : String(parseInt(clean10(s.id), 10) || "").padStart(7, "0"));
   const yn = (f, dis) => `<span class="yn">${["yes","no"].map(v=>`<button type="button" class="opt" data-f="${f}" data-v="${v}" aria-pressed="${chk[f]===v}" ${dis?"disabled":""}>${YN[v]}</button>`).join("")}</span>`;
   const drawChecks = () => {
     $("#chkBox").innerHTML = `
@@ -806,8 +807,8 @@ function openSheet(id, isNew){
     ${s.task?`<div class="task"><span>الطلب:</span>${esc(s.task)}</div>`:""}
     <div class="lbl">البلدة *</div>
     <div class="townrow" id="townBox"></div>
-    <label class="lbl" for="fullIn">رقم الاشتراك (10 خانات) *</label>
-    <input class="inp num" id="fullIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="0010132777" value="${esc(full0.length === 10 ? full0 : (town ? pad3(town) : ""))}">
+    <label class="lbl" for="subIn">رقم المشترك *</label>
+    <input class="inp num" id="subIn" inputmode="numeric" maxlength="10" dir="ltr" placeholder="مثال: 444" value="${esc(sub0)}" ${s.manual ? "" : "readonly"}>
     <div class="fullprev" id="fullPrev"></div>
     <div class="lbl">المهمة *</div>
     <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
@@ -822,40 +823,40 @@ function openSheet(id, isNew){
     ${old?`<button type="button" class="btn danger" id="undoRes">${s.manual ? "حذف الزيارة" : old.logged ? "حذف النتيجة (موثّقة)" : "إلغاء الإنجاز"}</button>`:""}`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0;
   drawChecks(); drawPhotos();
-  // the 10-digit field is the source of truth; the town buttons read/write its first 3 digits
-  const fullVal = () => {
-    const d = clean10($("#fullIn").value);
-    if (d.length === 10) return d;
-    if (d.length > 3 && TOWN_BY.has(parseInt(d.slice(0, 3), 10))) return d.slice(0, 3) + d.slice(3).padStart(7, "0");   // short subscriber part -> pad
-    return "";
-  };
+  // full number = town (3 digits, from the buttons) + subscriber (7 digits, zero-padded automatically: 444 -> 0000444)
+  const subD = () => clean10($("#subIn").value);
+  const fullVal = () => { const d = subD(); return town && d && d.length <= 7 && +d ? pad3(town) + d.padStart(7, "0") : ""; };
   const drawFull = () => {
-    const f = fullVal(), d = clean10($("#fullIn").value);
-    $("#fullPrev").innerHTML = f ? `${f !== d ? "سيُحفظ: " : ""}<span class="num">${f}</span> · ${esc(townName(parseInt(f.slice(0, 3), 10)))}`
-      : (d.length >= 3 && !TOWN_BY.has(parseInt(d.slice(0, 3), 10)) ? "أول 3 خانات ليست رقم بلدة معروفاً" : "أول 3 خانات = رقم البلدة، ثم رقم المشترك");
+    const f = fullVal(), d = subD();
+    $("#fullPrev").innerHTML = f ? `رقم الاشتراك (10 خانات): <span class="num">${f}</span> · ${esc(townName(town))}`
+      : !town ? "اختر البلدة من الزرّين أعلاه"
+      : d.length > 7 ? "رقم المشترك 7 خانات كحد أقصى"
+      : "اكتب رقم المشترك فقط، مثل 444، ويكمّله التطبيق إلى 7 خانات (0000444)";
   };
   const drawTown = () => townButtons($("#townBox"), () => town, v => {
-    town = v; const d = clean10($("#fullIn").value);
-    $("#fullIn").value = pad3(v) + (d.length > 3 ? d.slice(3) : "");
-    drawTown(); drawFull(); const f = $("#fullIn"); f.focus(); f.setSelectionRange(f.value.length, f.value.length);
+    town = v; drawTown(); drawFull();
+    const f = $("#subIn"); if (!f.readOnly && !subD()) f.focus();
   });
   drawTown();
-  $("#fullIn").oninput = () => {
-    const d = clean10($("#fullIn").value);
-    if (d.length >= 3){ const t = parseInt(d.slice(0, 3), 10), nt = TOWN_BY.has(t) ? t : 0; if (nt !== town){ town = nt; drawTown(); } }
+  $("#subIn").oninput = () => {
+    const d = subD();
+    if (d.length === 10 && TOWN_BY.has(parseInt(d.slice(0, 3), 10))){   // a full 10-digit number was pasted: split it
+      town = parseInt(d.slice(0, 3), 10); $("#subIn").value = d.slice(3); drawTown();
+    }
     drawFull();
   };
+  $("#subIn").onblur = () => { const d = subD(); if (d && d.length <= 7 && +d) $("#subIn").value = d.padStart(7, "0"); drawFull(); };
   drawFull();
-  if (isNew) setTimeout(() => { const f = $("#fullIn"); f.focus(); f.setSelectionRange(f.value.length, f.value.length); }, 250);
+  if (isNew) setTimeout(() => (town ? $("#subIn") : $("#townBox button")).focus(), 250);
   sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
   $("#camBtn").onclick = () => { $("#camIn").value = ""; $("#camIn").onchange = e => onFiles(e.target.files); $("#camIn").click(); };
   $("#galBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = e => onFiles(e.target.files); $("#galIn").click(); };
   $("#closeSh").onclick = closeSheet;
   $("#saveRes").onclick = async () => {
     const note = $("#noteIn").value.trim();
+    if (!town) return toast("اختر البلدة");
     const full = fullVal();
-    if (!full) return toast("يجب أن يتكون رقم الاشتراك من 10 خانات، أوله رقم البلدة");
-    if (!TOWN_BY.has(parseInt(full.slice(0, 3), 10))) return toast("أول 3 خانات ليست رقم بلدة معروفاً");
+    if (!full) return toast(subD().length > 7 ? "رقم المشترك 7 خانات كحد أقصى" : "اكتب رقم المشترك");
     const newId = String(parseInt(full.slice(3), 10));
     if (!+newId) return toast("رقم المشترك غير صحيح");
     rememberTown(parseInt(full.slice(0, 3), 10));
@@ -1227,7 +1228,7 @@ async function takeShared(){
   } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
 }
 (async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 22;
+const APP_VERSION = 23;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
