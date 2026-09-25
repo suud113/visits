@@ -229,6 +229,29 @@ select.inp{appearance:auto}
 .card.selected{outline:2px solid var(--gold);outline-offset:-1px}
 .selbar{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));z-index:5;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--gold-line);border-radius:14px;padding:8px;box-shadow:var(--shadow)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.lock{position:fixed;inset:0;z-index:40;overflow:auto;display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 18px calc(20px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(120% 70% at 90% -10%,rgba(216,180,106,.22),transparent 55%),radial-gradient(90% 60% at 0% 110%,rgba(59,94,143,.35),transparent 60%),linear-gradient(160deg,#1D3558,#0A1526)}
+.lock-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--gold-line);border-radius:24px;padding:22px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.lock-logo{align-self:center;width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(160deg,#1D3558,#0A1526);border:1px solid rgba(216,180,106,.5)}
+.lock-logo svg{width:44px;height:44px}
+.lock-title{font-family:"Wordmark",var(--sans);font-size:28px;margin:0;text-align:center;color:var(--ink)}
+.lock-sub{margin:-6px 0 4px;text-align:center;color:var(--muted);font-weight:600}
+.lock .inp.num{font-size:20px;letter-spacing:.3em;text-align:center}
+.lk-err{color:var(--danger);text-align:center;min-height:1em}
+.lk-err:empty{display:none}
+.lk-link{border:0;background:transparent;color:var(--gold-deep);font:600 13.5px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;align-self:center;padding:4px}
+#admBody,#lkAdm{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+#admBody>.btn,#lkAdm>.btn{width:100%}
+.acct{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.acct b{font-size:16px}
+.techs{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tech{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;padding:9px 10px;border-top:1px solid var(--line-2)}
+.tech:first-child{border-top:0}
+.tech.off b{color:var(--muted);text-decoration:line-through}
+.tech .tag{font-size:11px;font-weight:600;color:var(--danger);background:var(--danger-bg);border-radius:6px;padding:1px 7px}
+.tech .acts{display:flex;gap:5px;margin-inline-start:auto}
+.passbox{background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:center}
+.passbox .big{font-size:30px;font-weight:700;letter-spacing:.25em;color:var(--gold-deep)}
 details summary{list-style:revert}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -257,6 +280,7 @@ details summary{list-style:revert}
 </div>
 <div class="toast" id="toast" role="status"></div>
 <div class="viewer" id="viewer" hidden><img id="viewerImg" alt="صورة الزيارة"></div>
+<div class="lock" id="lock" hidden><div class="lock-card" id="lockCard"></div></div>
 <div class="sheet-bg" id="sheetBg" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
 <script>
@@ -308,7 +332,7 @@ function checksText(c){
 // ---------- settings + sync to Google Sheet ----------
 const CFG = "visits.cfg.v1", DELQ = "visits.delq.v1";
 let cfg = Object.assign({name:"", url:"", token:"", auto:false, team:[]}, get(CFG, {}));
-const cfgReady = () => !!(cfg.url && cfg.token && cfg.name);
+const cfgReady = () => !!(cfg.url && cfg.name && cfg.key);   // signed in with a technician account
 const sealTxt = (has, ok) => has === "no" ? "غير موجود" : has === "yes" ? (ok === "yes" ? "موجود وسليم" : ok === "no" ? "موجود وغير سليم" : "موجود") : "";
 const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const unb64url = s => decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
@@ -316,7 +340,7 @@ const blobToB64 = b => new Promise((res, rej) => { const fr = new FileReader(); 
 async function postScript(body){
   const res = await fetch(cfg.url, {method:"POST", body: JSON.stringify(body)});
   const j = await res.json();
-  if (!j.ok) throw new Error(j.error || "فشل");
+  if (!j.ok){ const e = new Error(j.error || "فشل"); e.auth = !!j.auth; throw e; }
   return j;
 }
 async function payloadFor(r){
@@ -327,7 +351,7 @@ async function payloadFor(r){
     photos.push(item);
   }
   const hasLoc = st.lat != null && st.lng != null;
-  return {token:cfg.token, tech:r.tech || cfg.name, date:r.date, id:r.id, full:resFull(r), work:r.work, note:r.note,
+  return {name:cfg.name, key:cfg.key, date:r.date, id:r.id, full:resFull(r), work:r.work, note:r.note,
     modem:sealTxt(c.modemSeal, c.modemOk), conn:sealTxt(c.connSeal, c.connOk), weak:c.weak ? YN[c.weak] : "",
     task:st.task || "", phone:st.phone || "", coords: hasLoc ? `${st.lat}, ${st.lng}` : "لا يوجد",
     map: hasLoc ? `https://www.google.com/maps?q=${st.lat},${st.lng}` : "", photos};
@@ -378,10 +402,10 @@ async function syncAll(manual){
   if (!manual) return;                       // visits are posted only with the «ترحيل زيارات اليوم» button
   if (!cfgReady()){ toast("يرجى ضبط الإعدادات أولاً"); openSettings(); return; }
   if (syncing){ syncAgain = true; return; }
-  syncing = true; let ok = 0, fail = 0;
+  syncing = true; let ok = 0, fail = 0, authLost = false;
   try {
     const q = get(DELQ, []);
-    while (q.length){ try { await postScript({...q[0], token:cfg.token}); q.shift(); put(DELQ, q); } catch(e){ fail++; break; } }
+    while (q.length){ try { await postScript({...q[0], name:cfg.name, key:cfg.key}); q.shift(); put(DELQ, q); } catch(e){ fail++; if (e.auth) authLost = true; break; } }
     for (const k of Object.keys(results)){
       const r = results[k]; if (!r || r.sent) continue;
       const v = r.v || 0;
@@ -390,12 +414,13 @@ async function syncAll(manual){
         const cur = results[k];
         if (cur && (cur.v || 0) === v){ cur.sent = true; cur.tech = body.tech; cur.sentPhotos = body.photos.map(x => x.k); }
         ok++;
-      } catch(e){ fail++; if (manual && fail === 1) toast("تعذّر الإرسال: " + e.message); }
+      } catch(e){ fail++; if (e.auth){ authLost = true; break; } if (manual && fail === 1) toast("تعذّر الإرسال: " + e.message); }
     }
   } finally { syncing = false; }
   put(RES, results);
   if (syncAgain){ syncAgain = false; setTimeout(() => syncAll(manual), 50); }
   render();
+  if (authLost){ cfg.key = ""; cfg.pv = ""; put(CFG, cfg); lockNow(); toast("انتهت صلاحية الدخول (تغيّرت كلمة السر أو أُوقف الحساب) — سجّل الدخول من جديد"); return; }
   if (fail) toast(`تعذّر ترحيل ${fail} — تحقّق من الإنترنت واضغط «ترحيل» مرة أخرى`);
   else if (ok) toast(`تم ترحيل ${ok} زيارة إلى رئيس القسم ✓`);
   else toast("تم الترحيل ✓");
@@ -419,88 +444,91 @@ async function shareOrCopy(text, label){
   try { await navigator.clipboard.writeText(text); toast(label + " — الصقه في واتساب"); }
   catch(e){ prompt("انسخ الرابط", text); }
 }
-const teamFrom = s => String(s || "").split(/\n|،|,/).map(x => x.trim()).filter(Boolean).filter((x,i,a) => a.indexOf(x) === i);
-
-// ---------- welcome (for colleagues opening a join link) ----------
-function openWelcome(){
-  const sh = $("#sheet"), team = cfg.team || [];
-  let picked = team.includes(cfg.name) ? cfg.name : "";
-  sh.innerHTML = `<h3>مرحباً بك في «زياراتي»</h3>
-    <p class="hint">خطوتان فقط وتكون جاهزاً.</p>
-    <div class="lbl">1. اختر اسمك</div>
-    ${team.length ? `<div class="opts" id="wTeam">${team.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n===picked}">${esc(n)}</button>`).join("")}</div>
-      <p class="hint">اسمك غير موجود في القائمة؟ اكتبه:</p>` : ""}
-    <input class="inp" id="wName" value="${picked ? "" : esc(cfg.name)}" placeholder="اسمك الكامل">
-    <div class="lbl">2. ثبّت التطبيق</div>
-    <div id="instBox">${installBlock()}</div>
-    <button type="button" class="btn primary big" id="wDone">ابدأ</button>`;
-  $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
-  sh.querySelectorAll("[data-nm]").forEach(b => b.onclick = () => { picked = b.dataset.nm; $("#wName").value = ""; sh.querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
-  $("#wName").oninput = () => { picked = ""; sh.querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", "false")); };
-  $("#wDone").onclick = async () => {
-    const name = $("#wName").value.trim() || picked;
-    if (!name) return toast("اختر اسمك أو اكتبه");
-    cfg.name = name; put(CFG, cfg);
-    let ok = false;
-    try { const r = await fetch(cfg.url, {method:"POST", body: JSON.stringify({token:cfg.token, ping:true})}); ok = (await r.json()).ok; } catch(e){}
-    closeSheet(); render();
-    toast(ok ? `مرحباً ${name} — يمكنك الآن توثيق زياراتك` : `تم حفظ اسمك، لكن تعذّر الاتصال — تحقّق من الإنترنت`);
-  };
-}
 
 // ---------- settings ----------
 function openSettings(){
   const sh = $("#sheet");
   sh.innerHTML = `<h3>الإعدادات</h3>
-    <label class="lbl" for="cfgName">اسم الفني</label>
-    <input class="inp" id="cfgName" value="${esc(cfg.name)}" placeholder="مثلاً: سعود">
+    <div class="acct"><div><div class="lbl">المستخدم</div><b>${esc(cfg.name || "—")}</b></div>
+      <button type="button" class="btn" id="logoutBtn">تسجيل الخروج</button></div>
     <div id="instBox">${isStandalone() ? "" : installBlock()}</div>
-
-    <div class="lbl" style="margin-top:6px">الفريق</div>
-    <label class="hint" for="cfgTeam">أسماء الزملاء، اسم في كل سطر. تظهر لهم قائمة يختارون منها، حتى لا تتكرر الأسماء بصيغ مختلفة في الجدول.</label>
-    <textarea id="cfgTeam" placeholder="سعود التحتموني&#10;قصي صوالحة">${esc((cfg.team || []).join("\n"))}</textarea>
-    <button type="button" class="btn primary" id="cfgShare">${ic("share")} رابط انضمام للزملاء</button>
-    <p class="hint">يفتح الزميل الرابط ويختار اسمه فقط. يتضمن رابط الانضمام الرمز السري، لذا أرسله لزملاء القسم فقط.</p>
-
-    <details style="display:flex;flex-direction:column;gap:8px">
-      <summary class="lbl" style="cursor:pointer">${ic("gear")} إعدادات الربط (متقدم)</summary>
-      <label class="lbl" for="cfgUrl">رابط الربط مع Google Sheet</label>
-      <input class="inp" id="cfgUrl" dir="ltr" value="${esc(cfg.url)}" placeholder="https://script.google.com/macros/s/…/exec">
-      <label class="lbl" for="cfgTok">الرمز السري</label>
-      <input class="inp" id="cfgTok" dir="ltr" value="${esc(cfg.token)}">
-      <button type="button" class="btn" id="cfgTest">اختبار الاتصال</button>
-      <label class="lbl" for="cfgPaste">لصق رابط (انضمام أو زيارات)</label>
-      <div class="row"><input class="inp" id="cfgPaste" dir="ltr" placeholder="https://suud113.github.io/…#…"><button type="button" class="btn" id="cfgPasteBtn" style="flex:0 0 auto">فتح</button></div>
+    <details id="admBox">
+      <summary class="lbl" style="cursor:pointer">${ic("users")} إدارة الفنيين (للمسؤول فقط)</summary>
+      <div id="admBody"></div>
     </details>
-
-    <div class="row"><button type="button" class="btn primary" id="cfgSave">حفظ</button><button type="button" class="btn" id="closeSh">إغلاق</button></div>
+    <button type="button" class="btn" id="closeSh">إغلاق</button>
     <p class="hint" style="text-align:center">الإصدار ${APP_VERSION}</p>`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
-  const read = () => ({name: $("#cfgName").value.trim(), url: $("#cfgUrl").value.trim(), token: $("#cfgTok").value.trim(), auto: false, team: teamFrom($("#cfgTeam").value)});
   $("#closeSh").onclick = closeSheet;
-  $("#cfgSave").onclick = () => {
-    const n = read();
-    if (n.url && !/^https:\/\/script\.google\.com\/.+\/exec/.test(n.url)) return toast("يجب أن يبدأ الرابط بـ script.google.com وينتهي بـ exec");
-    cfg = n; put(CFG, cfg); closeSheet(); render(); toast("تم حفظ الإعدادات"); syncAll();
+  $("#logoutBtn").onclick = () => { closeSheet(); lockNow(); };
+  $("#admBox").ontoggle = () => { if ($("#admBox").open) drawAdmin(); };
+}
+function drawAdmin(box){
+  box = box || $("#admBody"); const again = () => drawAdmin(box);
+  if (!cfg.adminOk){
+    box.innerHTML = `<p class="hint">هذا القسم للمسؤول: إضافة الفنيين وكلمات السر ورابط الانضمام.</p>
+      <label class="lbl" for="admUrl">رابط الربط مع Google Sheet</label>
+      <input class="inp" id="admUrl" dir="ltr" value="${esc(cfg.url)}" placeholder="https://script.google.com/macros/s/…/exec">
+      <label class="lbl" for="admTok">رمز المسؤول</label>
+      <input class="inp" id="admTok" type="password" dir="ltr" autocomplete="off" value="${esc(cfg.token || "")}">
+      <button type="button" class="btn primary" id="admGo">دخول المسؤول</button>`;
+    $("#admGo").onclick = async () => {
+      const url = ($("#admUrl").value.trim().match(/https:\/\/script\.google\.com\/\S+?\/exec/) || [""])[0], tok = $("#admTok").value.trim();
+      if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) return toast("يجب أن يبدأ الرابط بـ script.google.com وينتهي بـ exec");
+      try { const j = await (await fetch(url, {method:"POST", body: JSON.stringify({ping:true, token:tok})})).json();
+        if (!j.ok) return toast(j.error || "رمز المسؤول غير صحيح");
+        if (url !== cfg.url){ cfg.url = url; cfg.key = ""; cfg.pv = ""; }
+        cfg.token = tok; cfg.adminOk = true; put(CFG, cfg); again();
+      } catch(e){ toast("تعذّر الوصول إلى السكربت — تحقّق من الرابط والإنترنت"); }
+    };
+    return;
+  }
+  box.innerHTML = `<p class="hint">جاري تحميل الفنيين…</p>`;
+  const call = async body => { const j = await (await fetch(cfg.url, {method:"POST", body: JSON.stringify({...body, token:cfg.token})})).json(); if (!j.ok) throw new Error(j.error || "فشل"); return j; };
+  const newPass = () => String(100000 + crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
+  const showPass = (name, pass) => {
+    $("#admMsg").innerHTML = `<div class="passbox"><div>كلمة سر <b>${esc(name)}</b>:</div><div class="num big">${pass}</div>
+      <p class="hint">أعطها له بنفسك. لا تُعرض مرة أخرى، ويمكنك إنشاء غيرها في أي وقت.</p>
+      <button type="button" class="btn" id="passShare">${ic("share")} إرسالها له</button></div>`;
+    $("#passShare").onclick = () => shareOrCopy(`كلمة سرك في تطبيق «زياراتي»: ${pass}`, "تم نسخ كلمة السر");
   };
-  $("#cfgTest").onclick = async () => {
-    const n = read(); if (!n.url || !n.token) return toast("أدخل الرابط والرمز أولاً");
-    toast("جاري الاختبار…");
-    try { const res = await fetch(n.url, {method:"POST", body: JSON.stringify({token:n.token, ping:true})}); const j = await res.json();
-      toast(j.ok ? "الربط يعمل ✓" : "خطأ: " + (j.error || "فشل")); }
-    catch(e){ toast("تعذّر الوصول إلى السكربت — تحقّق من الرابط والإنترنت"); }
+  const load = async () => {
+    let list = [];
+    try { list = (await call({action:"admin_list"})).techs; }
+    catch(e){ box.innerHTML = `<p class="hint">${esc(e.message)}</p>`; if (/رمز/.test(e.message)){ cfg.adminOk = false; put(CFG, cfg); } return; }
+    box.innerHTML = `<div id="admMsg"></div>
+      <div class="techs">${list.map(t => `<div class="tech${t.active ? "" : " off"}"><b>${esc(t.name)}</b>${t.active ? "" : `<span class="tag">موقوف</span>`}
+        <span class="acts"><button type="button" class="btn sm" data-tp="${esc(t.name)}">كلمة سر جديدة</button>
+        <button type="button" class="btn sm" data-ta="${esc(t.name)}" data-on="${t.active ? 0 : 1}">${t.active ? "إيقاف" : "تفعيل"}</button>
+        <button type="button" class="btn sm danger" data-td="${esc(t.name)}">${ic("trash")}</button></span></div>`).join("") || `<p class="hint">لا يوجد فنيون بعد — أضف أول فني.</p>`}</div>
+      <label class="lbl" for="admNew">إضافة فني</label>
+      <div class="row"><input class="inp" id="admNew" placeholder="الاسم الكامل"><button type="button" class="btn primary" id="admAdd" style="flex:0 0 auto">إضافة</button></div>
+      <button type="button" class="btn" id="admLink">${ic("share")} رابط الانضمام للزملاء</button>
+      <p class="hint">الرابط لا يحتوي أي رمز سري: الزميل يفتحه ثم يدخل باسمه وكلمة السر التي تعطيه إياها.</p>
+      <button type="button" class="btn" id="admOut">خروج المسؤول</button>`;
+    $("#admAdd").onclick = async () => {
+      const name = $("#admNew").value.trim().replace(/\s+/g, " "); if (!name) return toast("اكتب اسم الفني");
+      if (list.some(t => t.name === name)) return toast("الاسم موجود — استخدم «كلمة سر جديدة»");
+      const pass = newPass();
+      try { await call({action:"admin_set", name, pass}); await load(); showPass(name, pass); } catch(e){ toast(e.message); }
+    };
+    box.querySelectorAll("[data-tp]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, async () => {
+      const name = b.dataset.tp, pass = newPass();
+      try { await call({action:"admin_set", name, pass}); await load(); showPass(name, pass); } catch(err){ toast(err.message); }
+    }, "تأكيد؟ القديمة ستتوقف"));
+    box.querySelectorAll("[data-ta]").forEach(b => b.onclick = async () => {
+      try { await call({action: b.dataset.on === "1" ? "admin_enable" : "admin_disable", name: b.dataset.ta}); await load(); } catch(e){ toast(e.message); }
+    });
+    box.querySelectorAll("[data-td]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, async () => {
+      try { await call({action:"admin_delete", name: b.dataset.td}); await load(); } catch(err){ toast(err.message); }
+    }, "حذف الحساب؟"));
+    $("#admLink").onclick = () => {
+      const link = location.origin + location.pathname + "#cfg=" + b64url(JSON.stringify({url: cfg.url}));
+      shareOrCopy("انضم إلى تطبيق «زياراتي» 👇\nافتح الرابط، ثم ادخل باسمك وكلمة السر التي أعطيتك إياها:\n" + link, "تم نسخ رابط الانضمام");
+    };
+    $("#admOut").onclick = () => { cfg.adminOk = false; put(CFG, cfg); again(); };
   };
-  $("#cfgShare").onclick = () => {
-    const n = read(); if (!n.url || !n.token) return toast("اضبط إعدادات الربط أولاً");
-    cfg = n; put(CFG, cfg);
-    const link = location.origin + location.pathname + "#cfg=" + b64url(JSON.stringify({url:n.url, token:n.token, team:n.team}));
-    shareOrCopy("انضم إلى تطبيق «زياراتي» 👇\nافتح الرابط واختر اسمك:\n" + link, "تم نسخ رابط الانضمام");
-  };
-  $("#cfgPasteBtn").onclick = async () => {
-    const v = $("#cfgPaste").value.trim(), i = v.indexOf("#");
-    if (i < 0) return toast("الصق الرابط كاملاً");
-    closeSheet(); if (await fromHash(v.slice(i))) render();
-  };
+  load();
 }
 $("#setBtn").onclick = openSettings;
 
@@ -542,8 +570,8 @@ async function fromHash(h){
   const cm = h.match(/^#cfg=([A-Za-z0-9_-]+)/);
   if (cm){
     try { const c = JSON.parse(unb64url(cm[1]));
-      if (c.url) cfg.url = c.url; if (c.token) cfg.token = c.token; if (Array.isArray(c.team) && c.team.length) cfg.team = c.team;
-      put(CFG, cfg); setTimeout(openWelcome, 300); }
+      if (c.url && c.url !== cfg.url){ cfg.url = c.url; cfg.key = ""; cfg.pv = ""; }
+      put(CFG, cfg); }
     catch(e){ toast("رابط الانضمام غير مكتمل أو تالف"); }
     if (own) history.replaceState(null, "", location.pathname);
     return true;
@@ -652,9 +680,7 @@ function render(){
       ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)}</p>` : ""}
       <p>لا توجد زيارات اليوم. بعد إنجاز أي زيارة، اضغط <b>توثيق زيارة</b> وسجّل ما تم.</p>
       <button class="btn primary big" type="button" id="addBtn0">${ic("plus")} توثيق زيارة</button>
-      ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختر اسمك</button>` : ""}
       <button class="btn" type="button" onclick="document.getElementById('fileIn').click()">استيراد ملف</button></div>`;
-    const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
     $("#addBtn0").onclick = () => openSheet(null, true);
     return;
   }
@@ -981,11 +1007,10 @@ function renderManual(){
     : `<div class="empty">
       ${cfg.name ? `<p style="color:var(--ink);font-weight:700">مرحباً ${esc(cfg.name)}</p>` : ""}
       <p>لا توجد زيارات مُدخلة اليوم. بعد إنجاز أي زيارة، اضغط <b>«توثيق زيارة جديدة»</b> وسجّل ما تم.</p>
-      ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختر اسمك</button>` : ""}</div>`}
+</div>`}
   </div>`;
   $("#addBtnM").onclick = () => openSheet(null, true); wirePost("postBtnM");
   const ex = $("#exportBtnM"); if (ex) ex.onclick = exportExcel;
-  const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
   main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
   const sb = $("#selBtnM"); if (sb) sb.onclick = () => { selMode = !selMode; sel.clear(); render(); };
   wireSel(M);
@@ -1237,7 +1262,101 @@ $("#fileIn").onchange = async e => {
   try { setData(JSON.parse(await f.text())); render(); toast("تم استيراد " + data.stops.length + " موقع"); }
   catch(err){ toast("الملف غير صحيح — اختر ملف محادثة واتساب (zip) أو ملف الزيارات"); }
 };
-window.addEventListener("hashchange", async () => { if (await fromHash()) render(); });
+window.addEventListener("hashchange", async () => { if (await fromHash()){ if (!$("#lock").hidden) drawLock(); else render(); } });
+
+// ---------- lock: the app opens only with the technician's password ----------
+// sessionStorage lives as long as the app is running (also in the background) and is cleared when it is closed.
+const UNLOCK = "visits.unlocked", LOCKT = "visits.lockuntil";
+const isUnlocked = () => { try { return sessionStorage.getItem(UNLOCK) === "1"; } catch(e){ return false; } };
+const setUnlocked = v => { try { v ? sessionStorage.setItem(UNLOCK, "1") : sessionStorage.removeItem(UNLOCK); } catch(e){} };
+async function sha256hex(t){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
+let afterUnlock = null;
+function lockNow(){ setUnlocked(false); showLock(() => { render(); }); }
+function showLock(onOpen){
+  afterUnlock = onOpen; closeSheet(); $("#lock").hidden = false; drawLock();
+}
+function unlockDone(){
+  setUnlocked(true); $("#lock").hidden = true; $("#lockCard").innerHTML = "";
+  const f = afterUnlock; afterUnlock = null; if (f) f();
+}
+function drawLock(mode){
+  const card = $("#lockCard"), LOGO = document.querySelector("header .logo").innerHTML;
+  const head = sub => `<div class="lock-logo">${LOGO}</div><h2 class="lock-title">زياراتي</h2><p class="lock-sub">${sub}</p>`;
+  if (mode === "admin"){
+    card.innerHTML = head("إدارة الحسابات") + `<div id="lkAdm"></div>
+      <button type="button" class="btn big" id="lkBackA">رجوع لتسجيل الدخول</button>`;
+    cfg.adminOk = cfg.adminOk && !!cfg.url; drawAdmin($("#lkAdm")); $("#lkBackA").onclick = () => drawLock();
+    return;
+  }
+  const admLink = `<button type="button" class="lk-link" id="lkAdmin">إدارة الحسابات (للمسؤول)</button>`;
+  const wireAdm = () => { const b = $("#lkAdmin"); if (b) b.onclick = () => drawLock("admin"); };
+  if (!cfg.url){
+    card.innerHTML = head("تطبيق فنيي القسم") + `<p class="hint">افتح رابط الانضمام الذي وصلك من المسؤول، أو الصقه هنا:</p>
+      <input class="inp" id="lkPaste" dir="ltr" placeholder="https://suud113.github.io/…#cfg=…">
+      <button type="button" class="btn primary big" id="lkPasteGo">متابعة</button>` + admLink;
+    wireAdm();
+    $("#lkPasteGo").onclick = async () => { const v = $("#lkPaste").value.trim(), i = v.indexOf("#"); if (i < 0) return toast("الصق الرابط كاملاً"); await fromHash(v.slice(i)); drawLock(); };
+    return;
+  }
+  const until = +(get(LOCKT, 0)), wait = until - Date.now();
+  if (cfg.key && cfg.pv && mode !== "new"){           // returning technician: checked on the phone, works offline
+    card.innerHTML = head(`مرحباً ${esc(cfg.name)}`) + `
+      <label class="lbl" for="lkPass">كلمة السر</label>
+      <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
+      <button type="button" class="btn primary big" id="lkGo">دخول</button>
+      <p class="hint lk-err" id="lkErr">${wait > 0 ? `محاولات كثيرة خاطئة — حاول بعد ${Math.ceil(wait / 60000)} دقيقة` : ""}</p>
+      <button type="button" class="lk-link" id="lkOther">دخول باسم فني آخر</button>`;
+    const go = async () => {
+      if (+(get(LOCKT, 0)) > Date.now()) return;
+      const pv = await sha256hex(cfg.ps + "|" + $("#lkPass").value.trim());
+      if (pv === cfg.pv){ put("visits.fails", 0); unlockDone(); return; }
+      const n = (+get("visits.fails", 0)) + 1; put("visits.fails", n); $("#lkPass").value = "";
+      if (n >= 5){ put(LOCKT, Date.now() + 15 * 60000); put("visits.fails", 0); $("#lkErr").textContent = "محاولات كثيرة خاطئة — حاول بعد 15 دقيقة"; }
+      else $("#lkErr").textContent = `كلمة السر غير صحيحة — بقي ${5 - n} محاولات`;
+    };
+    $("#lkGo").onclick = go; $("#lkPass").onkeydown = e => { if (e.key === "Enter") go(); };
+    $("#lkOther").onclick = () => {
+      const p = pendingPost();
+      if (p.n + p.del) return toast(`يوجد ${p.n + p.del} لم تُرحّل لـ ${cfg.name} — ادخل باسمه ورحّلها أولاً`);
+      drawLock("new");
+    };
+    setTimeout(() => $("#lkPass") && $("#lkPass").focus(), 200);
+    return;
+  }
+  // first sign-in on this phone: needs the internet once
+  card.innerHTML = head("تسجيل الدخول") + `<div class="lbl">اختر اسمك</div><div class="opts" id="lkNames"><p class="hint">جاري تحميل الأسماء…</p></div>
+    <label class="lbl" for="lkPass">كلمة السر</label>
+    <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
+    <button type="button" class="btn primary big" id="lkGo">دخول</button>
+    <p class="hint lk-err" id="lkErr"></p>
+    ${cfg.key && cfg.pv ? `<button type="button" class="lk-link" id="lkBack">رجوع</button>` : ""}` + admLink;
+  wireAdm();
+  let picked = "";
+  const bk = $("#lkBack"); if (bk) bk.onclick = () => drawLock();
+  fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"techs"})}).then(r => r.json()).then(j => {
+    const names = (j && j.techs) || [];
+    if (names.includes(cfg.name) && mode !== "new") picked = cfg.name;
+    $("#lkNames").innerHTML = names.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n === picked}">${esc(n)}</button>`).join("") || `<p class="hint">لا توجد حسابات بعد — اطلب من المسؤول إنشاء حسابك.</p>`;
+    $("#lkNames").querySelectorAll("[data-nm]").forEach(b => b.onclick = () => { picked = b.dataset.nm; $("#lkNames").querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", x === b)); $("#lkPass").focus(); });
+  }).catch(() => { $("#lkNames").innerHTML = `<p class="hint">يلزم الاتصال بالإنترنت لأول دخول على هذا الهاتف.</p>`; });
+  const go = async () => {
+    const pass = $("#lkPass").value.trim();
+    if (!picked) return toast("اختر اسمك"); if (!pass) return toast("اكتب كلمة السر");
+    const p = pendingPost();
+    if (cfg.acct && cfg.name && picked !== cfg.name && p.n + p.del) return toast(`يوجد ${p.n + p.del} لم تُرحّل لـ ${cfg.name} — ادخل باسمه ورحّلها أولاً`);
+    $("#lkGo").disabled = true; $("#lkErr").textContent = "";
+    try {
+      const j = await (await fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"login", name:picked, pass})})).json();
+      if (!j.ok){ $("#lkErr").textContent = j.error || "تعذّر الدخول"; $("#lkPass").value = ""; return; }
+      if (cfg.acct && cfg.name && cfg.name !== j.name){ results = {}; put(RES, results); put(DELQ, []); }   // another technician's (already posted) history leaves this phone
+      const ps = [...crypto.getRandomValues(new Uint8Array(16))].map(x => x.toString(16).padStart(2, "0")).join("");
+      cfg.name = j.name; cfg.key = j.key; cfg.ps = ps; cfg.acct = true; cfg.pv = await sha256hex(ps + "|" + pass); put(CFG, cfg);
+      put("visits.fails", 0); put(LOCKT, 0); unlockDone();
+    } catch(e){ $("#lkErr").textContent = "تعذّر الاتصال — تحقّق من الإنترنت"; }
+    finally { const b = $("#lkGo"); if (b) b.disabled = false; }
+  };
+  $("#lkGo").onclick = go; $("#lkPass").onkeydown = e => { if (e.key === "Enter") go(); };
+}
 
 async function takeShared(){
   if (!/[?&]share=1/.test(location.search)) return;
@@ -1250,8 +1369,13 @@ async function takeShared(){
     else toast("الملف المُشارك ليس ملف محادثة — اختر «تصدير الدردشة» مع الوسائط");
   } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
 }
-(async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 25;
+(async () => {
+  if (!cfg.adminOk && (cfg.token || cfg.team)){ delete cfg.token; delete cfg.team; put(CFG, cfg); }
+  await fromHash();
+  const open = async () => { render(); await takeShared(); };
+  if (isUnlocked() && cfgReady()) open(); else showLock(open);
+})();
+const APP_VERSION = 26;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
