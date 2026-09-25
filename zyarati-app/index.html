@@ -85,7 +85,7 @@ header .btn.icon-only{width:40px;padding:0}
 .bar input[type=checkbox]{accent-color:var(--accent);width:17px;height:17px}
 .bar .grp{display:flex;gap:6px;flex-wrap:wrap}
 #list{display:flex;flex-direction:column;gap:12px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px}
 .card.done{background:var(--done-bg);border-color:transparent;box-shadow:none}
 .card.done .body{display:none}
 .hide-done .card.done{display:none}
@@ -113,11 +113,12 @@ header .btn.icon-only{width:40px;padding:0}
 .phones{display:flex;flex-direction:column;border-top:1px solid var(--line-2)}
 .ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:10px 0;border-bottom:1px solid var(--line-2)}
 .ph:last-child{border-bottom:0}
-.ph .num{font-size:16px;font-weight:600;user-select:all}
+.ph .num{font-size:15.5px;font-weight:600;user-select:all;letter-spacing:0}
 .ph .cnt{font-size:12px;color:var(--muted);font-weight:600}
 .ph .tag{font-size:11.5px;color:var(--info);background:var(--info-bg);border-radius:6px;padding:1px 7px}
-.ph.main .num{font-weight:700;font-size:17px}
-.ph .acts{display:flex;gap:6px;margin-inline-start:auto}
+.ph.main .num{font-weight:700;font-size:16px}
+.ph .acts{display:flex;gap:5px;margin-inline-start:auto}
+.ph .acts .btn.sm{padding-inline:9px}
 .btn.call{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.wa{color:var(--accent)}
 .empty{background:var(--surface);border:1px dashed var(--line);border-radius:18px;padding:26px 18px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
@@ -143,7 +144,7 @@ textarea{width:100%;min-height:78px;box-sizing:border-box;border:1px solid var(-
 .row{display:flex;gap:8px}
 .row .btn{flex:1}
 .btn.danger{color:var(--danger)}
-.doc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
 .doc.logged{opacity:.55;box-shadow:none}
 .doc .full{font:700 21px var(--mono);letter-spacing:.03em}
 .doc .line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -194,6 +195,10 @@ select.inp{appearance:auto}
 .sync .ic{width:13px;height:13px}
 .sync.ok{background:var(--done-bg);color:var(--done)}
 .hint{font-size:12.5px;color:var(--muted);margin:0}
+.postbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:14px;padding:10px 12px}
+.postbar span{flex:1;min-width:120px;font-size:13.5px;font-weight:600;color:var(--warn)}
+.postbar .btn{flex:none}
+.posted{display:flex;align-items:center;gap:6px;justify-content:center;background:var(--done-bg);color:var(--done);border-radius:12px;padding:11px;font-weight:600;font-size:14px}
 .fullrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
 .fullrow .num{font-size:15px;font-weight:600}
 .fullrow .tag{font-size:11px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:1px 7px}
@@ -280,7 +285,7 @@ function checksText(c){
 
 // ---------- settings + sync to Google Sheet ----------
 const CFG = "visits.cfg.v1", DELQ = "visits.delq.v1";
-let cfg = Object.assign({name:"", url:"", token:"", auto:true, team:[]}, get(CFG, {}));
+let cfg = Object.assign({name:"", url:"", token:"", auto:false, team:[]}, get(CFG, {}));
 const cfgReady = () => !!(cfg.url && cfg.token && cfg.name);
 const sealTxt = (has, ok) => has === "no" ? "غير موجود" : has === "yes" ? (ok === "yes" ? "موجود وسليم" : ok === "no" ? "موجود وغير سليم" : "موجود") : "";
 const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
@@ -303,8 +308,27 @@ async function payloadFor(r){
   return {token:cfg.token, tech:r.tech || cfg.name, date:r.date, id:r.id, full:resFull(r), work:r.work, note:r.note,
     modem:sealTxt(c.modemSeal, c.modemOk), conn:sealTxt(c.connSeal, c.connOk), weak:c.weak ? YN[c.weak] : "",
     task:st.task || "", phone:st.phone || "", coords: hasLoc ? `${st.lat}, ${st.lng}` : "لا يوجد",
-    map: hasLoc ? `https://www.google.com/maps?q=${st.lat},${st.lng}` : "",
-    doneAt: new Date(r.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}), photos};
+    map: hasLoc ? `https://www.google.com/maps?q=${st.lat},${st.lng}` : "", photos};
+}
+// what is waiting to be posted: unsent visits + deletions of visits that were already posted
+function pendingPost(){
+  const un = Object.values(results).filter(r => !r.sent), dq = get(DELQ, []);
+  const days = new Set(un.map(r => r.date).concat(dq.map(d => d.date)));
+  return {n: un.length, del: dq.length, onlyToday: [...days].every(d => d === todayStr())};
+}
+function postBtnHtml(id, big){
+  if (!cfgReady()) return "";
+  const p = pendingPost(), tot = p.n + p.del;
+  if (!tot) return big ? `<div class="posted">${ic("check")} تم ترحيل جميع الزيارات إلى رئيس القسم</div>` : "";
+  const label = p.onlyToday ? "ترحيل زيارات اليوم" : "ترحيل الزيارات";
+  const cnt = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : `${n} ${n <= 10 ? few : many}`;
+  const what = [p.n ? cnt(p.n, "زيارة واحدة", "زيارتان", "زيارات", "زيارة") + " لم تُرحّل بعد" : "",
+    p.del ? cnt(p.del, "حذف واحد", "حذفان", "عمليات حذف", "عملية حذف") + " بانتظار الترحيل" : ""].filter(Boolean).join(" · ");
+  return `<div class="postbar"><span>${what}</span><button class="btn primary" id="${id}" type="button">${ic("cloud")} ${label}</button></div>`;
+}
+function wirePost(id){
+  const b = $("#" + id); if (!b) return;
+  b.onclick = e => confirmTap(e.currentTarget, () => { b.disabled = true; b.textContent = "جاري الترحيل…"; syncAll(true); }, "اضغط مرة أخرى للتأكيد");
 }
 function queueDelete(r){
   if (!r || !r.sent) return;
@@ -312,8 +336,8 @@ function queueDelete(r){
 }
 let syncing = false, syncAgain = false;
 async function syncAll(manual){
-  if (!cfgReady()){ if (manual) { toast("يرجى ضبط الإعدادات أولاً"); openSettings(); } return; }
-  if ((!manual && !cfg.auto) || (!navigator.onLine && !manual)) return;
+  if (!manual) return;                       // visits are posted only with the «ترحيل زيارات اليوم» button
+  if (!cfgReady()){ toast("يرجى ضبط الإعدادات أولاً"); openSettings(); return; }
   if (syncing){ syncAgain = true; return; }
   syncing = true; let ok = 0, fail = 0;
   try {
@@ -332,12 +356,11 @@ async function syncAll(manual){
   } finally { syncing = false; }
   put(RES, results);
   if (syncAgain){ syncAgain = false; setTimeout(() => syncAll(manual), 50); }
-  if (ok || fail) render();
-  if (fail) toast(`تعذّر إرسال ${fail} — ستُعاد المحاولة عند عودة الاتصال`);
-  else if (ok) toast(`أُرسلت ${ok} إلى رئيس القسم ✓`);
-  else if (manual) toast("جميع الزيارات أُرسلت إلى رئيس القسم ✓");
+  render();
+  if (fail) toast(`تعذّر ترحيل ${fail} — تحقّق من الإنترنت واضغط «ترحيل» مرة أخرى`);
+  else if (ok) toast(`تم ترحيل ${ok} زيارة إلى رئيس القسم ✓`);
+  else toast("تم الترحيل ✓");
 }
-window.addEventListener("online", () => syncAll());
 
 // ---------- install helpers ----------
 let deferredInstall = null;
@@ -392,7 +415,6 @@ function openSettings(){
   sh.innerHTML = `<h3>الإعدادات</h3>
     <label class="lbl" for="cfgName">اسم الفني</label>
     <input class="inp" id="cfgName" value="${esc(cfg.name)}" placeholder="مثلاً: سعود">
-    <label class="lbl" for="cfgAuto" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="cfgAuto" ${cfg.auto?"checked":""}> إرسال تلقائي إلى رئيس القسم بعد الحفظ</label>
     <div id="instBox">${isStandalone() ? "" : installBlock()}</div>
 
     <div class="lbl" style="margin-top:6px">الفريق</div>
@@ -415,7 +437,7 @@ function openSettings(){
     <div class="row"><button type="button" class="btn primary" id="cfgSave">حفظ</button><button type="button" class="btn" id="closeSh">إغلاق</button></div>
     <p class="hint" style="text-align:center">الإصدار ${APP_VERSION}</p>`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0; wireInstall();
-  const read = () => ({name: $("#cfgName").value.trim(), url: $("#cfgUrl").value.trim(), token: $("#cfgTok").value.trim(), auto: $("#cfgAuto").checked, team: teamFrom($("#cfgTeam").value)});
+  const read = () => ({name: $("#cfgName").value.trim(), url: $("#cfgUrl").value.trim(), token: $("#cfgTok").value.trim(), auto: false, team: teamFrom($("#cfgTeam").value)});
   $("#closeSh").onclick = closeSheet;
   $("#cfgSave").onclick = () => {
     const n = read();
@@ -656,6 +678,7 @@ function render(){
         ${noC?`<span class="stat"><b class="num">${noC}</b>بدون إحداثيات</span>`:""}
       </div>
       <div class="progress"><i style="width:${S.length?n/S.length*100:0}%"></i></div>
+      ${postBtnHtml("postBtnV")}
       <div class="routes">${routes.map((r,k)=>`<a class="btn primary big" href="${r.url}" target="_blank" rel="noopener">${ic("map")} ${routes.length>1?`المسار (${r.from}–${r.to}) على الخريطة`:"افتح المسار كاملاً على الخريطة"}</a>`).join("")}</div>
       ${al.length?`<section class="alerts"><h2>تنبيهات</h2><ul>${al.map(a=>`<li><span>${a}</span></li>`).join("")}</ul></section>`:""}
       <div class="bar">
@@ -669,7 +692,7 @@ function render(){
     </div>`;
   $("#app").classList.toggle("hide-done", get(HIDE,false));
   $("#hideDone").onchange = e => { put(HIDE, e.target.checked); $("#app").classList.toggle("hide-done", e.target.checked); };
-  $("#locBtn").onclick = sortByLocation;
+  $("#locBtn").onclick = sortByLocation; wirePost("postBtnV");
   main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
   $("#selBtn").onclick = () => { selMode = !selMode; sel.clear(); render(); };
   wireSel(get(HIDE,false) ? S.filter(s => !done[s.id]) : S);
@@ -846,7 +869,7 @@ function openSheet(id, isNew){
     results[key] = {date:data.date, id:s.id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
       stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || []};
-    put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تمت إضافة الزيارة " : "تم حفظ نتيجة ") + s.id); syncAll();
+    put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تم حفظ الزيارة " : "تم حفظ نتيجة ") + s.id + " — تُرحّل عند الضغط على «ترحيل»");
   };
   if (old){
     const del = e => confirmTap(e.currentTarget, () => deleteVisit(s.id), "هل أنت متأكد؟ اضغط مرة أخرى");
@@ -918,6 +941,7 @@ function renderManual(){
     </article>`; }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
     <button class="btn primary big" id="addBtnM" type="button">${ic("plus")} توثيق زيارة جديدة</button>
+    ${postBtnHtml("postBtnM")}
     ${M.length ? `<div class="bar"><div class="summary"><span class="stat"><b class="num">${M.length}</b>زيارة مُدخلة</span></div>
       <button class="btn sm" id="selBtnM" type="button">${ic("select")} تحديد</button></div>${selBar(M)}<div id="list">${cards}</div>
       <button class="btn" id="exportBtnM" type="button">${ic("excel")} تصدير زيارات اليوم إلى Excel</button>`
@@ -926,7 +950,7 @@ function renderManual(){
       <p>لا توجد زيارات مُدخلة اليوم. بعد إنجاز أي زيارة، اضغط <b>«توثيق زيارة جديدة»</b> وسجّل ما تم.</p>
       ${!cfg.name && cfg.url ? `<button class="btn primary" type="button" id="wOpen">اختر اسمك</button>` : ""}</div>`}
   </div>`;
-  $("#addBtnM").onclick = () => openSheet(null, true);
+  $("#addBtnM").onclick = () => openSheet(null, true); wirePost("postBtnM");
   const ex = $("#exportBtnM"); if (ex) ex.onclick = exportExcel;
   const wo = $("#wOpen"); if (wo) wo.onclick = openWelcome;
   main.querySelectorAll("[data-del]").forEach(b => b.onclick = () => confirmTap(b, () => deleteMany([b.dataset.del]), "هل أنت متأكد؟"));
@@ -958,14 +982,12 @@ function renderDocs(){
         <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
       ${(r.photos||[]).length?`<div class="photos">${r.photos.map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}</div>`:""}
       <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span>
-        ${cfgReady() ? (r.sent ? `<span class="sync ok">${ic("check")} وصلت إلى رئيس القسم</span>` : `<span class="sync">لم تُرسل بعد</span>`) : ""}<span style="flex:1"></span>
+        ${cfgReady() ? (r.sent ? `<span class="sync ok">${ic("check")} رُحّلت</span>` : `<span class="sync">لم تُرحّل بعد</span>`) : ""}<span style="flex:1"></span>
         <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتُها ✓"}</button></div>
     </div>`;
   }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
-    ${(() => { const un = Object.values(results).filter(r => !r.sent).length;
-      return cfgReady() ? `<button class="btn${un?" primary":""}" id="sendBtn" type="button">${ic("cloud")} ${un ? `إرسال ${un} إلى رئيس القسم` : "جميع الزيارات أُرسلت إلى رئيس القسم ✓"}</button>`
-        : `<button class="btn" id="sendBtn" type="button">${ic("cloud")} الربط مع رئيس القسم (Google Sheet)</button>`; })()}
+    ${cfgReady() ? postBtnHtml("sendBtn", true) : `<button class="btn" id="setupBtn" type="button">${ic("cloud")} الربط مع رئيس القسم (Google Sheet)</button>`}
     ${data?`<button class="btn" id="exportBtn2" type="button">${ic("excel")} تصدير زيارات ${esc(data.date)} إلى Excel</button>`:""}
     <p class="sub" style="margin:0">لكل زيارة: انسخ الرقم ← الصقه ← استعلام ← اختر نوع العمل ← انسخ الملاحظة ← الصقها ← حفظ ← «وثّقتُها»</p>
     ${logged?`<div class="bar"><label for="showLog"><input type="checkbox" id="showLog" ${showLogged?"checked":""}> عرض الموثّقة (${logged})</label>
@@ -976,7 +998,7 @@ function renderDocs(){
   const ex = $("#exportBtn2"); if (ex) ex.onclick = exportExcel;
   main.querySelectorAll("[data-editfull]").forEach(b => b.onclick = () => editFull(b.dataset.editfull));
   main.querySelectorAll("[data-delres]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, () => deleteResult(b.dataset.delres), "متأكد؟ اضغط مرة أخرى"));
-  const sn = $("#sendBtn"); if (sn) sn.onclick = () => syncAll(true);
+  wirePost("sendBtn"); const su = $("#setupBtn"); if (su) su.onclick = openSettings;
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
   const cl = $("#clearLog"); if (cl) cl.onclick = () => { Object.keys(results).forEach(k => { if (results[k].logged){ (results[k].photos||[]).forEach(pk => IDB.del(pk).catch(()=>{})); delete results[k]; } }); put(RES, results); render(); toast("تم مسح الزيارات الموثّقة"); };
 }
@@ -1080,7 +1102,7 @@ async function exportExcel(){
   const wb = new ExcelJS.Workbook(); wb.creator = "زياراتي";
   const ws = wb.addWorksheet("الزيارات", {views:[{rightToLeft:true, state:"frozen", ySplit:1}]});
   const cols = [
-    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["وقت الإنجاز",11],["المهمة",14],
+    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["المهمة",14],
     ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["الطلب",30],["التلفون",14],
     ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22]
   ];
@@ -1094,13 +1116,13 @@ async function exportExcel(){
     const c = (r && r.checks) || {};
     const row = ws.getRow(rowN);
     row.values = [i+1, (r && r.full) || stopFull(s), s.id, r ? "تمت" : "لم تتم",
-      r ? new Date(r.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}) : "", r ? r.work : "", r ? r.note : "",
+      r ? r.work : "", r ? r.note : "",
       seal(c.modemSeal, c.modemOk), seal(c.connSeal, c.connOk), c.weak ? YN[c.weak] : "", s.task || "",
       (s.phones && s.phones[0] && s.phones[0][0]) || "", hasC(s) ? `${s.lat}, ${s.lng}` : "لا يوجد",
       hasC(s) ? {text:"فتح", hyperlink:`https://www.google.com/maps?q=${s.lat},${s.lng}`} : "", r ? (r.logged ? "نعم" : "لا") : ""];
     row.alignment = {vertical:"middle", wrapText:true};
     row.getCell(4).font = {bold:true, color:{argb: r ? "FF2E7D32" : "FFB3261E"}};
-    if (hasC(s)) row.getCell(14).font = {color:{argb:"FF2B5DA8"}, underline:true};
+    if (hasC(s)) row.getCell(13).font = {color:{argb:"FF2B5DA8"}, underline:true};
     const pks = (r && r.photos || []).slice(0, 3);
     if (pks.length){
       row.height = 120;
@@ -1109,7 +1131,7 @@ async function exportExcel(){
         const buf = await v.blob.arrayBuffer();
         const id = wb.addImage({buffer:buf, extension:"jpeg"});
         const sc = Math.min(150 / v.w, 150 / v.h);
-        ws.addImage(id, {tl:{col:15 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
+        ws.addImage(id, {tl:{col:14 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
       }
     } else row.height = 36;
     rowN++;
@@ -1195,7 +1217,7 @@ async function takeShared(){
   } catch(e){ toast("تعذّر استلام الملف المُشارك"); }
 }
 (async () => { await fromHash(); render(); await takeShared(); setTimeout(() => syncAll(), 1500); })();
-const APP_VERSION = 19;
+const APP_VERSION = 21;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
