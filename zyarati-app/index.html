@@ -251,6 +251,12 @@ select.inp{appearance:auto}
 .tech.off b{color:var(--muted);text-decoration:line-through}
 .tech .tag{font-size:11px;font-weight:600;color:var(--danger);background:var(--danger-bg);border-radius:6px;padding:1px 7px}
 .tech .acts{display:flex;gap:5px;margin-inline-start:auto}
+.tech .tname{border:0;background:transparent;padding:4px 0;font:inherit;color:inherit;cursor:pointer;text-align:start;display:flex;align-items:center;gap:6px}
+.tech .tname::after{content:"▾";color:var(--muted);font-size:13px}
+.tech .tname[aria-expanded="true"]::after{content:"▴"}
+.tech .pwline{flex-basis:100%;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:10px;padding:8px 10px}
+.tech .pwline[hidden]{display:none}
+.tech .pwline .pw{font-size:20px;font-weight:700;letter-spacing:.18em;color:var(--gold-deep);margin-inline-end:auto}
 .passbox{background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:center}
 .passbox .big{font-size:30px;font-weight:700;letter-spacing:.25em;color:var(--gold-deep)}
 details summary{list-style:revert}
@@ -478,7 +484,7 @@ function drawAdmin(box){
       if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) return toast("يجب أن يبدأ الرابط بـ script.google.com وينتهي بـ exec");
       try {
         const v = await (await fetch(url, {method:"POST", body: JSON.stringify({action:"techs"})})).json();
-        if (!v.ok || !Array.isArray(v.techs)) return toast("السكربت اللي على الشيت لسا النسخة القديمة — حدّثه واعمل (Deploy) بنسخة جديدة (New version)");
+        if (!v.ok || !Array.isArray(v.techs)) return toast("سكربت الجدول ما زال بالإصدار القديم — حدّثه واعمل (Deploy) بنسخة جديدة (New version)");
         const j = await (await fetch(url, {method:"POST", body: JSON.stringify({ping:true, token:tok})})).json();
         if (!j.ok) return toast(j.error || "رمز المسؤول غير صحيح");
         if (url !== cfg.url){ cfg.url = url; cfg.key = ""; cfg.pv = ""; }
@@ -492,19 +498,20 @@ function drawAdmin(box){
   const newPass = () => String(100000 + crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
   const showPass = (name, pass) => {
     $("#admMsg").innerHTML = `<div class="passbox"><div>كلمة سر <b>${esc(name)}</b>:</div><div class="num big">${pass}</div>
-      <p class="hint">أعطها له بنفسك. لا تُعرض مرة أخرى، ويمكنك إنشاء غيرها في أي وقت.</p>
+      <p class="hint">أعطها له بنفسك. يمكنك رؤيتها لاحقاً بالضغط على اسمه.</p>
       <button type="button" class="btn" id="passShare">${ic("share")} إرسالها له</button></div>`;
     $("#passShare").onclick = () => shareOrCopy(`كلمة سرك في تطبيق «زياراتي»: ${pass}`, "تم نسخ كلمة السر");
   };
   const load = async () => {
     let list = [];
-    try { list = (await call({action:"admin_list"})).techs; if (!Array.isArray(list)) throw new Error("السكربت اللي على الشيت لسا النسخة القديمة — حدّثه واعمل (Deploy) بنسخة جديدة (New version)"); }
+    try { list = (await call({action:"admin_list"})).techs; if (!Array.isArray(list)) throw new Error("سكربت الجدول ما زال بالإصدار القديم — حدّثه واعمل (Deploy) بنسخة جديدة (New version)"); }
     catch(e){ box.innerHTML = `<p class="hint">${esc(e.message)}</p>`; if (/رمز/.test(e.message)){ cfg.adminOk = false; put(CFG, cfg); } return; }
     box.innerHTML = `<div id="admMsg"></div>
-      <div class="techs">${list.map(t => `<div class="tech${t.active ? "" : " off"}"><b>${esc(t.name)}</b>${t.active ? "" : `<span class="tag">موقوف</span>`}
+      <div class="techs">${list.map(t => `<div class="tech${t.active ? "" : " off"}"><button type="button" class="tname" data-tn="${esc(t.name)}" aria-expanded="false"><b>${esc(t.name)}</b></button>${t.active ? "" : `<span class="tag">موقوف</span>`}
         <span class="acts"><button type="button" class="btn sm" data-tp="${esc(t.name)}">كلمة سر جديدة</button>
         <button type="button" class="btn sm" data-ta="${esc(t.name)}" data-on="${t.active ? 0 : 1}">${t.active ? "إيقاف" : "تفعيل"}</button>
-        <button type="button" class="btn sm danger" data-td="${esc(t.name)}">${ic("trash")}</button></span></div>`).join("") || `<p class="hint">لا يوجد فنيون بعد — أضف أول فني.</p>`}</div>
+        <button type="button" class="btn sm danger" data-td="${esc(t.name)}">${ic("trash")}</button></span><div class="pwline" hidden></div></div>`).join("") || `<p class="hint">لا يوجد فنيون بعد — أضف أول فني.</p>`}</div>
+      ${list.length ? `<p class="hint">اضغط على اسم أي فني لعرض كلمة سره الحالية.</p>` : ""}
       <label class="lbl" for="admNew">إضافة فني</label>
       <div class="row"><input class="inp" id="admNew" placeholder="الاسم الكامل"><button type="button" class="btn primary" id="admAdd" style="flex:0 0 auto">إضافة</button></div>
       <button type="button" class="btn" id="admLink">${ic("share")} رابط الانضمام للزملاء</button>
@@ -516,6 +523,18 @@ function drawAdmin(box){
       const pass = newPass();
       try { await call({action:"admin_set", name, pass}); await load(); showPass(name, pass); } catch(e){ toast(e.message); }
     };
+    box.querySelectorAll("[data-tn]").forEach(b => b.onclick = async () => {
+      const row = b.closest(".tech"), line = row.querySelector(".pwline"), name = b.dataset.tn;
+      if (!line.hidden){ line.hidden = true; line.innerHTML = ""; b.setAttribute("aria-expanded", "false"); return; }
+      line.hidden = false; b.setAttribute("aria-expanded", "true"); line.innerHTML = `<span class="hint">جاري العرض…</span>`;
+      try {
+        const j = await call({action:"admin_get", name});
+        if (typeof j.pass !== "string") throw new Error("سكربت الجدول ما زال بالإصدار 4 — حدّثه للإصدار 5 واعمل (Deploy) بنسخة جديدة");
+        if (!j.pass){ line.innerHTML = `<span class="hint">أُنشئت كلمة سره قبل هذا التحديث، وستظهر هنا بعد أن يفتح التطبيق مرة وهو متصل بالإنترنت. أو اضغط «كلمة سر جديدة».</span>`; return; }
+        line.innerHTML = `<span class="lbl">كلمة السر:</span><span class="num pw">${esc(j.pass)}</span><button type="button" class="btn sm" data-copy="${esc(j.pass)}">${ic("copy")} نسخ</button><button type="button" class="btn sm" data-ps>${ic("share")} إرسالها له</button>`;
+        line.querySelector("[data-ps]").onclick = () => shareOrCopy(`كلمة سرك في تطبيق «زياراتي»: ${j.pass}`, "تم نسخ كلمة السر");
+      } catch(e){ line.innerHTML = `<span class="hint">${esc(/طلب غير معروف/.test(e.message) ? "سكربت الجدول ما زال بالإصدار 4 — حدّثه للإصدار 5 واعمل (Deploy) بنسخة جديدة" : e.message)}</span>`; }
+    });
     box.querySelectorAll("[data-tp]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, async () => {
       const name = b.dataset.tp, pass = newPass();
       try { await call({action:"admin_set", name, pass}); await load(); showPass(name, pass); } catch(err){ toast(err.message); }
@@ -1275,6 +1294,12 @@ const isUnlocked = () => { try { return sessionStorage.getItem(UNLOCK) === "1"; 
 const setUnlocked = v => { try { v ? sessionStorage.setItem(UNLOCK, "1") : sessionStorage.removeItem(UNLOCK); } catch(e){} };
 async function sha256hex(t){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
 let afterUnlock = null;
+function syncPass(pass){
+  if (!navigator.onLine || !cfg.url || !cfg.name) return;
+  fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"login", name:cfg.name, pass})}).then(r => r.json()).then(j => {
+    if (j && j.v >= 5){ cfg.pwSync = true; if (j.ok && j.key) cfg.key = j.key; put(CFG, cfg); }
+  }).catch(() => {});
+}
 function lockNow(){ setUnlocked(false); showLock(() => { render(); }); }
 function showLock(onOpen){
   afterUnlock = onOpen; closeSheet(); $("#lock").hidden = false; drawLock();
@@ -1313,7 +1338,7 @@ function drawLock(mode){
     const go = async () => {
       if (+(get(LOCKT, 0)) > Date.now()) return;
       const pv = await sha256hex(cfg.ps + "|" + $("#lkPass").value.trim());
-      if (pv === cfg.pv){ put("visits.fails", 0); unlockDone(); return; }
+      if (pv === cfg.pv){ const pw = $("#lkPass").value.trim(); put("visits.fails", 0); unlockDone(); if (!cfg.pwSync) syncPass(pw); return; }
       const n = (+get("visits.fails", 0)) + 1; put("visits.fails", n); $("#lkPass").value = "";
       if (n >= 5){ put(LOCKT, Date.now() + 15 * 60000); put("visits.fails", 0); $("#lkErr").textContent = "محاولات كثيرة خاطئة — حاول بعد 15 دقيقة"; }
       else $("#lkErr").textContent = `كلمة السر غير صحيحة — بقي ${5 - n} محاولات`;
@@ -1329,7 +1354,7 @@ function drawLock(mode){
     return;
   }
   // first sign-in on this phone: needs the internet once
-  card.innerHTML = head("تسجيل الدخول") + (mode === "again" ? `<p class="hint">اطلب من المسؤول كلمة سر جديدة، ثم ادخل بها هنا (يلزم الإنترنت).</p>` : "") + `<div class="lbl">اختر اسمك</div><div class="opts" id="lkNames"><p class="hint">جاري تحميل الأسماء…</p></div>
+  card.innerHTML = head("تسجيل الدخول") + (mode === "again" ? `<p class="hint">اطلب كلمة سرك من المسؤول، ثم ادخل بها هنا (يلزم الإنترنت).</p>` : "") + `<div class="lbl">اختر اسمك</div><div class="opts" id="lkNames"><p class="hint">جاري تحميل الأسماء…</p></div>
     <label class="lbl" for="lkPass">كلمة السر</label>
     <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
     <button type="button" class="btn primary big" id="lkGo">دخول</button>
@@ -1339,7 +1364,7 @@ function drawLock(mode){
   let picked = "";
   const bk = $("#lkBack"); if (bk) bk.onclick = () => drawLock();
   fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"techs"})}).then(r => r.json()).then(j => {
-    if (!j || !j.ok || !Array.isArray(j.techs)){ $("#lkNames").innerHTML = `<p class="hint">السكربت اللي على الشيت لسا النسخة القديمة — حدّثه واعمل (Deploy) بنسخة جديدة (New version)</p>`; return; }
+    if (!j || !j.ok || !Array.isArray(j.techs)){ $("#lkNames").innerHTML = `<p class="hint">سكربت الجدول ما زال بالإصدار القديم — حدّثه واعمل (Deploy) بنسخة جديدة (New version)</p>`; return; }
     const names = j.techs;
     if (names.includes(cfg.name) && mode !== "new") picked = cfg.name;
     $("#lkNames").innerHTML = names.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n === picked}">${esc(n)}</button>`).join("") || `<p class="hint">لا توجد حسابات بعد — اطلب من المسؤول إنشاء حسابك.</p>`;
@@ -1356,7 +1381,7 @@ function drawLock(mode){
       if (!j.ok){ $("#lkErr").textContent = j.error || "تعذّر الدخول"; $("#lkPass").value = ""; return; }
       if (cfg.acct && cfg.name && cfg.name !== j.name){ results = {}; put(RES, results); put(DELQ, []); }   // another technician's (already posted) history leaves this phone
       const ps = [...crypto.getRandomValues(new Uint8Array(16))].map(x => x.toString(16).padStart(2, "0")).join("");
-      cfg.name = j.name; cfg.key = j.key; cfg.ps = ps; cfg.acct = true; cfg.pv = await sha256hex(ps + "|" + pass); put(CFG, cfg);
+      cfg.name = j.name; cfg.key = j.key; cfg.ps = ps; cfg.acct = true; cfg.pwSync = j.v >= 5; cfg.pv = await sha256hex(ps + "|" + pass); put(CFG, cfg);
       put("visits.fails", 0); put(LOCKT, 0); unlockDone();
     } catch(e){ $("#lkErr").textContent = "تعذّر الاتصال — تحقّق من الإنترنت"; }
     finally { const b = $("#lkGo"); if (b) b.disabled = false; }
@@ -1381,7 +1406,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 28;
+const APP_VERSION = 29;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
