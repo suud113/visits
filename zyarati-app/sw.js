@@ -1,4 +1,4 @@
-const CACHE = "visits-v26";
+const CACHE = "visits-v27";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "exceljs.min.js",
                "wa-import.js", "reader.js", "reader-model.json",
                "plex-400.woff2", "plex-600.woff2", "plex-700.woff2", "icon-maskable-512.png"];

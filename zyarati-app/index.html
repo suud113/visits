@@ -475,7 +475,10 @@ function drawAdmin(box){
     $("#admGo").onclick = async () => {
       const url = ($("#admUrl").value.trim().match(/https:\/\/script\.google\.com\/\S+?\/exec/) || [""])[0], tok = $("#admTok").value.trim();
       if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) return toast("يجب أن يبدأ الرابط بـ script.google.com وينتهي بـ exec");
-      try { const j = await (await fetch(url, {method:"POST", body: JSON.stringify({ping:true, token:tok})})).json();
+      try {
+        const v = await (await fetch(url, {method:"POST", body: JSON.stringify({action:"techs"})})).json();
+        if (!v.ok || !Array.isArray(v.techs)) return toast("السكربت اللي على الشيت لسا النسخة القديمة — حدّثه واعمل (Deploy) بنسخة جديدة (New version)");
+        const j = await (await fetch(url, {method:"POST", body: JSON.stringify({ping:true, token:tok})})).json();
         if (!j.ok) return toast(j.error || "رمز المسؤول غير صحيح");
         if (url !== cfg.url){ cfg.url = url; cfg.key = ""; cfg.pv = ""; }
         cfg.token = tok; cfg.adminOk = true; put(CFG, cfg); again();
@@ -494,7 +497,7 @@ function drawAdmin(box){
   };
   const load = async () => {
     let list = [];
-    try { list = (await call({action:"admin_list"})).techs; }
+    try { list = (await call({action:"admin_list"})).techs; if (!Array.isArray(list)) throw new Error("السكربت اللي على الشيت لسا النسخة القديمة — حدّثه واعمل (Deploy) بنسخة جديدة (New version)"); }
     catch(e){ box.innerHTML = `<p class="hint">${esc(e.message)}</p>`; if (/رمز/.test(e.message)){ cfg.adminOk = false; put(CFG, cfg); } return; }
     box.innerHTML = `<div id="admMsg"></div>
       <div class="techs">${list.map(t => `<div class="tech${t.active ? "" : " off"}"><b>${esc(t.name)}</b>${t.active ? "" : `<span class="tag">موقوف</span>`}
@@ -1334,7 +1337,8 @@ function drawLock(mode){
   let picked = "";
   const bk = $("#lkBack"); if (bk) bk.onclick = () => drawLock();
   fetch(cfg.url, {method:"POST", body: JSON.stringify({action:"techs"})}).then(r => r.json()).then(j => {
-    const names = (j && j.techs) || [];
+    if (!j || !j.ok || !Array.isArray(j.techs)){ $("#lkNames").innerHTML = `<p class="hint">السكربت اللي على الشيت لسا النسخة القديمة — حدّثه واعمل (Deploy) بنسخة جديدة (New version)</p>`; return; }
+    const names = j.techs;
     if (names.includes(cfg.name) && mode !== "new") picked = cfg.name;
     $("#lkNames").innerHTML = names.map(n => `<button type="button" class="opt" data-nm="${esc(n)}" aria-pressed="${n === picked}">${esc(n)}</button>`).join("") || `<p class="hint">لا توجد حسابات بعد — اطلب من المسؤول إنشاء حسابك.</p>`;
     $("#lkNames").querySelectorAll("[data-nm]").forEach(b => b.onclick = () => { picked = b.dataset.nm; $("#lkNames").querySelectorAll("[data-nm]").forEach(x => x.setAttribute("aria-pressed", x === b)); $("#lkPass").focus(); });
@@ -1375,7 +1379,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 26;
+const APP_VERSION = 27;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
