@@ -239,6 +239,7 @@ select.inp{appearance:auto}
 .lock .inp.num{font-size:20px;letter-spacing:.3em;text-align:center}
 .lk-err{color:var(--danger);text-align:center;min-height:1em}
 .lk-err:empty{display:none}
+.lk-links{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
 .lk-link{border:0;background:transparent;color:var(--gold-deep);font:600 13.5px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;align-self:center;padding:4px}
 #admBody,#lkAdm{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 #admBody>.btn,#lkAdm>.btn{width:100%}
@@ -1302,13 +1303,13 @@ function drawLock(mode){
     return;
   }
   const until = +(get(LOCKT, 0)), wait = until - Date.now();
-  if (cfg.key && cfg.pv && mode !== "new"){           // returning technician: checked on the phone, works offline
+  if (cfg.key && cfg.pv && mode !== "new" && mode !== "again"){           // returning technician: checked on the phone, works offline
     card.innerHTML = head(`مرحباً ${esc(cfg.name)}`) + `
       <label class="lbl" for="lkPass">كلمة السر</label>
       <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
       <button type="button" class="btn primary big" id="lkGo">دخول</button>
       <p class="hint lk-err" id="lkErr">${wait > 0 ? `محاولات كثيرة خاطئة — حاول بعد ${Math.ceil(wait / 60000)} دقيقة` : ""}</p>
-      <button type="button" class="lk-link" id="lkOther">دخول باسم فني آخر</button>`;
+      <div class="lk-links"><button type="button" class="lk-link" id="lkForgot">نسيت كلمة السر؟</button><button type="button" class="lk-link" id="lkOther">دخول باسم فني آخر</button></div>`;
     const go = async () => {
       if (+(get(LOCKT, 0)) > Date.now()) return;
       const pv = await sha256hex(cfg.ps + "|" + $("#lkPass").value.trim());
@@ -1318,6 +1319,7 @@ function drawLock(mode){
       else $("#lkErr").textContent = `كلمة السر غير صحيحة — بقي ${5 - n} محاولات`;
     };
     $("#lkGo").onclick = go; $("#lkPass").onkeydown = e => { if (e.key === "Enter") go(); };
+    $("#lkForgot").onclick = () => drawLock("again");
     $("#lkOther").onclick = () => {
       const p = pendingPost();
       if (p.n + p.del) return toast(`يوجد ${p.n + p.del} لم تُرحّل لـ ${cfg.name} — ادخل باسمه ورحّلها أولاً`);
@@ -1327,7 +1329,7 @@ function drawLock(mode){
     return;
   }
   // first sign-in on this phone: needs the internet once
-  card.innerHTML = head("تسجيل الدخول") + `<div class="lbl">اختر اسمك</div><div class="opts" id="lkNames"><p class="hint">جاري تحميل الأسماء…</p></div>
+  card.innerHTML = head("تسجيل الدخول") + (mode === "again" ? `<p class="hint">اطلب من المسؤول كلمة سر جديدة، ثم ادخل بها هنا (يلزم الإنترنت).</p>` : "") + `<div class="lbl">اختر اسمك</div><div class="opts" id="lkNames"><p class="hint">جاري تحميل الأسماء…</p></div>
     <label class="lbl" for="lkPass">كلمة السر</label>
     <input class="inp num" id="lkPass" type="password" inputmode="numeric" autocomplete="current-password" dir="ltr">
     <button type="button" class="btn primary big" id="lkGo">دخول</button>
@@ -1379,7 +1381,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 27;
+const APP_VERSION = 28;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
