@@ -473,20 +473,34 @@ async function syncAll(manual){
   if (fail) toast(`تعذّر ترحيل ${fail} — تحقّق من الإنترنت واضغط «ترحيل» مرة أخرى`);
   else if (ok) toast(`تم ترحيل ${ok} زيارة إلى رئيس القسم ✓`);
   else toast("تم الترحيل ✓");
-  const ms = postedNow.filter(k => results[k] && results[k].modemPhotos && !results[k].mShared);
+  const ms = postedNow.filter(k => shareKind(results[k]) && !results[k].mShared);
   if (ms.length) setTimeout(() => openModemShare(ms), 500);
 }
 
-// ---------- old/new modem photos → WhatsApp group (share sheet: WhatsApp ← group ← send) ----------
+// ---------- photos → WhatsApp group (share sheet: WhatsApp ← group ← send) ----------
+// modem replaced → old + new modem photos · modem installed → the meter photo
+const INSTALL = "تركيب مودم";
+function shareKind(r){
+  if (!r) return "";
+  if (r.modemPhotos && (r.modemPhotos.old || r.modemPhotos.new)) return "replace";
+  if (r.work === INSTALL && (r.photos || []).length) return "install";
+  return "";
+}
+function shareList(r){
+  const k = shareKind(r);
+  return k === "replace" ? [["modem-old", r.modemPhotos.old, "المودم القديم"], ["modem-new", r.modemPhotos.new, "المودم الجديد"]].filter(x => x[1])
+       : k === "install" ? [["meter", r.photos[0], "العداد"]] : [];
+}
+const shareWhat = r => shareKind(r) === "install" ? "صورة العداد" : "صور المودم";
 const modemCaption = r => resFull(r);   // the message is only the 10-digit subscriber number
 async function shareModem(k, btn){
-  const r = results[k]; if (!r || !r.modemPhotos) return;
+  const r = results[k]; if (!shareKind(r)) return;
   const f = resFull(r), files = [];
-  for (const sl of ["old", "new"]){
-    const pk = r.modemPhotos[sl], v = pk && await IDB.get(pk).catch(()=>null);
-    if (v) files.push(new File([v.blob], `modem-${sl}-${f}.jpg`, {type:"image/jpeg"}));
+  for (const [nm, pk] of shareList(r)){
+    const v = pk && await IDB.get(pk).catch(()=>null);
+    if (v) files.push(new File([v.blob], `${nm}-${f}.jpg`, {type:"image/jpeg"}));
   }
-  if (!files.length) return toast("صور المودم غير موجودة على هذا الهاتف");
+  if (!files.length) return toast("الصور غير موجودة على هذا الهاتف");
   const text = modemCaption(r);
   const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.innerHTML = `${ic("check")} أُرسلت`; } };
   if (navigator.canShare && navigator.canShare({files})){
@@ -494,19 +508,19 @@ async function shareModem(k, btn){
     catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
     return;
   }
-  // devices without file sharing (e.g. a computer): save the two photos and copy the text
+  // devices without file sharing (e.g. a computer): save the photos and copy the text
   files.forEach(fl => { const a = document.createElement("a"); a.href = URL.createObjectURL(fl); a.download = fl.name; document.body.appendChild(a); a.click(); a.remove(); });
   try { await navigator.clipboard.writeText(text); } catch(e){}
-  mark(); toast("حُفظت الصورتان في التنزيلات ونُسخ النص — أرسلها على واتساب");
+  mark(); toast("حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب");
 }
 function openModemShare(keys){
-  keys = keys.filter(k => results[k] && results[k].modemPhotos); if (!keys.length) return;
+  keys = keys.filter(k => shareKind(results[k])); if (!keys.length) return;
   const sh = $("#sheet");
-  sh.innerHTML = `<h3>إرسال صور المودم</h3>
-    <p class="hint">استبدلت المودم في ${keys.length === 1 ? "زيارة واحدة" : keys.length === 2 ? "زيارتين" : keys.length + (keys.length <= 10 ? " زيارات" : " زيارة")}. أرسل الصورتين إلى جروب واتساب:</p>
+  sh.innerHTML = `<h3>إرسال الصور للجروب</h3>
+    <p class="hint">أرسل الصور إلى جروب واتساب، مع رقم الاشتراك فقط:</p>
     <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r);
-      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${esc(townName(parseInt(f.slice(0, 3), 10)))}</span></div>
-        <div class="msph"><img data-pk="${esc(r.modemPhotos.old)}" alt="المودم القديم"><img data-pk="${esc(r.modemPhotos.new)}" alt="المودم الجديد"></div>
+      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${shareKind(r) === "install" ? "تركيب مودم" : "استبدال مودم"} · ${esc(townName(parseInt(f.slice(0, 3), 10)))}</span></div>
+        <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
         <button type="button" class="btn primary sm${r.mShared ? " done" : ""}" data-mshare="${esc(k)}">${r.mShared ? `${ic("check")} أُرسلت` : `${ic("share")} إرسال`}</button></div>`; }).join("")}</div>
     <p class="hint">بعد «إرسال»: اختر واتساب ← الجروب ← إرسال.</p>
     <button type="button" class="btn" id="closeSh">إغلاق</button>`;
@@ -964,7 +978,7 @@ function openSheet(id, isNew){
       <span class="q">هل ختم الكونيكشن موجود؟</span>${yn("connSeal")}
       <span class="q sub2">هل وُجد سليماً؟</span>${yn("connOk", chk.connSeal!=="yes")}
       <span class="q">هل يوجد ضعف شبكة؟</span>${yn("weak")}
-      ${chk.weak === "no" ? `<span class="q">هل تم فعلياً معالجة الاتصال؟</span>${yn("fixed")}` : ""}
+      ${chk.weak === "no" && work !== INSTALL ? `<span class="q">هل تم فعلياً معالجة الاتصال؟</span>${yn("fixed")}` : ""}
       ${chk.weak === "no" && chk.fixed === "yes" ? `<span class="q sub2 full">كيف تمت معالجة الاتصال؟</span><div class="opts full">${pick("fixHow", FIX_HOW)}</div>` : ""}
       ${needModemPhotos(chk) ? `<div class="mph full">${["old", "new"].map(sl => `<div class="mslot">
         <div class="lbl">${sl === "old" ? "صورة المودم القديم" : "صورة المودم الجديد"} *</div>
@@ -977,7 +991,7 @@ function openSheet(id, isNew){
       const f = b.dataset.f; chk[f] = chk[f] === b.dataset.v ? "" : b.dataset.v;
       if (f === "modemSeal" && chk.modemSeal !== "yes") chk.modemOk = "";
       if (f === "connSeal" && chk.connSeal !== "yes") chk.connOk = "";
-      if (chk.weak !== "no") chk.fixed = "";
+      if (chk.weak !== "no" || work === INSTALL) chk.fixed = "";
       if (chk.fixed !== "yes") chk.fixHow = "";
       if (chk.fixed !== "no") chk.notFixed = "";
       drawChecks();
@@ -1012,7 +1026,7 @@ function openSheet(id, isNew){
     <div class="opts" id="works">${WORKS.map(w=>`<button type="button" class="opt" data-w="${w}" aria-pressed="${w===work}">${w}</button>`).join("")}</div>
     <div class="lbl">الفحص</div>
     <div class="chk" id="chkBox"></div>
-    <div class="lbl">الصور (أول صورة = صورة العداد)</div>
+    <div class="lbl" id="phLbl">الصور (أول صورة = صورة العداد)</div>
     <div class="photos" id="phBox"></div>
     <div class="row"><button type="button" class="btn" id="camBtn">${ic("camera")} كاميرا</button><button type="button" class="btn" id="galBtn">${ic("image")} من المعرض</button></div>
     <label class="lbl" for="noteIn">الملاحظة *</label>
@@ -1037,7 +1051,13 @@ function openSheet(id, isNew){
   $("#subIn").oninput = drawFull;
   drawFull();
   if (isNew) setTimeout(() => (town ? $("#subIn") : $("#townBox button")).focus(), 250);
-  sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); });
+  const drawWork = () => {
+    $("#phLbl").textContent = work === INSTALL ? "صورة العداد *" : "الصور (أول صورة = صورة العداد)";
+    if (work === INSTALL){ chk.fixed = chk.fixHow = chk.notFixed = ""; }
+    drawChecks();
+  };
+  sh.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { work = b.dataset.w; sh.querySelectorAll("[data-w]").forEach(x => x.setAttribute("aria-pressed", x===b)); drawWork(); });
+  drawWork();
   $("#camBtn").onclick = () => { $("#camIn").value = ""; $("#camIn").onchange = e => onFiles(e.target.files); $("#camIn").click(); };
   $("#galBtn").onclick = () => { $("#galIn").value = ""; $("#galIn").onchange = e => onFiles(e.target.files); $("#galIn").click(); };
   $("#closeSh").onclick = closeSheet;
@@ -1052,7 +1072,8 @@ function openSheet(id, isNew){
     if (!s.manual && newId !== String(parseInt(clean10(id), 10))) return toast("يجب أن تطابق الخانات السبع الأخيرة رقم المشترك " + id);
     if (!work) return toast("اختر المهمة");
     if (!note) return toast("اكتب الملاحظة");
-    if (chk.weak === "no"){
+    if (work === INSTALL && !photos.length && !added.length) return toast("أضف صورة العداد");
+    if (chk.weak === "no" && work !== INSTALL){
       if (!chk.fixed) return toast("أجب في الفحص: هل تم فعلياً معالجة الاتصال؟");
       if (chk.fixed === "yes" && !chk.fixHow) return toast("اختر كيف تمت معالجة الاتصال");
       if (chk.fixed === "no" && !chk.notFixed) return toast("اختر سبب عدم معالجة الاتصال");
@@ -1085,7 +1106,8 @@ function openSheet(id, isNew){
       stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || [],
       modemPhotos: needModemPhotos(chk) ? {old: mph.old, new: mph.new} : undefined,
-      mShared: !!(old && old.mShared && needModemPhotos(chk) && !mphAdd.old && !mphAdd.new && !mphDrop.length)};
+      mShared: !!(old && old.mShared && (needModemPhotos(chk) ? !mphAdd.old && !mphAdd.new && !mphDrop.length && shareKind(old) === "replace"
+        : work === INSTALL && old.work === INSTALL && photos[0] === (old.photos || [])[0]))};
     put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تم حفظ الزيارة " : "تم حفظ نتيجة ") + s.id + " — تُرحّل عند الضغط على «ترحيل»");
   };
   if (old){
@@ -1197,7 +1219,7 @@ function renderDocs(){
       ${checksText(r.checks)?`<div class="line"><span class="checks" style="flex:1">${esc(checksText(r.checks))}</span>
         <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
       ${photoKeys(r).length?`<div class="photos">${(r.photos||[]).map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}${Object.entries(r.modemPhotos||{}).filter(([,k]) => k).map(([sl,k])=>`<div class="thumb"><img alt="" data-pk="${esc(k)}"><span class="tag0">${sl === "old" ? "المودم القديم" : "المودم الجديد"}</span></div>`).join("")}</div>`:""}
-      ${r.modemPhotos ? `<div class="line"><button class="btn sm${r.mShared ? " done" : ""}" data-mshare="${esc(r.k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال صور المودم للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>` : ""}
+      ${shareKind(r) ? `<div class="line"><button class="btn sm${r.mShared ? " done" : ""}" data-mshare="${esc(r.k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>` : ""}
       <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span>
         ${cfgReady() ? (r.sent ? `<span class="sync ok">${ic("check")} رُحّلت</span>` : `<span class="sync">لم تُرحّل بعد</span>`) : ""}<span style="flex:1"></span>
         <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتُها ✓"}</button></div>
@@ -1313,62 +1335,63 @@ function loadExcelJS(){
   if (window.ExcelJS) return Promise.resolve();
   return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "exceljs.min.js"; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
 }
+const visitsN = n => n === 1 ? "زيارة واحدة" : n === 2 ? "زيارتان" : `${n} ${n >= 3 && n <= 10 ? "زيارات" : "زيارة"}`;
 async function exportExcel(){
   if (!data) return toast("لا توجد زيارات محمّلة");
   toast("جاري تجهيز ملف Excel…");
   try { await loadExcelJS(); } catch(e){ return toast("يلزم الاتصال بالإنترنت في المرة الأولى لتحميل أداة التصدير"); }
   const wb = new ExcelJS.Workbook(); wb.creator = "زياراتي";
   const ws = wb.addWorksheet("الزيارات", {views:[{rightToLeft:true, state:"frozen", ySplit:1}]});
+  // photos sit right after the note so they are on the first screen (not in the last columns)
   const cols = [
-    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["المهمة",14],
-    ["الملاحظة",42],["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["معالجة الاتصال",24],["الطلب",30],["التلفون",14],
-    ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة العداد",22],["صورة 2",22],["صورة 3",22],["المودم القديم",22],["المودم الجديد",22]
+    ["#",5],["رقم الاشتراك (10 خانات)",16],["رقم المشترك",11],["الحالة",10],["المهمة",14],["الملاحظة",40],
+    ["صورة العداد",22],["المودم القديم",22],["المودم الجديد",22],
+    ["ختم المودم",16],["ختم الكونيكشن",16],["ضعف شبكة",10],["معالجة الاتصال",24],["الطلب",30],["التلفون",14],
+    ["الإحداثيات",20],["الخريطة",11],["موثّقة بالنظام",12],["صورة 2",22],["صورة 3",22]
   ];
+  const C = name => cols.findIndex(c => c[0] === name) + 1;   // 1-based column of a header
   ws.columns = cols.map(([h,w]) => ({header:h, width:w}));
   const hr = ws.getRow(1); hr.height = 24;
-  hr.eachCell(c => { c.font = {bold:true, color:{argb:"FFFFFFFF"}}; c.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF0B6E5E"}}; c.alignment = {vertical:"middle", horizontal:"center", wrapText:true}; });
+  hr.eachCell(c => { c.font = {bold:true, color:{argb:"FFFFFFFF"}}; c.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF16263F"}}; c.alignment = {vertical:"middle", horizontal:"center", wrapText:true}; });
   const seal = sealTxt;
+  const putImage = async (pk, colName, rowN) => {
+    const v = pk && await IDB.get(pk).catch(()=>null); if (!v) return false;
+    const id = wb.addImage({buffer: await v.blob.arrayBuffer(), extension:"jpeg"}), sc = Math.min(150 / v.w, 150 / v.h);
+    ws.addImage(id, {tl:{col:C(colName) - 1 + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
+    return true;
+  };
   let rowN = 2, doneN = 0;
   for (const [i, s] of data.stops.entries()){
     const r = results[rkey(s.id)]; if (r) doneN++;
     const c = (r && r.checks) || {};
-    const row = ws.getRow(rowN);
-    row.values = [i+1, (r && r.full) || stopFull(s), s.id, r ? "تمت" : "لم تتم",
-      r ? r.work : "", r ? r.note : "",
-      seal(c.modemSeal, c.modemOk), seal(c.connSeal, c.connOk), c.weak ? YN[c.weak] : "", fixText(c), s.task || "",
-      (s.phones && s.phones[0] && s.phones[0][0]) || "", hasC(s) ? `${s.lat}, ${s.lng}` : "لا يوجد",
-      hasC(s) ? {text:"فتح", hyperlink:`https://www.google.com/maps?q=${s.lat},${s.lng}`} : "", r ? (r.logged ? "نعم" : "لا") : ""];
+    const row = ws.getRow(rowN), val = {};
+    val["#"] = i + 1; val["رقم الاشتراك (10 خانات)"] = (r && r.full) || stopFull(s); val["رقم المشترك"] = s.id;
+    val["الحالة"] = r ? "تمت" : "لم تتم"; val["المهمة"] = r ? r.work : ""; val["الملاحظة"] = r ? r.note : "";
+    val["ختم المودم"] = seal(c.modemSeal, c.modemOk); val["ختم الكونيكشن"] = seal(c.connSeal, c.connOk);
+    val["ضعف شبكة"] = c.weak ? YN[c.weak] : ""; val["معالجة الاتصال"] = fixText(c); val["الطلب"] = s.task || "";
+    val["التلفون"] = (s.phones && s.phones[0] && s.phones[0][0]) || ""; val["الإحداثيات"] = hasC(s) ? `${s.lat}, ${s.lng}` : "لا يوجد";
+    val["الخريطة"] = hasC(s) ? {text:"فتح", hyperlink:`https://www.google.com/maps?q=${s.lat},${s.lng}`} : "";
+    val["موثّقة بالنظام"] = r ? (r.logged ? "نعم" : "لا") : "";
+    row.values = cols.map(([h]) => val[h] === undefined ? "" : val[h]);
     row.alignment = {vertical:"middle", wrapText:true};
-    row.getCell(4).font = {bold:true, color:{argb: r ? "FF2E7D32" : "FFB3261E"}};
-    if (hasC(s)) row.getCell(14).font = {color:{argb:"FF2B5DA8"}, underline:true};
-    if (fixAlert(c)) row.getCell(10).font = {bold:true, color:{argb:"FFB3261E"}};
-    const pks = (r && r.photos || []).slice(0, 3), mk = r && r.modemPhotos ? [r.modemPhotos.old, r.modemPhotos.new] : [];
-    for (const [n, pk] of mk.entries()){
-      if (!pk) continue;
-      const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
-      const id = wb.addImage({buffer: await v.blob.arrayBuffer(), extension:"jpeg"}), sc = Math.min(150 / v.w, 150 / v.h);
-      ws.addImage(id, {tl:{col:18 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
-    }
-    if (pks.length || mk.some(Boolean)){
-      row.height = 120;
-      for (const [n, pk] of pks.entries()){
-        const v = await IDB.get(pk).catch(()=>null); if (!v) continue;
-        const buf = await v.blob.arrayBuffer();
-        const id = wb.addImage({buffer:buf, extension:"jpeg"});
-        const sc = Math.min(150 / v.w, 150 / v.h);
-        ws.addImage(id, {tl:{col:15 + n + 0.05, row:rowN - 1 + 0.05}, ext:{width:Math.round(v.w*sc), height:Math.round(v.h*sc)}});
-      }
-    } else row.height = 36;
+    row.getCell(C("الحالة")).font = {bold:true, color:{argb: r ? "FF2E7D32" : "FFB3261E"}};
+    if (hasC(s)) row.getCell(C("الخريطة")).font = {color:{argb:"FF2B5DA8"}, underline:true};
+    if (fixAlert(c)) row.getCell(C("معالجة الاتصال")).font = {bold:true, color:{argb:"FFB3261E"}};
+    const ph = (r && r.photos) || [], mp = (r && r.modemPhotos) || {};
+    let any = false;
+    for (const [pk, col] of [[ph[0], "صورة العداد"], [mp.old, "المودم القديم"], [mp.new, "المودم الجديد"], [ph[1], "صورة 2"], [ph[2], "صورة 3"]])
+      if (await putImage(pk, col, rowN)) any = true;
+    row.height = any ? 120 : 36;
     rowN++;
   }
   const sum = ws.getRow(rowN + 1);
-  sum.values = ["", `المجموع: ${data.stops.length} زيارة · تمت ${doneN} · لم تتم ${data.stops.length - doneN}`];
+  sum.values = ["", `المجموع: ${visitsN(data.stops.length)} · تمت ${doneN} · لم تتم ${data.stops.length - doneN}`];
   sum.getCell(2).font = {bold:true};
   const buf = await wb.xlsx.writeBuffer();
   const name = `زيارات-${String(data.date).replace(/\//g,"-")}.xlsx`;
   const file = new File([buf], name, {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const sh = $("#sheet");
-  sh.innerHTML = `<h3>ملف Excel جاهز</h3><p class="sub" style="margin:0">${esc(name)} · ${data.stops.length} زيارة · ${(file.size/1024/1024).toFixed(1)} MB</p>
+  sh.innerHTML = `<h3>ملف Excel جاهز</h3><p class="sub" style="margin:0">زيارات <span dir="ltr" style="unicode-bidi:isolate">${esc(data.date)}</span> · ${visitsN(data.stops.length)} · <span dir="ltr" style="unicode-bidi:isolate">${(file.size/1024/1024).toFixed(1)} MB</span></p>
     <div class="row"><button type="button" class="btn primary" id="dlX">${ic("download")} تنزيل</button>
     ${navigator.canShare && navigator.canShare({files:[file]}) ? `<button type="button" class="btn" id="shX">${ic("share")} مشاركة</button>` : ""}</div>
     <button type="button" class="btn" id="closeSh">إغلاق</button>`;
@@ -1550,7 +1573,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 33;
+const APP_VERSION = 36;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
