@@ -190,6 +190,7 @@ textarea{width:100%;min-height:78px;box-sizing:border-box;border:1px solid var(-
 .msinfo b{display:block;font-size:15px}
 .msinfo span{font-size:12.5px;color:var(--muted)}
 .cshare{padding:0 16px 12px}.cshare .btn{width:100%;justify-content:center}
+.cshint{margin:6px 2px 0;font-size:12px;line-height:1.6;color:var(--muted);text-align:center}
 .msinfo .msnote{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;font-size:12px;line-height:1.5;color:var(--ink-2,var(--muted))}
 .msph{display:flex;gap:5px}
 .msph img{width:46px;height:46px;border-radius:9px;object-fit:cover;border:1px solid var(--line)}
@@ -502,7 +503,10 @@ const shareWhat = r => { const k = shareKind(r); return k === "replace" ? "صو�
 const resShort = r => { const n = parseInt(resFull(r).slice(3), 10); return isNaN(n) ? String(r.id || "") : String(n); };
 // share button shown on the visit card right after saving (no need to post first)
 const cardShare = k => { const r = results[k]; if (!shareKind(r)) return "";
-  return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>`; };
+  return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button>${!r.mShared && pasteKind(r) ? `<p class="cshint">${PASTE_HINT}</p>` : ""}</div>`; };
+// one photo: WhatsApp drops the text, so the text is copied and pasted by hand into the caption (searchable later)
+const pasteKind = r => (shareKind(r) === "fix" || shareKind(r) === "install") && shareList(r).length > 0;
+const PASTE_HINT = "النص بينسخ لحاله: بالواتساب اضغط مطوّلاً على خانة التعليق ← لصق، وبعدين إرسال";
 const modemCaption = r => shareKind(r) !== "fix" ? resFull(r)
   : [resShort(r), resTown(r)].filter(Boolean).join(" ") + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : "");
 // WhatsApp drops the text when a single photo is shared, so for a connection fix the text is written on the photo:
@@ -539,6 +543,8 @@ async function composeFix(blob, head, note){
 }
 async function shareModem(k, btn){
   const r = results[k]; if (!shareKind(r)) return;
+  const text = modemCaption(r), paste = pasteKind(r);
+  if (paste){ try { await navigator.clipboard.writeText(text); } catch(e){} }   // first, while the tap still counts
   const f = resFull(r), files = [], fix = shareKind(r) === "fix";
   const head = [resShort(r), resTown(r)].filter(Boolean).join(" "), note = String(r.note || "").trim();
   for (const [nm, pk] of shareList(r)){
@@ -549,9 +555,9 @@ async function shareModem(k, btn){
     files.push(new File([b], `${nm}-${f}.jpg`, {type:"image/jpeg"}));
   }
   if (!files.length && !fix) return toast("الصور غير موجودة على هذا الهاتف");
-  const text = modemCaption(r);
   const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} إرسال ${shareWhat(r)} للجروب (أُرسلت)` : `${ic("check")} أُرسلت`; } };
-  const payload = !files.length ? {text} : fix ? {files} : {files, text};   // a fix photo already carries its text
+  const payload = files.length ? {files, text} : {text};
+  if (paste) toast("نُسخ النص — الصقه بخانة التعليق تحت الصورة", 4000);
   if (navigator.share && (!files.length || (navigator.canShare && navigator.canShare({files})))){
     try { await navigator.share(payload); mark(); }
     catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
@@ -566,9 +572,8 @@ async function shareModem(k, btn){
 function openModemShare(keys){
   keys = keys.filter(k => shareKind(results[k])); if (!keys.length) return;
   const sh = $("#sheet");
-  const anyFix = keys.some(k => shareKind(results[k]) === "fix"), anyPh = keys.some(k => shareKind(results[k]) !== "fix");
   sh.innerHTML = `<h3>إرسال للجروب</h3>
-    <p class="hint">${anyPh ? "صور المودم وتركيب المودم: مع رقم الاشتراك فقط." : ""}${anyPh && anyFix ? "<br>" : ""}${anyFix ? "معالجة الاتصال: صورة العداد مكتوب عليها رقم الاشتراك واسم البلدة، والملاحظة تحتها." : ""}</p>
+    <p class="hint">${keys.some(k => shareKind(results[k]) === "replace") ? "صور المودم: تنبعث مع رقم الاشتراك.<br>" : ""}${keys.some(k => pasteKind(results[k])) ? "صورة العداد: " + PASTE_HINT + "." : ""}</p>
     <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r), kd = shareKind(r);
       return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
         <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
@@ -1492,7 +1497,7 @@ function editFull(k){
 }
 
 let tt;
-function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), 1800); }
+function toast(msg, ms){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove("on"), ms || 1800); }
 
 document.addEventListener("click", e => {
   if (e.target.closest("[data-postlist]")){ openPostList(); return; }
@@ -1650,7 +1655,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 42;
+const APP_VERSION = 43;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
