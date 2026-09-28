@@ -189,6 +189,8 @@ textarea{width:100%;min-height:78px;box-sizing:border-box;border:1px solid var(-
 .msrow:first-child{border-top:0}
 .msinfo b{display:block;font-size:15px}
 .msinfo span{font-size:12.5px;color:var(--muted)}
+.cshare{padding:0 16px 12px}.cshare .btn{width:100%;justify-content:center}
+.msinfo .msnote{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;font-size:12px;line-height:1.5;color:var(--ink-2,var(--muted))}
 .msph{display:flex;gap:5px}
 .msph img{width:46px;height:46px;border-radius:9px;object-fit:cover;border:1px solid var(--line)}
 .btn.done{background:var(--surface-2);border-color:var(--line);color:var(--muted);box-shadow:none}
@@ -479,20 +481,30 @@ async function syncAll(manual){
 
 // ---------- photos → WhatsApp group (share sheet: WhatsApp ← group ← send) ----------
 // modem replaced → old + new modem photos · modem installed → the meter photo
-const INSTALL = "تركيب مودم";
+// connection fix → the meter photo, captioned: subscriber number, town name, then the note
+const INSTALL = "تركيب مودم", FIXWORK = "معالجة اتصال";
 function shareKind(r){
   if (!r) return "";
   if (r.modemPhotos && (r.modemPhotos.old || r.modemPhotos.new)) return "replace";
   if (r.work === INSTALL && (r.photos || []).length) return "install";
+  if (r.work === FIXWORK) return "fix";
   return "";
 }
 function shareList(r){
   const k = shareKind(r);
   return k === "replace" ? [["modem-old", r.modemPhotos.old, "المودم القديم"], ["modem-new", r.modemPhotos.new, "المودم الجديد"]].filter(x => x[1])
-       : k === "install" ? [["meter", r.photos[0], "العداد"]] : [];
+       : (k === "install" || k === "fix") && (r.photos || []).length ? [["meter", r.photos[0], "العداد"]] : [];
 }
-const shareWhat = r => shareKind(r) === "install" ? "صورة العداد" : "صور المودم";
-const modemCaption = r => resFull(r);   // the message is only the 10-digit subscriber number
+const SHARE_KIND = {replace: "استبدال مودم", install: "تركيب مودم", fix: "معالجة اتصال"};
+const resTown = r => townName(parseInt(resFull(r).slice(0, 3), 10));
+const shareWhat = r => { const k = shareKind(r); return k === "replace" ? "صور المودم" : k === "install" ? "صورة العداد" : shareList(r).length ? "صورة العداد والملاحظة" : "الملاحظة"; };
+// modem photos: only the 10-digit subscriber number · connection fix: "353 الخريبة" (the actual number + town name), the note under them
+const resShort = r => { const n = parseInt(resFull(r).slice(3), 10); return isNaN(n) ? String(r.id || "") : String(n); };
+// share button shown on the visit card right after saving (no need to post first)
+const cardShare = k => { const r = results[k]; if (!shareKind(r)) return "";
+  return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>`; };
+const modemCaption = r => shareKind(r) !== "fix" ? resFull(r)
+  : [resShort(r), resTown(r)].filter(Boolean).join(" ") + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : "");
 async function shareModem(k, btn){
   const r = results[k]; if (!shareKind(r)) return;
   const f = resFull(r), files = [];
@@ -500,26 +512,30 @@ async function shareModem(k, btn){
     const v = pk && await IDB.get(pk).catch(()=>null);
     if (v) files.push(new File([v.blob], `${nm}-${f}.jpg`, {type:"image/jpeg"}));
   }
-  if (!files.length) return toast("الصور غير موجودة على هذا الهاتف");
+  const fix = shareKind(r) === "fix";
+  if (!files.length && !fix) return toast("الصور غير موجودة على هذا الهاتف");
   const text = modemCaption(r);
-  const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.innerHTML = `${ic("check")} أُرسلت`; } };
-  if (navigator.canShare && navigator.canShare({files})){
-    try { await navigator.share({files, text}); mark(); }
+  const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} إرسال ${shareWhat(r)} للجروب (أُرسلت)` : `${ic("check")} أُرسلت`; } };
+  const payload = files.length ? {files, text} : {text};
+  if (navigator.share && (!files.length || (navigator.canShare && navigator.canShare({files})))){
+    try { await navigator.share(payload); mark(); }
     catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
     return;
   }
   // devices without file sharing (e.g. a computer): save the photos and copy the text
   files.forEach(fl => { const a = document.createElement("a"); a.href = URL.createObjectURL(fl); a.download = fl.name; document.body.appendChild(a); a.click(); a.remove(); });
   try { await navigator.clipboard.writeText(text); } catch(e){}
-  mark(); toast("حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب");
+  mark(); toast(files.length ? (fix ? "حُفظت صورة العداد في التنزيلات ونُسخ النص — أرسلهما على واتساب" : "حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب")
+                             : "نُسخ النص — الصقه في جروب واتساب");
 }
 function openModemShare(keys){
   keys = keys.filter(k => shareKind(results[k])); if (!keys.length) return;
   const sh = $("#sheet");
-  sh.innerHTML = `<h3>إرسال الصور للجروب</h3>
-    <p class="hint">أرسل الصور إلى جروب واتساب، مع رقم الاشتراك فقط:</p>
-    <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r);
-      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${shareKind(r) === "install" ? "تركيب مودم" : "استبدال مودم"} · ${esc(townName(parseInt(f.slice(0, 3), 10)))}</span></div>
+  const anyFix = keys.some(k => shareKind(results[k]) === "fix"), anyPh = keys.some(k => shareKind(results[k]) !== "fix");
+  sh.innerHTML = `<h3>إرسال للجروب</h3>
+    <p class="hint">${anyPh ? "صور المودم وتركيب المودم: مع رقم الاشتراك فقط." : ""}${anyPh && anyFix ? "<br>" : ""}${anyFix ? "معالجة الاتصال: رقم الاشتراك واسم البلدة، وتحتهم صورة العداد والملاحظة." : ""}</p>
+    <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r), kd = shareKind(r);
+      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
         <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
         <button type="button" class="btn primary sm${r.mShared ? " done" : ""}" data-mshare="${esc(k)}">${r.mShared ? `${ic("check")} أُرسلت` : `${ic("share")} إرسال`}</button></div>`; }).join("")}</div>
     <p class="hint">بعد «إرسال»: اختر واتساب ← الجروب ← إرسال.</p>
@@ -842,7 +858,7 @@ function render(){
         <span class="sp"></span>
         ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الموقع">${ic("trash")}</button>
         <button class="btn sm toggle" data-done="${esc(s.id)}" type="button">${done[s.id]?"تم ✓":"تم"}</button>`}</div>
-      ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · ${ic("camera")} ${results[rkey(s.id)].photos.length}`:""}</div>`:""}
+      ${done[s.id]?`<div class="res">${esc(results[rkey(s.id)].work||"")} · ${esc(results[rkey(s.id)].note||"")}${(results[rkey(s.id)].photos||[]).length?` · ${ic("camera")} ${results[rkey(s.id)].photos.length}`:""}</div>${cardShare(rkey(s.id))}`:""}
       <div class="body">
         <div class="fullrow"><span class="lbl">رقم الاشتراك:</span><span class="num">${esc(stopFull(s))}</span>${s.full?"":`<span class="tag">مقترح</span>`}
           <span style="flex:1"></span></div>
@@ -893,6 +909,12 @@ const pad3 = n => String(+n || 0).padStart(3, "0");
 const normAr = t => AR_DIG(t).replace(/[\u064B-\u0652\u0640]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ").trim();
 const TOWN_KEY = TOWN_LIST.map(([n, name]) => [n, name, normAr(name), normAr(name).replace(/ /g, "")]);
 const RECENT_T = "visits.towns.recent";
+function townByName(name){   // "الخريبة" → 70 ; "" or unknown → 0
+  const q = normAr(name || ""), q2 = q.replace(/ /g, ""); if (!q) return 0;
+  const hit = TOWN_KEY.find(t => t[2] === q || t[3] === q2); if (hit) return hit[0];
+  const part = TOWN_KEY.filter(t => t[2].startsWith(q) || t[3].startsWith(q2));
+  return part.length === 1 ? part[0][0] : 0;
+}
 const recentTowns = () => { try { return (JSON.parse(localStorage.getItem(RECENT_T)) || []).filter(n => TOWN_BY.has(n)); } catch(e){ return []; } };
 function rememberTown(n){ try { localStorage.setItem(RECENT_T, JSON.stringify([+n, ...recentTowns().filter(x => x !== +n)].slice(0, 6))); } catch(e){} }
 // full-screen town picker: mode "name" (Arabic keyboard) or "num" (number pad)
@@ -1107,7 +1129,8 @@ function openSheet(id, isNew){
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || [],
       modemPhotos: needModemPhotos(chk) ? {old: mph.old, new: mph.new} : undefined,
       mShared: !!(old && old.mShared && (needModemPhotos(chk) ? !mphAdd.old && !mphAdd.new && !mphDrop.length && shareKind(old) === "replace"
-        : work === INSTALL && old.work === INSTALL && photos[0] === (old.photos || [])[0]))};
+        : work === INSTALL ? old.work === INSTALL && photos[0] === (old.photos || [])[0]
+        : work === FIXWORK && shareKind(old) === "fix" && photos[0] === (old.photos || [])[0] && note === old.note && full === old.full))};
     put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تم حفظ الزيارة " : "تم حفظ نتيجة ") + s.id + " — تُرحّل عند الضغط على «ترحيل»");
   };
   if (old){
@@ -1177,6 +1200,7 @@ function renderManual(){
         ${selMode ? "" : `<button class="btn sm danger" data-del="${esc(s.id)}" type="button" aria-label="حذف الزيارة">${ic("trash")}</button>
         <button class="btn sm" data-done="${esc(s.id)}" type="button">${ic("edit")} تعديل</button>`}</div>
       <div class="res"><span class="num">${esc(stopFull(s))}</span>${townName(parseInt(stopFull(s).slice(0, 3), 10)) ? ` · ${esc(townName(parseInt(stopFull(s).slice(0, 3), 10)))}` : ""} · ${esc(r.work || "")} · ${esc(r.note || "")}${(r.photos||[]).length ? ` · ${ic("camera")} ${r.photos.length}` : ""}</div>
+      ${cardShare(rkey(s.id))}
     </article>`; }).join("");
   main.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
     <button class="btn primary big" id="addBtnM" type="button">${ic("plus")} توثيق زيارة جديدة</button>
@@ -1252,7 +1276,8 @@ let readerReady = null;
 function loadReader(){
   return readerReady || (readerReady = (async () => {
     await loadScript("wa-import.js"); await loadScript("reader.js");
-    const m = await (await fetch("reader-model.json")).json(); VisitReader.setNet(m);
+    const m = await (await fetch("reader-model.json")).json(); VisitReader.setNet(m, "ar");
+    try { VisitReader.setNet(await (await fetch("reader-model-en.json")).json(), "en"); } catch(e){ console.warn(e); }
   })().catch(e => { readerReady = null; throw e; }));
 }
 const TOWNS = {"اربد":"1","إربد":"1","جرش":"4"};
@@ -1282,7 +1307,7 @@ async function importWhatsApp(file){
     $("#impGo").disabled = true; $("#impProg").hidden = false;
     const total = day.subs.reduce((a, s) => a + s.images.length, 0); let doneN = 0;
     if (data && data.stops) for (const s of data.stops) for (const k of (s.refs || [])) await IDB.del(k).catch(()=>{});
-    const stops = [];
+    const stops = []; VisitReader.resetScript();
     for (const sub of day.subs){
       const reads = [], refs = [];
       for (const name of sub.images){
@@ -1293,22 +1318,30 @@ async function importWhatsApp(file){
           try {
             const blob = new Blob([await f.get()], {type: "image/jpeg"});
             const {g, W, H} = await VisitReader.grayFromBlob(blob);
-            reads.push(VisitReader.readGray(g, W, H));
+            reads.push(VisitReader.readAuto(g, W, H));
             const c = await compress(blob, 1600, 0.8);
             const k = "ref|" + day.date + "|" + sub.id + "|" + refs.length; await IDB.put(k, {blob: c.blob, w: c.w, h: c.h}); refs.push(k);
           } catch(e){ console.warn(e); }
         }
         doneN++; $("#impProg i").style.width = (doneN / total * 100) + "%";
       }
+      // town from the clerk's label ("الخريبة-353") or from a 10-digit number
+      const code = sub.townCode ? parseInt(sub.townCode, 10) : townByName(sub.town);
+      const full = (code && TOWN_BY.has(code)) ? fullNum(code, sub.id) : "";
       const r = VisitReader.combine(reads);
-      const phones = r.phones.map(o => o.alt.length ? [o.p, o.n, "تحقق من الصورة: قد يكون " + o.alt[0]] : [o.p, o.n]);
+      // the subscriber number itself (e.g. 0790000121) can look like a mobile number on the screen
+      const phones = r.phones.filter(o => o.p !== full).map(o => o.alt.length ? [o.p, o.n, "تحقق من الصورة: قد يكون " + o.alt[0]] : [o.p, o.n]);
       sub.extraPhones.forEach(p => { if (!phones.some(x => x[0] === p)) phones.push([p, 1, "من الطلب"]); });
       const warn = [];
       if (r.lat === null || r.lng === null) warn.push("لم تُقرأ الإحداثيات آلياً — راجع الصور الأصلية");
+      else if (r.unsure) warn.push("الإحداثيات مختلفة بين الفواتير — تأكد من الموقع من الصور");
       if (!phones.length) warn.push("لم تُقرأ أرقام الهواتف آلياً — راجع الصور الأصلية");
-      stops.push({id: sub.id, lat: r.lat, lng: r.lng, phones, task: sub.task, refs, warn, auto: true});
+      const st = {id: sub.id, lat: r.lat, lng: r.lng, phones, task: sub.task, refs, warn, auto: true};
+      if (full){ st.town = String(code); st.full = full; }
+      stops.push(st);
     }
-    setData({date: day.date, area: "", town: "1", stops: nearestOrder(stops), auto: true});
+    const codes = stops.map(s => s.town).filter(Boolean), top = codes.sort((a, b) => codes.filter(x => x === b).length - codes.filter(x => x === a).length)[0];
+    setData({date: day.date, area: "", town: top || "1", stops: nearestOrder(stops), auto: true});
     closeSheet(); view = "v"; render(); scrollTo(0, 0);
     const bad = stops.filter(s => s.warn.length).length;
     toast(`تمت قراءة ${stops.length} مشتركاً` + (bad ? ` — ${bad} بحاجة إلى مراجعة` : ""));
@@ -1439,6 +1472,8 @@ document.addEventListener("click", e => {
     try { navigator.clipboard.writeText(v).then(()=>toast("تم النسخ: " + v), fb); } catch(err){ fb(); }
     return;
   }
+  const cs = e.target.closest("[data-cshare]");
+  if (cs){ shareModem(cs.dataset.cshare, cs); return; }
   const d = e.target.closest("[data-done]");
   if (d){ openSheet(d.dataset.done); return; }
   const cp = e.target.closest("[data-logged]");
@@ -1573,7 +1608,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()) open(); else showLock(open);
 })();
-const APP_VERSION = 36;
+const APP_VERSION = 40;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });

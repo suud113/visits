@@ -1,6 +1,6 @@
-const CACHE = "visits-v36";
+const CACHE = "visits-v40";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "exceljs.min.js",
-               "wa-import.js", "reader.js", "reader-model.json",
+               "wa-import.js", "reader.js", "reader-model.json", "reader-model-en.json",
                "plex-400.woff2", "plex-600.woff2", "plex-700.woff2", "icon-maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== "share-inbox").map(k => caches.delete(k))))); self.clients.claim(); });
