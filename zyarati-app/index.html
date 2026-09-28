@@ -504,10 +504,11 @@ const resShort = r => { const n = parseInt(resFull(r).slice(3), 10); return isNa
 // share button shown on the visit card right after saving (no need to post first)
 const cardShare = k => { const r = results[k]; if (!shareKind(r)) return "";
   return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button>${!r.mShared && pasteKind(r) ? `<p class="cshint">${PASTE_HINT}</p>` : ""}</div>`; };
-// connection fix with a photo: WhatsApp dropped the text, so it is also copied for pasting into the caption (searchable later)
-// (modem installation: the caption arrives on its own)
-const pasteKind = r => shareKind(r) === "fix" && shareList(r).length > 0;
-const PASTE_HINT = "النص بينسخ لحاله: بالواتساب اضغط مطوّلاً على خانة التعليق ← لصق، وبعدين إرسال";
+// WhatsApp on the phone drops the text that comes with photos (on a computer it arrives), so on a phone the text is
+// also copied, ready to paste into the caption — the caption stays searchable in the group later
+const MOBILE = !!((navigator.userAgentData && navigator.userAgentData.mobile) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+const pasteKind = r => MOBILE && shareList(r).length > 0;
+const PASTE_HINT = "النص بينسخ لحاله: إذا ما طلع تحت الصورة بالواتساب، اضغط مطوّلاً على خانة التعليق ← لصق، وبعدين إرسال";
 // modem replaced: the 10-digit number · modem installed: «353 الخريبة» · connection fix: «353 الخريبة» + the note
 const shortTown = r => [resShort(r), resTown(r)].filter(Boolean).join(" ");
 const modemCaption = r => { const k = shareKind(r);
@@ -561,7 +562,7 @@ async function shareModem(k, btn){
   if (!files.length && !fix) return toast("الصور غير موجودة على هذا الهاتف");
   const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} إرسال ${shareWhat(r)} للجروب (أُرسلت)` : `${ic("check")} أُرسلت`; } };
   const payload = files.length ? {files, text} : {text};
-  if (paste) toast("نُسخ النص — الصقه بخانة التعليق تحت الصورة", 4000);
+  if (paste) toast("نُسخ النص — إذا ما طلع تحت الصورة الصقه بخانة التعليق", 4000);
   if (navigator.share && (!files.length || (navigator.canShare && navigator.canShare({files})))){
     try { await navigator.share(payload); mark(); }
     catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
@@ -577,7 +578,7 @@ function openModemShare(keys){
   keys = keys.filter(k => shareKind(results[k])); if (!keys.length) return;
   const sh = $("#sheet");
   sh.innerHTML = `<h3>إرسال للجروب</h3>
-    <p class="hint">${keys.some(k => shareKind(results[k]) === "replace") ? "صور المودم: تنبعث مع رقم الاشتراك (10 خانات).<br>" : ""}${keys.some(k => pasteKind(results[k])) ? "صورة العداد: " + PASTE_HINT + "." : ""}</p>
+    <p class="hint">${keys.some(k => shareKind(results[k]) === "replace") ? "صور المودم: تنبعث مع رقم الاشتراك (10 خانات).<br>" : ""}${keys.some(k => pasteKind(results[k])) ? PASTE_HINT + "." : ""}</p>
     <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r), kd = shareKind(r);
       return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
         <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
@@ -1659,7 +1660,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 45;
+const APP_VERSION = 46;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
