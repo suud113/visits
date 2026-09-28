@@ -189,7 +189,7 @@ textarea{width:100%;min-height:78px;box-sizing:border-box;border:1px solid var(-
 .msrow:first-child{border-top:0}
 .msinfo b{display:block;font-size:15px}
 .msinfo span{font-size:12.5px;color:var(--muted)}
-.cshare{padding:0 16px 12px}.cshare .btn{width:100%;justify-content:center}
+.cshare{padding:0 16px 12px;display:flex;flex-direction:column;gap:8px}.cshare .btn{width:100%;justify-content:center}
 .cshint{margin:6px 2px 0;font-size:12px;line-height:1.6;color:var(--muted);text-align:center}
 .msinfo .msnote{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;font-size:12px;line-height:1.5;color:var(--ink-2,var(--muted))}
 .msph{display:flex;gap:5px}
@@ -476,44 +476,57 @@ async function syncAll(manual){
   if (fail) toast(`تعذّر ترحيل ${fail} — تحقّق من الإنترنت واضغط «ترحيل» مرة أخرى`);
   else if (ok) toast(`تم ترحيل ${ok} زيارة إلى رئيس القسم ✓`);
   else toast("تم الترحيل ✓");
-  const ms = postedNow.filter(k => shareKind(results[k]) && !results[k].mShared);
+  const ms = postedNow.flatMap(k => unsent(results[k]).map(kd => [k, kd]));
   if (ms.length) setTimeout(() => openModemShare(ms), 500);
 }
 
 // ---------- photos → WhatsApp group (share sheet: WhatsApp ← group ← send) ----------
-// modem replaced → old + new modem photos · modem installed → the meter photo
-// connection fix → the meter photo, captioned: subscriber number, town name, then the note
+// What a saved visit sends, each with its own button and its own "sent" mark, in this order:
+//   fix     – connection fix: the meter photo + «353 الخريبة» + the note → the visits group
+//   replace – modem replaced: old + new modem photos + «353 الخريبة»     → the modems group
+//   install – modem installed: the meter photo + «353 الخريبة»
+// (a connection fix with a modem replacement has two buttons: fix, then replace)
 const INSTALL = "تركيب مودم", FIXWORK = "معالجة اتصال";
-function shareKind(r){
-  if (!r) return "";
-  if (r.modemPhotos && (r.modemPhotos.old || r.modemPhotos.new)) return "replace";
-  if (r.work === INSTALL && (r.photos || []).length) return "install";
-  if (r.work === FIXWORK) return "fix";
-  return "";
+function shareKinds(r){
+  if (!r) return [];
+  const out = [];
+  if (r.work === FIXWORK) out.push("fix");
+  if (r.modemPhotos && (r.modemPhotos.old || r.modemPhotos.new)) out.push("replace");
+  if (r.work === INSTALL && (r.photos || []).length) out.push("install");
+  return out;
 }
-function shareList(r){
-  const k = shareKind(r);
-  return k === "replace" ? [["modem-old", r.modemPhotos.old, "المودم القديم"], ["modem-new", r.modemPhotos.new, "المودم الجديد"]].filter(x => x[1])
-       : (k === "install" || k === "fix") && (r.photos || []).length ? [["meter", r.photos[0], "العداد"]] : [];
+const shareKind = r => shareKinds(r)[0] || "";
+// visits saved before v47 kept one mark for their single button
+const legacyKind = r => (r.modemPhotos && (r.modemPhotos.old || r.modemPhotos.new)) ? "replace" : r.work === INSTALL ? "install" : "fix";
+const isSent = (r, kd) => !!r && (r.sh ? !!r.sh[kd] : !!r.mShared && kd === legacyKind(r));
+const unsent = r => shareKinds(r).filter(kd => !isSent(r, kd));
+function setSent(r, kd){
+  if (!r.sh){ r.sh = {}; if (r.mShared) r.sh[legacyKind(r)] = true; }
+  r.sh[kd] = true; r.mShared = shareKinds(r).every(x => r.sh[x]);
+}
+function shareList(r, kd){
+  return kd === "replace" ? [["modem-old", r.modemPhotos.old, "المودم القديم"], ["modem-new", r.modemPhotos.new, "المودم الجديد"]].filter(x => x[1])
+       : (kd === "install" || kd === "fix") && (r.photos || []).length ? [["meter", r.photos[0], "العداد"]] : [];
 }
 const SHARE_KIND = {replace: "استبدال مودم", install: "تركيب مودم", fix: "معالجة اتصال"};
 const resTown = r => townName(parseInt(resFull(r).slice(0, 3), 10));
-const shareWhat = r => { const k = shareKind(r); return k === "replace" ? "صور المودم" : k === "install" ? "صورة العداد" : shareList(r).length ? "صورة العداد والملاحظة" : "الملاحظة"; };
+const shareWhat = (r, kd) => kd === "replace" ? "صور المودم" : kd === "install" ? "صورة العداد" : shareList(r, kd).length ? "صورة العداد والملاحظة" : "الملاحظة";
+const shareTo = kd => kd === "replace" ? "لجروب المودمات" : "للجروب";
+const shareLabel = (r, kd) => `إرسال ${shareWhat(r, kd)} ${shareTo(kd)}`;
 // modem photos: only the 10-digit subscriber number · connection fix: "353 الخريبة" (the actual number + town name), the note under them
 const resShort = r => { const n = parseInt(resFull(r).slice(3), 10); return isNaN(n) ? String(r.id || "") : String(n); };
 // share button shown on the visit card right after saving (no need to post first)
-const cardShare = k => { const r = results[k]; if (!shareKind(r)) return "";
-  return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button>${!r.mShared && pasteKind(r) ? `<p class="cshint">${PASTE_HINT}</p>` : ""}</div>`; };
+const cardShare = k => { const r = results[k], kinds = shareKinds(r); if (!kinds.length) return "";
+  return `<div class="cshare">${kinds.map(kd => { const sent = isSent(r, kd);
+    return `<button class="btn sm${sent ? " done" : " primary"}" data-cshare="${esc(k)}" data-kind="${kd}" type="button">${sent ? ic("check") : ic("share")} ${shareLabel(r, kd)}${sent ? " (أُرسلت)" : ""}</button>`; }).join("")}${kinds.some(kd => !isSent(r, kd) && pasteKind(r, kd)) ? `<p class="cshint">${PASTE_HINT}</p>` : ""}</div>`; };
 // WhatsApp on the phone drops the text that comes with photos (on a computer it arrives), so on a phone the text is
 // also copied, ready to paste into the caption — the caption stays searchable in the group later
 const MOBILE = !!((navigator.userAgentData && navigator.userAgentData.mobile) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-const pasteKind = r => MOBILE && shareList(r).length > 0;
+const pasteKind = (r, kd) => MOBILE && shareList(r, kd).length > 0;
 const PASTE_HINT = "النص بينسخ لحاله: إذا ما طلع تحت الصورة بالواتساب، اضغط مطوّلاً على خانة التعليق ← لصق، وبعدين إرسال";
-// modem replaced: the 10-digit number · modem installed: «353 الخريبة» · connection fix: «353 الخريبة» + the note
+// modem photos and modem installation: «353 الخريبة» · connection fix: «353 الخريبة» + the note
 const shortTown = r => [resShort(r), resTown(r)].filter(Boolean).join(" ");
-const modemCaption = r => { const k = shareKind(r);
-  return k === "replace" ? resFull(r) : k === "install" ? shortTown(r)
-    : shortTown(r) + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : ""); };
+const modemCaption = (r, kd) => kd === "fix" ? shortTown(r) + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : "") : shortTown(r);
 // WhatsApp drops the text when a single photo is shared, so for a connection fix the text is written on the photo:
 // «353 الخريبة» on a band above it and the note on a band under it
 function wrapLines(ctx, text, maxW){
@@ -546,13 +559,13 @@ async function composeFix(blob, head, note){
   lines.forEach((ln, i) => ctx.fillText(ln, W - pad, headH + ph + pad * 0.7 + lh * (i + 0.5)));
   return await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error("toBlob")), "image/jpeg", 0.9));
 }
-async function shareModem(k, btn){
-  const r = results[k]; if (!shareKind(r)) return;
-  const text = modemCaption(r), paste = pasteKind(r);
+async function shareModem(k, kd, btn){
+  const r = results[k]; if (!r || !shareKinds(r).includes(kd)) return;
+  const text = modemCaption(r, kd), paste = pasteKind(r, kd);
   if (paste){ try { await navigator.clipboard.writeText(text); } catch(e){} }   // first, while the tap still counts
-  const f = resFull(r), files = [], fix = shareKind(r) === "fix";
+  const f = resFull(r), files = [], fix = kd === "fix";
   const head = shortTown(r), note = String(r.note || "").trim();
-  for (const [nm, pk] of shareList(r)){
+  for (const [nm, pk] of shareList(r, kd)){
     const v = pk && await IDB.get(pk).catch(()=>null);
     if (!v) continue;
     let b = v.blob;
@@ -560,7 +573,7 @@ async function shareModem(k, btn){
     files.push(new File([b], `${nm}-${f}.jpg`, {type:"image/jpeg"}));
   }
   if (!files.length && !fix) return toast("الصور غير موجودة على هذا الهاتف");
-  const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} إرسال ${shareWhat(r)} للجروب (أُرسلت)` : `${ic("check")} أُرسلت`; } };
+  const mark = () => { setSent(r, kd); put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} ${shareLabel(r, kd)} (أُرسلت)` : `${ic("check")} أُرسلت`; } };
   const payload = files.length ? {files, text} : {text};
   if (paste) toast("نُسخ النص — إذا ما طلع تحت الصورة الصقه بخانة التعليق", 4000);
   if (navigator.share && (!files.length || (navigator.canShare && navigator.canShare({files})))){
@@ -571,23 +584,23 @@ async function shareModem(k, btn){
   // devices without file sharing (e.g. a computer): save the photos and copy the text
   files.forEach(fl => { const a = document.createElement("a"); a.href = URL.createObjectURL(fl); a.download = fl.name; document.body.appendChild(a); a.click(); a.remove(); });
   try { await navigator.clipboard.writeText(text); } catch(e){}
-  mark(); toast(files.length ? (fix ? "حُفظت صورة العداد في التنزيلات — أرسلها على واتساب" : "حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب")
+  mark(); toast(files.length ? (fix ? "حُفظت صورة العداد في التنزيلات — أرسلها على واتساب" : "حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب" + (kd === "replace" ? " (جروب المودمات)" : ""))
                              : "نُسخ النص — الصقه في جروب واتساب");
 }
-function openModemShare(keys){
-  keys = keys.filter(k => shareKind(results[k])); if (!keys.length) return;
+function openModemShare(items){
+  items = items.filter(([k, kd]) => shareKinds(results[k]).includes(kd)); if (!items.length) return;
   const sh = $("#sheet");
   sh.innerHTML = `<h3>إرسال للجروب</h3>
-    <p class="hint">${keys.some(k => shareKind(results[k]) === "replace") ? "صور المودم: تنبعث مع رقم الاشتراك (10 خانات).<br>" : ""}${keys.some(k => pasteKind(results[k])) ? PASTE_HINT + "." : ""}</p>
-    <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r), kd = shareKind(r);
-      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
-        <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
-        <button type="button" class="btn primary sm${r.mShared ? " done" : ""}" data-mshare="${esc(k)}">${r.mShared ? `${ic("check")} أُرسلت` : `${ic("share")} إرسال`}</button></div>`; }).join("")}</div>
+    <p class="hint">${items.some(([, kd]) => kd === "replace") ? "صور المودم تروح لجروب المودمات.<br>" : ""}${items.some(([k, kd]) => pasteKind(results[k], kd)) ? PASTE_HINT + "." : ""}</p>
+    <div class="mshare">${items.map(([k, kd]) => { const r = results[k], f = resFull(r), sent = isSent(r, kd);
+      return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}${kd === "replace" ? " · جروب المودمات" : ""}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
+        <div class="msph">${shareList(r, kd).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
+        <button type="button" class="btn primary sm${sent ? " done" : ""}" data-mshare="${esc(k)}" data-kind="${kd}">${sent ? `${ic("check")} أُرسلت` : `${ic("share")} إرسال`}</button></div>`; }).join("")}</div>
     <p class="hint">بعد «إرسال»: اختر واتساب ← الجروب ← إرسال.</p>
     <button type="button" class="btn" id="closeSh">إغلاق</button>`;
   $("#sheetBg").hidden = false; sh.scrollTop = 0; $("#closeSh").onclick = closeSheet;
   fillThumbs(sh);
-  sh.querySelectorAll("[data-mshare]").forEach(b => b.onclick = () => shareModem(b.dataset.mshare, b));
+  sh.querySelectorAll("[data-mshare]").forEach(b => b.onclick = () => shareModem(b.dataset.mshare, b.dataset.kind, b));
 }
 
 // ---------- install helpers ----------
@@ -1169,13 +1182,16 @@ function openSheet(id, isNew){
       if (added.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
     } catch(e){ toast("حدثت مشكلة في حفظ الصور — حاول مرة أخرى"); return; }
     s.full = full; put(STORE, data);
+    const keepSh = {}, same0 = photos[0] === ((old && old.photos) || [])[0], sameFull = !!old && full === old.full;
+    if (old && isSent(old, "fix") && work === FIXWORK && old.work === FIXWORK && same0 && note === old.note && sameFull) keepSh.fix = true;
+    if (old && isSent(old, "replace") && needModemPhotos(chk) && !mphAdd.old && !mphAdd.new && !mphDrop.length && sameFull) keepSh.replace = true;
+    if (old && isSent(old, "install") && work === INSTALL && old.work === INSTALL && same0 && sameFull) keepSh.install = true;
     results[key] = {date:data.date, id:s.id, town:String(parseInt(full.slice(0,3),10)), full, work, note, checks:chk, photos, at: old ? old.at : new Date().toISOString(), logged: old ? old.logged : false,
       stop:{phone:(s.phones && s.phones[0] && s.phones[0][0]) || "", lat:s.lat, lng:s.lng, task:s.task || ""},
       v:(old && old.v || 0) + 1, sent:false, tech: old && old.tech, sentPhotos:(old && old.sentPhotos) || [],
       modemPhotos: needModemPhotos(chk) ? {old: mph.old, new: mph.new} : undefined,
-      mShared: !!(old && old.mShared && (needModemPhotos(chk) ? !mphAdd.old && !mphAdd.new && !mphDrop.length && shareKind(old) === "replace"
-        : work === INSTALL ? old.work === INSTALL && photos[0] === (old.photos || [])[0]
-        : work === FIXWORK && shareKind(old) === "fix" && photos[0] === (old.photos || [])[0] && note === old.note && full === old.full))};
+      sh: keepSh};
+    results[key].mShared = shareKinds(results[key]).length > 0 && shareKinds(results[key]).every(kd => keepSh[kd]);
     put(RES, results); closeSheet(); view = s.manual ? "m" : "v"; render(); toast((isNew ? "تم حفظ الزيارة " : "تم حفظ نتيجة ") + s.id + " — تُرحّل عند الضغط على «ترحيل»");
   };
   if (old){
@@ -1288,7 +1304,7 @@ function renderDocs(){
       ${checksText(r.checks)?`<div class="line"><span class="checks" style="flex:1">${esc(checksText(r.checks))}</span>
         <button class="btn sm" data-copy="${esc(r.note + " · " + checksText(r.checks))}" type="button">نسخ الملاحظة + الفحص</button></div>`:""}
       ${photoKeys(r).length?`<div class="photos">${(r.photos||[]).map((k,n)=>`<div class="thumb"><img alt="" data-pk="${esc(k)}">${n===0?`<span class="tag0">العداد</span>`:""}</div>`).join("")}${Object.entries(r.modemPhotos||{}).filter(([,k]) => k).map(([sl,k])=>`<div class="thumb"><img alt="" data-pk="${esc(k)}"><span class="tag0">${sl === "old" ? "المودم القديم" : "المودم الجديد"}</span></div>`).join("")}</div>`:""}
-      ${shareKind(r) ? `<div class="line"><button class="btn sm${r.mShared ? " done" : ""}" data-mshare="${esc(r.k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>` : ""}
+      ${shareKinds(r).map(kd => { const sent = isSent(r, kd); return `<div class="line"><button class="btn sm${sent ? " done" : ""}" data-mshare="${esc(r.k)}" data-kind="${kd}" type="button">${sent ? ic("check") : ic("share")} ${shareLabel(r, kd)}${sent ? " (أُرسلت)" : ""}</button></div>`; }).join("")}
       <div class="line"><span class="meta">${new Date(r.at).toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"})}</span>
         ${cfgReady() ? (r.sent ? `<span class="sync ok">${ic("check")} رُحّلت</span>` : `<span class="sync">لم تُرحّل بعد</span>`) : ""}<span style="flex:1"></span>
         <button class="btn sm${r.logged?"":" primary"}" data-logged="${esc(r.k)}" type="button">${r.logged?"موثّقة ✓":"وثّقتُها ✓"}</button></div>
@@ -1305,7 +1321,7 @@ function renderDocs(){
   fillThumbs(main).then(() => main.querySelectorAll(".doc img").forEach(im => im.onclick = () => viewPhoto(im.src)));
   const ex = $("#exportBtn2"); if (ex) ex.onclick = exportExcel;
   main.querySelectorAll("[data-editfull]").forEach(b => b.onclick = () => editFull(b.dataset.editfull));
-  main.querySelectorAll("[data-mshare]").forEach(b => b.onclick = () => shareModem(b.dataset.mshare));
+  main.querySelectorAll("[data-mshare]").forEach(b => b.onclick = () => shareModem(b.dataset.mshare, b.dataset.kind));
   main.querySelectorAll("[data-delres]").forEach(b => b.onclick = e => confirmTap(e.currentTarget, () => deleteResult(b.dataset.delres), "متأكد؟ اضغط مرة أخرى"));
   wirePost("sendBtn"); const su = $("#setupBtn"); if (su) su.onclick = openSettings;
   const sl = $("#showLog"); if (sl) sl.onchange = e => { put(SHOWLOG, e.target.checked); render(); };
@@ -1518,7 +1534,7 @@ document.addEventListener("click", e => {
     return;
   }
   const cs = e.target.closest("[data-cshare]");
-  if (cs){ shareModem(cs.dataset.cshare, cs); return; }
+  if (cs){ shareModem(cs.dataset.cshare, cs.dataset.kind, cs); return; }
   const d = e.target.closest("[data-done]");
   if (d){ openSheet(d.dataset.done); return; }
   const cp = e.target.closest("[data-logged]");
@@ -1660,7 +1676,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 46;
+const APP_VERSION = 47;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
