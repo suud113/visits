@@ -519,11 +519,12 @@ const resShort = r => { const n = parseInt(resFull(r).slice(3), 10); return isNa
 const cardShare = k => { const r = results[k], kinds = shareKinds(r); if (!kinds.length) return "";
   return `<div class="cshare">${kinds.map(kd => { const sent = isSent(r, kd);
     return `<button class="btn sm${sent ? " done" : " primary"}" data-cshare="${esc(k)}" data-kind="${kd}" type="button">${sent ? ic("check") : ic("share")} ${shareLabel(r, kd)}${sent ? " (أُرسلت)" : ""}</button>`; }).join("")}${kinds.some(kd => !isSent(r, kd) && pasteKind(r, kd)) ? `<p class="cshint">${PASTE_HINT}</p>` : ""}</div>`; };
-// WhatsApp on the phone drops the text that comes with photos (on a computer it arrives), so on a phone the text is
-// also copied, ready to paste into the caption — the caption stays searchable in the group later
+// WhatsApp on the phone mishandles text sent with photos: with one photo it drops it, with two it writes it under
+// each photo. So on a phone the photos go alone and the text is copied, to paste once into the caption of the first
+// photo (searchable in the group later). On a computer the text goes with the photos.
 const MOBILE = !!((navigator.userAgentData && navigator.userAgentData.mobile) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
 const pasteKind = (r, kd) => MOBILE && shareList(r, kd).length > 0;
-const PASTE_HINT = "النص بينسخ لحاله: إذا ما طلع تحت الصورة بالواتساب، اضغط مطوّلاً على خانة التعليق ← لصق، وبعدين إرسال";
+const PASTE_HINT = "النص بينسخ لحاله: بالواتساب اضغط مطوّلاً على خانة التعليق تحت الصورة الأولى ← لصق، وبعدين إرسال";
 // modem photos and modem installation: «353 الخريبة» · connection fix: «353 الخريبة» + the note
 const shortTown = r => [resShort(r), resTown(r)].filter(Boolean).join(" ");
 const modemCaption = (r, kd) => kd === "fix" ? shortTown(r) + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : "") : shortTown(r);
@@ -574,8 +575,8 @@ async function shareModem(k, kd, btn){
   }
   if (!files.length && !fix) return toast("الصور غير موجودة على هذا الهاتف");
   const mark = () => { setSent(r, kd); put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} ${shareLabel(r, kd)} (أُرسلت)` : `${ic("check")} أُرسلت`; } };
-  const payload = files.length ? {files, text} : {text};
-  if (paste) toast("نُسخ النص — إذا ما طلع تحت الصورة الصقه بخانة التعليق", 4000);
+  const payload = !files.length ? {text} : MOBILE ? {files} : {files, text};
+  if (paste) toast("نُسخ النص — الصقه مرة وحدة بخانة التعليق تحت الصورة الأولى", 4000);
   if (navigator.share && (!files.length || (navigator.canShare && navigator.canShare({files})))){
     try { await navigator.share(payload); mark(); }
     catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
@@ -1676,7 +1677,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 47;
+const APP_VERSION = 48;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
