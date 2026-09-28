@@ -505,18 +505,53 @@ const cardShare = k => { const r = results[k]; if (!shareKind(r)) return "";
   return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button></div>`; };
 const modemCaption = r => shareKind(r) !== "fix" ? resFull(r)
   : [resShort(r), resTown(r)].filter(Boolean).join(" ") + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : "");
+// WhatsApp drops the text when a single photo is shared, so for a connection fix the text is written on the photo:
+// «353 الخريبة» on a band above it and the note on a band under it
+function wrapLines(ctx, text, maxW){
+  const out = [];
+  String(text || "").split(/\n+/).forEach(par => {
+    let line = "";
+    par.split(/\s+/).filter(Boolean).forEach(w => { const t = line ? line + " " + w : w; if (line && ctx.measureText(t).width > maxW){ out.push(line); line = w; } else line = t; });
+    if (line) out.push(line);
+  });
+  return out;
+}
+async function composeFix(blob, head, note){
+  try { await Promise.all([document.fonts.load("700 40px Plex"), document.fonts.load("600 30px Plex")]); } catch(e){}
+  const bmp = await createImageBitmap(blob);
+  const W = Math.min(1280, bmp.width), ph = Math.round(bmp.height * W / bmp.width);
+  const pad = Math.round(W * 0.045), hs = Math.round(W * 0.07), ns = Math.round(W * 0.046);
+  const cv = document.createElement("canvas"), ctx = cv.getContext("2d");
+  ctx.font = `600 ${ns}px Plex, sans-serif`;
+  const lines = wrapLines(ctx, note, W - 2 * pad), headH = Math.round(hs * 2), lh = Math.round(ns * 1.6);
+  const noteH = lines.length ? lines.length * lh + pad * 1.4 : 0;
+  cv.width = W; cv.height = Math.round(headH + ph + noteH);
+  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = "#16263F"; ctx.fillRect(0, 0, W, headH);
+  ctx.fillStyle = "#D8B46A"; ctx.fillRect(0, headH - Math.max(3, Math.round(W * 0.004)), W, Math.max(3, Math.round(W * 0.004)));
+  ctx.direction = "rtl"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#FFFFFF"; ctx.textAlign = "center"; ctx.font = `700 ${hs}px Plex, sans-serif`;
+  ctx.fillText(head, W / 2, headH / 2);
+  ctx.drawImage(bmp, 0, headH, W, ph);
+  ctx.fillStyle = "#131A26"; ctx.textAlign = "right"; ctx.font = `600 ${ns}px Plex, sans-serif`;
+  lines.forEach((ln, i) => ctx.fillText(ln, W - pad, headH + ph + pad * 0.7 + lh * (i + 0.5)));
+  return await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error("toBlob")), "image/jpeg", 0.9));
+}
 async function shareModem(k, btn){
   const r = results[k]; if (!shareKind(r)) return;
-  const f = resFull(r), files = [];
+  const f = resFull(r), files = [], fix = shareKind(r) === "fix";
+  const head = [resShort(r), resTown(r)].filter(Boolean).join(" "), note = String(r.note || "").trim();
   for (const [nm, pk] of shareList(r)){
     const v = pk && await IDB.get(pk).catch(()=>null);
-    if (v) files.push(new File([v.blob], `${nm}-${f}.jpg`, {type:"image/jpeg"}));
+    if (!v) continue;
+    let b = v.blob;
+    if (fix){ try { b = await composeFix(v.blob, head, note); } catch(e){ console.warn(e); } }
+    files.push(new File([b], `${nm}-${f}.jpg`, {type:"image/jpeg"}));
   }
-  const fix = shareKind(r) === "fix";
   if (!files.length && !fix) return toast("الصور غير موجودة على هذا الهاتف");
   const text = modemCaption(r);
   const mark = () => { r.mShared = true; put(RES, results); if (btn){ btn.classList.add("done"); btn.classList.remove("primary"); btn.innerHTML = btn.dataset.cshare ? `${ic("check")} إرسال ${shareWhat(r)} للجروب (أُرسلت)` : `${ic("check")} أُرسلت`; } };
-  const payload = files.length ? {files, text} : {text};
+  const payload = !files.length ? {text} : fix ? {files} : {files, text};   // a fix photo already carries its text
   if (navigator.share && (!files.length || (navigator.canShare && navigator.canShare({files})))){
     try { await navigator.share(payload); mark(); }
     catch(e){ if (!(e && e.name === "AbortError")) toast("تعذّرت المشاركة — حاول مرة أخرى"); }
@@ -525,7 +560,7 @@ async function shareModem(k, btn){
   // devices without file sharing (e.g. a computer): save the photos and copy the text
   files.forEach(fl => { const a = document.createElement("a"); a.href = URL.createObjectURL(fl); a.download = fl.name; document.body.appendChild(a); a.click(); a.remove(); });
   try { await navigator.clipboard.writeText(text); } catch(e){}
-  mark(); toast(files.length ? (fix ? "حُفظت صورة العداد في التنزيلات ونُسخ النص — أرسلهما على واتساب" : "حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب")
+  mark(); toast(files.length ? (fix ? "حُفظت صورة العداد في التنزيلات — أرسلها على واتساب" : "حُفظت الصور في التنزيلات ونُسخ رقم الاشتراك — أرسلها على واتساب")
                              : "نُسخ النص — الصقه في جروب واتساب");
 }
 function openModemShare(keys){
@@ -533,7 +568,7 @@ function openModemShare(keys){
   const sh = $("#sheet");
   const anyFix = keys.some(k => shareKind(results[k]) === "fix"), anyPh = keys.some(k => shareKind(results[k]) !== "fix");
   sh.innerHTML = `<h3>إرسال للجروب</h3>
-    <p class="hint">${anyPh ? "صور المودم وتركيب المودم: مع رقم الاشتراك فقط." : ""}${anyPh && anyFix ? "<br>" : ""}${anyFix ? "معالجة الاتصال: رقم الاشتراك واسم البلدة، وتحتهم صورة العداد والملاحظة." : ""}</p>
+    <p class="hint">${anyPh ? "صور المودم وتركيب المودم: مع رقم الاشتراك فقط." : ""}${anyPh && anyFix ? "<br>" : ""}${anyFix ? "معالجة الاتصال: صورة العداد مكتوب عليها رقم الاشتراك واسم البلدة، والملاحظة تحتها." : ""}</p>
     <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r), kd = shareKind(r);
       return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
         <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
@@ -1615,7 +1650,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 41;
+const APP_VERSION = 42;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
