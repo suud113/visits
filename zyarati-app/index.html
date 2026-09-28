@@ -504,11 +504,15 @@ const resShort = r => { const n = parseInt(resFull(r).slice(3), 10); return isNa
 // share button shown on the visit card right after saving (no need to post first)
 const cardShare = k => { const r = results[k]; if (!shareKind(r)) return "";
   return `<div class="cshare"><button class="btn sm${r.mShared ? " done" : " primary"}" data-cshare="${esc(k)}" type="button">${r.mShared ? ic("check") : ic("share")} إرسال ${shareWhat(r)} للجروب${r.mShared ? " (أُرسلت)" : ""}</button>${!r.mShared && pasteKind(r) ? `<p class="cshint">${PASTE_HINT}</p>` : ""}</div>`; };
-// one photo: WhatsApp drops the text, so the text is copied and pasted by hand into the caption (searchable later)
-const pasteKind = r => (shareKind(r) === "fix" || shareKind(r) === "install") && shareList(r).length > 0;
+// connection fix with a photo: WhatsApp dropped the text, so it is also copied for pasting into the caption (searchable later)
+// (modem installation: the caption arrives on its own)
+const pasteKind = r => shareKind(r) === "fix" && shareList(r).length > 0;
 const PASTE_HINT = "النص بينسخ لحاله: بالواتساب اضغط مطوّلاً على خانة التعليق ← لصق، وبعدين إرسال";
-const modemCaption = r => shareKind(r) !== "fix" ? resFull(r)
-  : [resShort(r), resTown(r)].filter(Boolean).join(" ") + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : "");
+// modem replaced: the 10-digit number · modem installed: «353 الخريبة» · connection fix: «353 الخريبة» + the note
+const shortTown = r => [resShort(r), resTown(r)].filter(Boolean).join(" ");
+const modemCaption = r => { const k = shareKind(r);
+  return k === "replace" ? resFull(r) : k === "install" ? shortTown(r)
+    : shortTown(r) + (String(r.note || "").trim() ? "\n\n" + String(r.note).trim() : ""); };
 // WhatsApp drops the text when a single photo is shared, so for a connection fix the text is written on the photo:
 // «353 الخريبة» on a band above it and the note on a band under it
 function wrapLines(ctx, text, maxW){
@@ -546,7 +550,7 @@ async function shareModem(k, btn){
   const text = modemCaption(r), paste = pasteKind(r);
   if (paste){ try { await navigator.clipboard.writeText(text); } catch(e){} }   // first, while the tap still counts
   const f = resFull(r), files = [], fix = shareKind(r) === "fix";
-  const head = [resShort(r), resTown(r)].filter(Boolean).join(" "), note = String(r.note || "").trim();
+  const head = shortTown(r), note = String(r.note || "").trim();
   for (const [nm, pk] of shareList(r)){
     const v = pk && await IDB.get(pk).catch(()=>null);
     if (!v) continue;
@@ -573,7 +577,7 @@ function openModemShare(keys){
   keys = keys.filter(k => shareKind(results[k])); if (!keys.length) return;
   const sh = $("#sheet");
   sh.innerHTML = `<h3>إرسال للجروب</h3>
-    <p class="hint">${keys.some(k => shareKind(results[k]) === "replace") ? "صور المودم: تنبعث مع رقم الاشتراك.<br>" : ""}${keys.some(k => pasteKind(results[k])) ? "صورة العداد: " + PASTE_HINT + "." : ""}</p>
+    <p class="hint">${keys.some(k => shareKind(results[k]) === "replace") ? "صور المودم: تنبعث مع رقم الاشتراك (10 خانات).<br>" : ""}${keys.some(k => pasteKind(results[k])) ? "صورة العداد: " + PASTE_HINT + "." : ""}</p>
     <div class="mshare">${keys.map(k => { const r = results[k], f = resFull(r), kd = shareKind(r);
       return `<div class="msrow"><div class="msinfo"><b class="num">${esc(f)}</b><span>${SHARE_KIND[kd]} · ${esc(resTown(r))}</span>${kd === "fix" && String(r.note || "").trim() ? `<span class="msnote">${esc(String(r.note).trim())}</span>` : ""}</div>
         <div class="msph">${shareList(r).map(([, pk, t]) => `<img data-pk="${esc(pk)}" alt="${t}">`).join("")}</div>
@@ -1655,7 +1659,7 @@ async function takeShared(){
   const open = async () => { render(); await takeShared(); };
   if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 43;
+const APP_VERSION = 45;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
