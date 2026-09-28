@@ -142,11 +142,13 @@
   const median = arr => { const s = arr.slice().sort((a, b) => a - b), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : 0; };
 
   // ---------- CNN + CTC line reader ----------
-  let NET = null;
-  function setNet(d) {
+  // two readers: "ar" = Arabic-Indic digits (old screen), "en" = Latin digits (new screen)
+  let NET = null; const NETS = {}; let PREF = "ar";
+  function setNet(d, name) {
     const dec = b64 => { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Float32Array(u.buffer); };
-    NET = { ch: d.ch, ht: d.ht, L: {} };
-    for (const k in d.layers) { const s = d.layers[k].shape; NET.L[k] = { w: dec(d.layers[k].w), b: dec(d.layers[k].b), s: s.length === 3 ? [s[0], s[1], 1, s[2]] : s }; }
+    const n = { ch: d.ch, ht: d.ht, L: {} };
+    for (const k in d.layers) { const s = d.layers[k].shape; n.L[k] = { w: dec(d.layers[k].w), b: dec(d.layers[k].b), s: s.length === 3 ? [s[0], s[1], 1, s[2]] : s }; }
+    NETS[name || "ar"] = n; if (!NET || (name || "ar") === PREF) NET = n;
   }
   // conv2d, stride 1, zero padding (ph, pw); x: [C][H][W] flat
   function conv2d(x, C, H, W, L, ph, pw) {
@@ -247,7 +249,7 @@
 
   // ---------- reading ----------
   const roundEven = x => { const f = Math.floor(x), d = x - f; return d > 0.5 ? f + 1 : d < 0.5 ? f : (f % 2 === 0 ? f : f + 1); };  // = Python round()
-  const parseCoord = s => { const m = s.match(/^(3[1256]),(\d{2,8})$/); return m ? parseFloat(m[1] + "." + m[2]) : null; };
+  const parseCoord = s => { const m = s.match(/^(3[1-6]),(\d{2,8})$/); return m ? parseFloat(m[1] + "." + m[2]) : null; };
   const parsePhone = s => (/^07[789]\d{7}$/.test(s) ? s : null);
 
   function readGray(g, W, H) {
@@ -268,8 +270,24 @@
     // subscriber screen (many fields, no coordinate table): only the approved mobile (top-most) counts;
     // the other numbers there belong to staff (meter reader etc.)
     if (nb >= 50 && lats.length + lngs.length < 5 && phones.length) phones = [phones.reduce((a, b) => (b[1] < a[1] ? b : a))];
-    return { lats, lngs, phones, screen: nb >= 50 && lats.length + lngs.length < 5 };
+    // a table row whose X or Y lies outside Jordan (e.g. 33.8183 / 35.4908 placeholder) is dropped as a whole
+    const badY = lats.filter(([v]) => !(v > 29 && v < 33.45)).concat(lngs.filter(([v]) => !(v > 34.8 && v < 39.4))).map(x => x[1]);
+    const okRow = ([, y]) => !badY.some(b => Math.abs(b - y) < 0.7 * th);
+    return { lats: lats.filter(okRow), lngs: lngs.filter(okRow), phones, screen: nb >= 50 && lats.length + lngs.length < 5 };
   }
+  // read with the digit style that worked last; if nothing is found, try the other style and keep it if it finds more
+  const hits = r => r.lats.length + r.lngs.length + r.phones.length;
+  function readAuto(g, W, H) {
+    const names = Object.keys(NETS); if (!names.includes(PREF)) PREF = names[0];
+    NET = NETS[PREF]; let r = readGray(g, W, H); r.script = PREF;
+    if (hits(r) === 0) for (const n of names) {
+      if (n === PREF) continue;
+      NET = NETS[n]; const r2 = readGray(g, W, H); r2.script = n;
+      if (hits(r2) > hits(r)) { r = r2; PREF = n; }
+    }
+    NET = NETS[PREF]; return r;
+  }
+  const resetScript = () => { PREF = "ar"; if (NETS.ar) NET = NETS.ar; };
 
   async function grayFromBlob(blob, maxSide) {
     maxSide = maxSide || 1600;
@@ -289,6 +307,8 @@
     const r = vals.map(([v, y]) => [Math.round(v * 1e4) / 1e4, y]), cnt = new Map();
     r.forEach(([v]) => cnt.set(v, (cnt.get(v) || 0) + 1));
     const top = Math.max(...cnt.values()), cands = [...cnt.keys()].filter(v => cnt.get(v) === top);
+    // every row different (GPS noise between visits): take the middle value
+    if (top === 1 && r.length >= 3) { const s = r.map(x => x[0]).sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; }
     return cands.reduce((best, v) => { const yv = Math.max(...r.filter(x => x[0] === v).map(x => x[1])); return (best === null || yv > best[1]) ? [v, yv] : best; }, null)[0];
   }
   // phones: fold 1-digit variants (misreads of the same number) into the stronger reading
@@ -307,11 +327,11 @@
   function combine(results) {
     const la = [], ln = [], ph = [];
     results.forEach(r => { la.push(...r.lats); ln.push(...r.lngs); r.phones.forEach(([p, , c]) => { if (!FAKE.test(p)) ph.push([p, c]); }); });
-    let lat = pick(la), lng = pick(ln);
-    if (lat !== null && !(lat > 29 && lat < 34)) lat = null;
-    if (lng !== null && !(lng > 34.5 && lng < 39.5)) lng = null;
-    return { lat, lng, phones: mergePhones(ph), nLat: la.length, nLng: ln.length };
+    // keep Jordan only (drops the placeholder 33.8183 / 35.4908 rows some bills carry)
+    let lat = pick(la.filter(([v]) => v > 29 && v < 33.45)), lng = pick(ln.filter(([v]) => v > 34.8 && v < 39.4));
+    const spread = a => { const c = new Map(); a.forEach(([v]) => { v = Math.round(v * 1e4); c.set(v, (c.get(v) || 0) + 1); }); return a.length >= 3 && Math.max(...c.values()) === 1; };
+    return { lat, lng, phones: mergePhones(ph), nLat: la.length, nLng: ln.length, unsure: lat !== null && (spread(la) || spread(ln)) };
   }
 
-  root.VisitReader = { binarize, components, estimateH, dropLines, wordBoxes, setNet, netRead, cropNorm, readGray, grayFromBlob, combine, pick, mergePhones, roundEven };
+  root.VisitReader = { binarize, components, estimateH, dropLines, wordBoxes, setNet, netRead, cropNorm, readGray, readAuto, resetScript, script: () => PREF, grayFromBlob, combine, pick, mergePhones, roundEven };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -1491,9 +1491,16 @@ window.addEventListener("hashchange", async () => { if (await fromHash()){ if (!
 
 // ---------- lock: the app opens only with the technician's password ----------
 // sessionStorage lives as long as the app is running (also in the background) and is cleared when it is closed.
-const UNLOCK = "visits.unlocked", LOCKT = "visits.lockuntil";
-const isUnlocked = () => { try { return sessionStorage.getItem(UNLOCK) === "1"; } catch(e){ return false; } };
-const setUnlocked = v => { try { v ? sessionStorage.setItem(UNLOCK, "1") : sessionStorage.removeItem(UNLOCK); } catch(e){} };
+// Phones often close a background app on their own (camera, WhatsApp, low memory) — so an app that was on screen
+// less than GRACE ago opens without the password too; after that, or after «خروج», it asks again.
+const UNLOCK = "visits.unlocked", LOCKT = "visits.lockuntil", SEEN = "visits.lastseen", GRACE = 30 * 60000;
+const seenRecently = () => { const t = +get(SEEN, 0), d = Date.now() - t; return t > 0 && d >= -60000 && d < GRACE; };
+const isUnlocked = () => { try { if (sessionStorage.getItem(UNLOCK) === "1") return true; } catch(e){} return seenRecently(); };
+const setUnlocked = v => { try { v ? sessionStorage.setItem(UNLOCK, "1") : sessionStorage.removeItem(UNLOCK); } catch(e){} v ? put(SEEN, Date.now()) : localStorage.removeItem(SEEN); };
+const markSeen = () => { if ($("#lock").hidden && document.visibilityState === "visible") put(SEEN, Date.now()); };
+document.addEventListener("visibilitychange", () => { if ($("#lock").hidden) put(SEEN, Date.now()); });
+addEventListener("pagehide", () => { if ($("#lock").hidden) put(SEEN, Date.now()); });
+setInterval(markSeen, 20000);
 async function sha256hex(t){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
 let afterUnlock = null;
 function syncPass(pass){
@@ -1606,9 +1613,9 @@ async function takeShared(){
   if (!cfg.adminOk && (cfg.token || cfg.team)){ delete cfg.token; delete cfg.team; put(CFG, cfg); }
   await fromHash();
   const open = async () => { render(); await takeShared(); };
-  if (isUnlocked() && cfgReady()) open(); else showLock(open);
+  if (isUnlocked() && cfgReady()){ setUnlocked(true); open(); } else showLock(open);
 })();
-const APP_VERSION = 40;
+const APP_VERSION = 41;
 if ("serviceWorker" in navigator){
   const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });

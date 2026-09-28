@@ -53,6 +53,25 @@
   }
   const imgName = s => { const m = s.match(/([\w-]+\.(?:jpe?g|png|webp))/i); return m ? m[1] : null; };
 
+  /** A clerk message that names one subscriber:
+   *  "85486" · "0700000353" (10 digits) · "الخريبة-353" · "سمر 944" · "353 الخريبة" */
+  const AR_WORDS = "[\u0600-\u06FF][\u0600-\u06FF\\s.]*?";
+  const SEP = "\\s*[-–—_:/،,]?\\s*";
+  const RX_TOWN_NUM = new RegExp("^(" + AR_WORDS + ")" + SEP + "(\\d{1,7}|\\d{10})$");
+  const RX_NUM_TOWN = new RegExp("^(\\d{1,7})" + SEP + "(" + AR_WORDS + ")$");
+  function parseLabel(tx) {
+    const t = tx.replace(/\s+/g, " ").trim();
+    let m = t.match(/^(\d{4,7}|\d{10})$/), town = "", id;
+    if (m) id = m[1];
+    else if ((m = t.match(RX_TOWN_NUM))) { town = m[1].trim(); id = m[2]; }
+    else if ((m = t.match(RX_NUM_TOWN))) { id = m[1]; town = m[2].trim(); }
+    else return null;
+    let townCode = "";
+    if (id.length === 10) { townCode = id.slice(0, 3); id = String(parseInt(id.slice(3), 10) || ""); }
+    if (!id || !+id) return null;
+    return { id, town, townCode, named: !!town };
+  }
+
   /** Build the subscriber list for one day.
    *  clerk = the person who sends the images; me = the other person (the technician). */
   function buildDay(msgs, date) {
@@ -83,15 +102,35 @@
       const note = [...new Set(notes)].join(" · ");
       if (note) nums.forEach(n => (tasks[n] = note));
     }
-    const subs = []; let cur = null;
+    // the clerk's messages of that day: images and subscriber labels, in order
+    const seq = [];
     for (const m of msgs) {
       if (m.date !== date || m.who !== clerk) continue;
       const tx = toLatin(m.text).trim(), img = imgName(tx);
-      if (img) { if (cur) cur.images.push(img); }
-      else if (/^\d{4,7}$/.test(tx)) { cur = { id: tx, images: [], task: tasks[tx] || "", extraPhones: extraPhones[tx] || [] }; subs.push(cur); }
+      if (img) seq.push({ img });
+      else { const lb = parseLabel(tx); if (lb) seq.push({ lb }); }
     }
-    return { date, clerk, dates, subs };
+    const newSub = lb => ({ id: lb.id, town: lb.town, townCode: lb.townCode, images: [], task: tasks[lb.id] || "", extraPhones: extraPhones[lb.id] || [], named: lb.named });
+    // two ways clerks work: the number first then its images, or the images first then the number under them
+    const firstImg = seq.findIndex(x => x.img), firstLb = seq.findIndex(x => x.lb);
+    const labelAfter = firstImg >= 0 && firstLb > firstImg;
+    let subs = [];
+    if (labelAfter) {
+      let pending = [];
+      for (const x of seq) {
+        if (x.img) pending.push(x.img);
+        else { const s = newSub(x.lb); s.images = pending; pending = []; subs.push(s); }
+      }
+    } else {
+      let cur = null;
+      for (const x of seq) {
+        if (x.img) { if (cur) cur.images.push(x.img); }
+        else { cur = newSub(x.lb); subs.push(cur); }
+      }
+    }
+    subs = subs.filter(s => s.images.length || !s.named);   // a "town-number" line without images is just text
+    return { date, clerk, dates, subs, labelAfter };
   }
 
-  root.WAImport = { readZip, parseChat, buildDay, toLatin };
+  root.WAImport = { readZip, parseChat, buildDay, toLatin, parseLabel };
 })(typeof window !== "undefined" ? window : globalThis);
